@@ -33,7 +33,7 @@ class EvaluationRepository:
     async def get_champion_model(self, model_name: str) -> EvaluationRun | None:
         stmt = (
             select(EvaluationRun)
-            .where(EvaluationRun.model_name == model_name, EvaluationRun.is_champion == True)
+            .where(EvaluationRun.model_name == model_name, EvaluationRun.is_champion)
             .order_by(desc(EvaluationRun.evaluated_at))
             .limit(1)
         )

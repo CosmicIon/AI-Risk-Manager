@@ -1,9 +1,9 @@
 """Domain enumerations for AI Risk Manager."""
 
-from enum import Enum
+from enum import StrEnum
 
 
-class CardNetwork(str, Enum):
+class CardNetwork(StrEnum):
     """Supported card networks."""
     VISA = "VISA"
     MASTERCARD = "MASTERCARD"
@@ -11,7 +11,7 @@ class CardNetwork(str, Enum):
     AMEX = "AMEX"
 
 
-class ReasonCode(str, Enum):
+class ReasonCode(StrEnum):
     """Chargeback reason codes mapped to internal constants."""
     # Visa codes
     FRAUD_CARD_NOT_PRESENT = "10.4"
@@ -34,10 +34,10 @@ class ReasonCode(str, Enum):
             return cls(str(raw_code).strip())
         except ValueError:
             # Fallback or generic code could be returned here
-            raise ValueError(f"Unknown reason code '{raw_code}' for network {network.value}")
+            raise ValueError(f"Unknown reason code '{raw_code}' for network {network.value}") from None
 
 
-class RiskTier(str, Enum):
+class RiskTier(StrEnum):
     """Categorized risk levels for transactions and returns."""
     LOW = "LOW"
     MEDIUM = "MEDIUM"
@@ -45,7 +45,7 @@ class RiskTier(str, Enum):
     CRITICAL = "CRITICAL"
 
 
-class CaseStatus(str, Enum):
+class CaseStatus(StrEnum):
     """Lifecycle states of a risk/chargeback case."""
     NEW = "NEW"
     EVIDENCE_GATHERING = "EVIDENCE_GATHERING"
@@ -59,7 +59,7 @@ class CaseStatus(str, Enum):
     ACCEPTED_LOSS = "ACCEPTED_LOSS"
 
 
-class CaseSource(str, Enum):
+class CaseSource(StrEnum):
     """Origin of a case creation."""
     CHARGEBACK = "CHARGEBACK"
     RETURN = "RETURN"
@@ -67,14 +67,14 @@ class CaseSource(str, Enum):
     ABUSE_RING = "ABUSE_RING"
 
 
-class SpikeClassification(str, Enum):
+class SpikeClassification(StrEnum):
     """Classification of detected velocity anomalies."""
     ORGANIC_SPIKE = "ORGANIC_SPIKE"
     ATTACK = "ATTACK"
     UNCERTAIN = "UNCERTAIN"
 
 
-class AlertSeverity(str, Enum):
+class AlertSeverity(StrEnum):
     """Severity levels for system and fraud alerts."""
     INFO = "INFO"
     WARNING = "WARNING"
@@ -82,7 +82,7 @@ class AlertSeverity(str, Enum):
     EMERGENCY = "EMERGENCY"
 
 
-class NotificationChannel(str, Enum):
+class NotificationChannel(StrEnum):
     """Supported channels for alert dispatch."""
     EMAIL = "EMAIL"
     SLACK = "SLACK"

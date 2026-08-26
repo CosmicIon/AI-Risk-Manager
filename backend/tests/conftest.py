@@ -17,7 +17,7 @@ if str(backend_dir) not in sys.path:
 os.environ["ENVIRONMENT"] = "dev"
 os.environ["DEBUG"] = "true"
 
-from src.main import app
+from src.main import app  # noqa: E402
 
 
 @pytest.fixture
