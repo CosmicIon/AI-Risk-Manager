@@ -232,19 +232,50 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to access th
 
 ## Testing & Quality Verification
 
-Run the test suite and code quality checks:
+Run the test suite and code quality checks to verify **Module 0 (Scaffolding)** and **Module 1 (Data Contracts)** manually:
 
+### Verify Module 0 (Infrastructure & FastAPI)
+
+1. **Check Docker Services:** Ensure the 7 core infrastructure services are running.
+   ```bash
+   docker compose -f infra/docker/docker-compose.yml ps
+   ```
+2. **Check FastAPI Health Endpoints:**
+   In a separate terminal, start the FastAPI server:
+   ```bash
+   cd backend
+   .\.venv\Scripts\Activate.ps1
+   uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+   Then run:
+   ```bash
+   curl http://localhost:8000/health
+   curl http://localhost:8000/readiness
+   ```
+   *Both should return a 200 OK JSON response.*
+
+### Verify Module 1 (Data Contracts & Schemas)
+
+1. **Run Pydantic and Avro Schema Tests:**
+   This verifies all enums, data contracts, deadline computations, and `fastavro` schema parsing.
+   ```bash
+   cd backend
+   .\.venv\Scripts\Activate.ps1
+   pytest tests/unit/test_schemas.py -v --tb=short
+   ```
+   *You should see 8 passing tests.*
+
+2. **Run Linting and Formatting Checks:**
+   ```bash
+   cd backend
+   .\.venv\Scripts\Activate.ps1
+   ruff check src/ tests/
+   mypy src/
+   ```
+
+### Verify Dashboard Build
 ```bash
-# Run backend unit tests with coverage
-cd backend
-pytest tests/ -v --cov=src
-
-# Run linting and formatting checks
-ruff check src/ tests/
-mypy src/
-
-# Verify dashboard build
-cd ../dashboard
+cd dashboard
 npm run build
 ```
 

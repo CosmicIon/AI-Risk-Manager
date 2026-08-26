@@ -126,67 +126,67 @@ cd dashboard && npm run build
 
 ### Implementation Checklist
 
-- [ ] **1.1 — Enums (`backend/src/core/enums.py`)**
-  - [ ] `CardNetwork(str, Enum)`: `VISA`, `MASTERCARD`, `RUPAY`, `AMEX`
-  - [ ] `ReasonCode(str, Enum)`: At minimum — `FRAUD_CARD_NOT_PRESENT = "10.4"`, `MERCHANDISE_NOT_RECEIVED = "13.1"`, `NOT_AS_DESCRIBED = "13.3"`, `DUPLICATE_PROCESSING = "12.2"`, `CANCELLED_RECURRING = "13.7"` (Visa codes), plus Mastercard equivalents `UNAUTHORIZED_TRANSACTION = "4837"`, `CARDHOLDER_DISPUTE = "4853"`. Add `@classmethod from_network_code(cls, network: CardNetwork, raw_code: str) -> ReasonCode` mapper
-  - [ ] `RiskTier(str, Enum)`: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
-  - [ ] `CaseStatus(str, Enum)`: `NEW`, `EVIDENCE_GATHERING`, `DRAFT_READY`, `IN_REVIEW`, `APPROVED`, `SUBMITTED`, `WON`, `LOST`, `EXPIRED`, `ACCEPTED_LOSS`
-  - [ ] `CaseSource(str, Enum)`: `CHARGEBACK`, `RETURN`, `FRAUD_ALERT`, `ABUSE_RING`
-  - [ ] `SpikeClassification(str, Enum)`: `ORGANIC_SPIKE`, `ATTACK`, `UNCERTAIN`
-  - [ ] `AlertSeverity(str, Enum)`: `INFO`, `WARNING`, `CRITICAL`, `EMERGENCY`
-  - [ ] `NotificationChannel(str, Enum)`: `EMAIL`, `SLACK`, `PAGERDUTY`, `SMS`
+- [x] **1.1 — Enums (`backend/src/core/enums.py`)**
+  - [x] `CardNetwork(str, Enum)`: `VISA`, `MASTERCARD`, `RUPAY`, `AMEX`
+  - [x] `ReasonCode(str, Enum)`: At minimum — `FRAUD_CARD_NOT_PRESENT = "10.4"`, `MERCHANDISE_NOT_RECEIVED = "13.1"`, `NOT_AS_DESCRIBED = "13.3"`, `DUPLICATE_PROCESSING = "12.2"`, `CANCELLED_RECURRING = "13.7"` (Visa codes), plus Mastercard equivalents `UNAUTHORIZED_TRANSACTION = "4837"`, `CARDHOLDER_DISPUTE = "4853"`. Add `@classmethod from_network_code(cls, network: CardNetwork, raw_code: str) -> ReasonCode` mapper
+  - [x] `RiskTier(str, Enum)`: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+  - [x] `CaseStatus(str, Enum)`: `NEW`, `EVIDENCE_GATHERING`, `DRAFT_READY`, `IN_REVIEW`, `APPROVED`, `SUBMITTED`, `WON`, `LOST`, `EXPIRED`, `ACCEPTED_LOSS`
+  - [x] `CaseSource(str, Enum)`: `CHARGEBACK`, `RETURN`, `FRAUD_ALERT`, `ABUSE_RING`
+  - [x] `SpikeClassification(str, Enum)`: `ORGANIC_SPIKE`, `ATTACK`, `UNCERTAIN`
+  - [x] `AlertSeverity(str, Enum)`: `INFO`, `WARNING`, `CRITICAL`, `EMERGENCY`
+  - [x] `NotificationChannel(str, Enum)`: `EMAIL`, `SLACK`, `PAGERDUTY`, `SMS`
 
-- [ ] **1.2 — Domain exceptions (`backend/src/core/exceptions.py`)**
-  - [ ] `RiskManagerError(Exception)`: base exception with `message: str`, `error_code: str`
-  - [ ] `SchemaValidationError(RiskManagerError)`: raised on Pydantic validation failures at service boundaries
-  - [ ] `CaseNotFoundError(RiskManagerError)`: raised when case ID lookup fails
-  - [ ] `DuplicateIngestionError(RiskManagerError)`: raised on duplicate chargeback (idempotency violation)
-  - [ ] `ModelInferenceError(RiskManagerError)`: raised when ONNX Runtime inference fails
-  - [ ] `EvidenceRetrievalError(RiskManagerError)`: raised when an agent tool fails to fetch evidence
-  - [ ] `LLMResponseError(RiskManagerError)`: raised when LLM returns malformed/unparseable output
-  - [ ] `FeatureStoreUnavailableError(RiskManagerError)`: raised when Redis feature cache is unreachable
-  - [ ] `DeadlineExceededError(RiskManagerError)`: raised when chargeback representment deadline has passed
+- [x] **1.2 — Domain exceptions (`backend/src/core/exceptions.py`)**
+  - [x] `RiskManagerError(Exception)`: base exception with `message: str`, `error_code: str`
+  - [x] `SchemaValidationError(RiskManagerError)`: raised on Pydantic validation failures at service boundaries
+  - [x] `CaseNotFoundError(RiskManagerError)`: raised when case ID lookup fails
+  - [x] `DuplicateIngestionError(RiskManagerError)`: raised on duplicate chargeback (idempotency violation)
+  - [x] `ModelInferenceError(RiskManagerError)`: raised when ONNX Runtime inference fails
+  - [x] `EvidenceRetrievalError(RiskManagerError)`: raised when an agent tool fails to fetch evidence
+  - [x] `LLMResponseError(RiskManagerError)`: raised when LLM returns malformed/unparseable output
+  - [x] `FeatureStoreUnavailableError(RiskManagerError)`: raised when Redis feature cache is unreachable
+  - [x] `DeadlineExceededError(RiskManagerError)`: raised when chargeback representment deadline has passed
 
-- [ ] **1.3 — Chargeback schemas (`backend/src/core/schemas/chargeback.py`)**
-  - [ ] `ChargebackNotification(BaseModel)`: fields — `notification_id: str`, `network: CardNetwork`, `arn: str` (Acquirer Reference Number), `raw_reason_code: str`, `reason_code: ReasonCode`, `transaction_id: str`, `transaction_date: datetime`, `transaction_amount: Decimal`, `currency: str = "INR"`, `cardholder_name: str | None`, `merchant_id: str`, `tenant_id: UUID`, `received_at: datetime`, `deadline: datetime`. Add `@model_validator(mode="after")` to compute `deadline` from `received_at` + network-specific days (Visa: 30, Mastercard: 45). Add `@computed_field idempotency_key` returning `f"{network.value}:{arn}"`
-  - [ ] `EvidenceItem(BaseModel)`: `evidence_type: Literal["delivery_proof", "avs_match", "3ds_log", "customer_communication", "order_confirmation", "refund_receipt", "ip_geolocation"]`, `source: str`, `content: str | None`, `file_url: str | None`, `retrieved_at: datetime`, `confidence: float` (0.0-1.0)
-  - [ ] `EvidenceBundle(BaseModel)`: `case_id: UUID`, `items: list[EvidenceItem]`, `completeness_score: float` (fraction of required evidence retrieved), `missing_evidence: list[str]`
-  - [ ] `RepresentmentDraft(BaseModel)`: `case_id: UUID`, `narrative: str`, `evidence_summary: str`, `network_template_version: str`, `win_probability: float`, `recommendation: Literal["respond", "accept_loss"]`, `generated_at: datetime`, `llm_model_used: str`, `prompt_version: str`
-  - [ ] `ChargebackIngestRequest(BaseModel)`: wraps raw webhook payload with `raw_payload: dict[str, Any]`, `source_ip: str | None`, `webhook_signature: str | None`
-  - [ ] `ChargebackIngestResponse(BaseModel)`: `case_id: UUID`, `status: CaseStatus`, `deadline: datetime`, `message: str`
+- [x] **1.3 — Chargeback schemas (`backend/src/core/schemas/chargeback.py`)**
+  - [x] `ChargebackNotification(BaseModel)`: fields — `notification_id: str`, `network: CardNetwork`, `arn: str` (Acquirer Reference Number), `raw_reason_code: str`, `reason_code: ReasonCode`, `transaction_id: str`, `transaction_date: datetime`, `transaction_amount: Decimal`, `currency: str = "INR"`, `cardholder_name: str | None`, `merchant_id: str`, `tenant_id: UUID`, `received_at: datetime`, `deadline: datetime`. Add `@model_validator(mode="after")` to compute `deadline` from `received_at` + network-specific days (Visa: 30, Mastercard: 45). Add `@computed_field idempotency_key` returning `f"{network.value}:{arn}"`
+  - [x] `EvidenceItem(BaseModel)`: `evidence_type: Literal["delivery_proof", "avs_match", "3ds_log", "customer_communication", "order_confirmation", "refund_receipt", "ip_geolocation"]`, `source: str`, `content: str | None`, `file_url: str | None`, `retrieved_at: datetime`, `confidence: float` (0.0-1.0)
+  - [x] `EvidenceBundle(BaseModel)`: `case_id: UUID`, `items: list[EvidenceItem]`, `completeness_score: float` (fraction of required evidence retrieved), `missing_evidence: list[str]`
+  - [x] `RepresentmentDraft(BaseModel)`: `case_id: UUID`, `narrative: str`, `evidence_summary: str`, `network_template_version: str`, `win_probability: float`, `recommendation: Literal["respond", "accept_loss"]`, `generated_at: datetime`, `llm_model_used: str`, `prompt_version: str`
+  - [x] `ChargebackIngestRequest(BaseModel)`: wraps raw webhook payload with `raw_payload: dict[str, Any]`, `source_ip: str | None`, `webhook_signature: str | None`
+  - [x] `ChargebackIngestResponse(BaseModel)`: `case_id: UUID`, `status: CaseStatus`, `deadline: datetime`, `message: str`
 
-- [ ] **1.4 — Return request schemas (`backend/src/core/schemas/return_request.py`)**
-  - [ ] `ReturnScoreRequest(BaseModel)`: `request_id: str`, `tenant_id: UUID`, `customer_id: str`, `order_id: str`, `order_amount: Decimal`, `return_amount: Decimal`, `return_reason: str`, `order_date: datetime`, `return_initiated_at: datetime`, `product_category: str`, `device_fingerprint: str | None`, `ip_address: str | None`. Add `@field_validator("return_amount")` ensuring `return_amount <= order_amount`
-  - [ ] `FeatureVector(BaseModel)`: `customer_id: str`, `features: dict[str, float]`, `computed_at: datetime`, `staleness_seconds: float`, `is_degraded: bool = False` (true when feature store was partially unavailable)
-  - [ ] `ReturnScoreResponse(BaseModel)`: `request_id: str`, `risk_score: int` (0-100, `@field_validator` clamping), `risk_tier: RiskTier`, `decision: Literal["auto_approve", "manual_review", "auto_deny"]`, `explanation: str`, `top_features: list[dict[str, float]]` (top-5 SHAP values), `model_version: str`, `inference_latency_ms: float`, `scored_at: datetime`
-  - [ ] `PolicyConfig(BaseModel)`: `tenant_id: UUID`, `low_threshold: int = 25`, `medium_threshold: int = 50`, `high_threshold: int = 75`, `auto_deny_enabled: bool = False`, `high_value_customer_override: bool = True` (if true, high-LTV customers with HIGH tier go to manual_review instead of auto_deny)
+- [x] **1.4 — Return request schemas (`backend/src/core/schemas/return_request.py`)**
+  - [x] `ReturnScoreRequest(BaseModel)`: `request_id: str`, `tenant_id: UUID`, `customer_id: str`, `order_id: str`, `order_amount: Decimal`, `return_amount: Decimal`, `return_reason: str`, `order_date: datetime`, `return_initiated_at: datetime`, `product_category: str`, `device_fingerprint: str | None`, `ip_address: str | None`. Add `@field_validator("return_amount")` ensuring `return_amount <= order_amount`
+  - [x] `FeatureVector(BaseModel)`: `customer_id: str`, `features: dict[str, float]`, `computed_at: datetime`, `staleness_seconds: float`, `is_degraded: bool = False` (true when feature store was partially unavailable)
+  - [x] `ReturnScoreResponse(BaseModel)`: `request_id: str`, `risk_score: int` (0-100, `@field_validator` clamping), `risk_tier: RiskTier`, `decision: Literal["auto_approve", "manual_review", "auto_deny"]`, `explanation: str`, `top_features: list[dict[str, float]]` (top-5 SHAP values), `model_version: str`, `inference_latency_ms: float`, `scored_at: datetime`
+  - [x] `PolicyConfig(BaseModel)`: `tenant_id: UUID`, `low_threshold: int = 25`, `medium_threshold: int = 50`, `high_threshold: int = 75`, `auto_deny_enabled: bool = False`, `high_value_customer_override: bool = True` (if true, high-LTV customers with HIGH tier go to manual_review instead of auto_deny)
 
-- [ ] **1.5 — Fraud alert schemas (`backend/src/core/schemas/fraud_alert.py`)**
-  - [ ] `AnomalyAlert(BaseModel)`: `alert_id: UUID`, `tenant_id: UUID`, `detected_at: datetime`, `severity: AlertSeverity`, `spike_classification: SpikeClassification`, `affected_segment: str` (e.g., "MCC:5411, city:Mumbai"), `baseline_tps: float`, `current_tps: float`, `deviation_factor: float`, `window_seconds: int`, `is_calendar_adjusted: bool`
-  - [ ] `FraudSpikeDetail(BaseModel)`: `alert_id: UUID`, `transaction_ids: list[str]`, `geographic_spread: dict[str, int]`, `amount_distribution: dict[str, float]` (mean, median, stddev, p95), `velocity_profile: list[dict[str, Any]]` (per-second counts over the anomaly window)
+- [x] **1.5 — Fraud alert schemas (`backend/src/core/schemas/fraud_alert.py`)**
+  - [x] `AnomalyAlert(BaseModel)`: `alert_id: UUID`, `tenant_id: UUID`, `detected_at: datetime`, `severity: AlertSeverity`, `spike_classification: SpikeClassification`, `affected_segment: str` (e.g., "MCC:5411, city:Mumbai"), `baseline_tps: float`, `current_tps: float`, `deviation_factor: float`, `window_seconds: int`, `is_calendar_adjusted: bool`
+  - [x] `FraudSpikeDetail(BaseModel)`: `alert_id: UUID`, `transaction_ids: list[str]`, `geographic_spread: dict[str, int]`, `amount_distribution: dict[str, float]` (mean, median, stddev, p95), `velocity_profile: list[dict[str, Any]]` (per-second counts over the anomaly window)
 
-- [ ] **1.6 — Case management schemas (`backend/src/core/schemas/case.py`)**
-  - [ ] `CaseCreate(BaseModel)`: `tenant_id: UUID`, `source: CaseSource`, `source_id: str` (e.g., chargeback ARN, return request_id), `priority: int = 0` (higher = more urgent), `metadata: dict[str, Any] = {}`
-  - [ ] `Case(BaseModel)`: `case_id: UUID`, `tenant_id: UUID`, `source: CaseSource`, `source_id: str`, `status: CaseStatus`, `assigned_to: UUID | None`, `priority: int`, `created_at: datetime`, `updated_at: datetime`, `deadline: datetime | None`, `resolution: str | None`, `metadata: dict[str, Any]`
-  - [ ] `CaseUpdate(BaseModel)`: `status: CaseStatus | None`, `assigned_to: UUID | None`, `resolution: str | None`, `metadata: dict[str, Any] | None`
-  - [ ] `AuditLogEntry(BaseModel)`: `entry_id: UUID`, `case_id: UUID`, `actor_id: UUID`, `action: str`, `old_value: dict[str, Any] | None`, `new_value: dict[str, Any] | None`, `timestamp: datetime`, `ip_address: str | None`
+- [x] **1.6 — Case management schemas (`backend/src/core/schemas/case.py`)**
+  - [x] `CaseCreate(BaseModel)`: `tenant_id: UUID`, `source: CaseSource`, `source_id: str` (e.g., chargeback ARN, return request_id), `priority: int = 0` (higher = more urgent), `metadata: dict[str, Any] = {}`
+  - [x] `Case(BaseModel)`: `case_id: UUID`, `tenant_id: UUID`, `source: CaseSource`, `source_id: str`, `status: CaseStatus`, `assigned_to: UUID | None`, `priority: int`, `created_at: datetime`, `updated_at: datetime`, `deadline: datetime | None`, `resolution: str | None`, `metadata: dict[str, Any]`
+  - [x] `CaseUpdate(BaseModel)`: `status: CaseStatus | None`, `assigned_to: UUID | None`, `resolution: str | None`, `metadata: dict[str, Any] | None`
+  - [x] `AuditLogEntry(BaseModel)`: `entry_id: UUID`, `case_id: UUID`, `actor_id: UUID`, `action: str`, `old_value: dict[str, Any] | None`, `new_value: dict[str, Any] | None`, `timestamp: datetime`, `ip_address: str | None`
 
-- [ ] **1.7 — Evaluation schemas (`backend/src/core/schemas/evaluation.py`)**
-  - [ ] `CostWeightedMetrics(BaseModel)`: `precision: float`, `recall: float`, `f1: float`, `auc_roc: float`, `fp_count: int`, `fn_count: int`, `tp_count: int`, `tn_count: int`, `fp_cost_per_unit: Decimal`, `fn_cost_per_unit: Decimal`, `total_fp_cost: Decimal`, `total_fn_cost: Decimal`, `cost_weighted_loss: float` (formula: `(fp_cost_per_unit * fp_count + fn_cost_per_unit * fn_count) / total_samples`)
-  - [ ] `EvaluationReport(BaseModel)`: `report_id: UUID`, `model_name: str`, `model_version: str`, `holdout_set_version: str`, `holdout_set_hash: str` (SHA-256), `metrics: CostWeightedMetrics`, `threshold_used: float`, `champion_model_version: str | None`, `is_improvement: bool | None` (true if cost_weighted_loss is lower than champion), `evaluated_at: datetime`, `report_url: str` (S3 path to full report)
-  - [ ] `DriftReport(BaseModel)`: `feature_name: str`, `psi_value: float`, `kl_divergence: float`, `is_drifted: bool` (PSI > 0.1), `requires_retrain: bool` (PSI > 0.2), `reference_distribution: dict[str, float]`, `current_distribution: dict[str, float]`, `computed_at: datetime`
+- [x] **1.7 — Evaluation schemas (`backend/src/core/schemas/evaluation.py`)**
+  - [x] `CostWeightedMetrics(BaseModel)`: `precision: float`, `recall: float`, `f1: float`, `auc_roc: float`, `fp_count: int`, `fn_count: int`, `tp_count: int`, `tn_count: int`, `fp_cost_per_unit: Decimal`, `fn_cost_per_unit: Decimal`, `total_fp_cost: Decimal`, `total_fn_cost: Decimal`, `cost_weighted_loss: float` (formula: `(fp_cost_per_unit * fp_count + fn_cost_per_unit * fn_count) / total_samples`)
+  - [x] `EvaluationReport(BaseModel)`: `report_id: UUID`, `model_name: str`, `model_version: str`, `holdout_set_version: str`, `holdout_set_hash: str` (SHA-256), `metrics: CostWeightedMetrics`, `threshold_used: float`, `champion_model_version: str | None`, `is_improvement: bool | None` (true if cost_weighted_loss is lower than champion), `evaluated_at: datetime`, `report_url: str` (S3 path to full report)
+  - [x] `DriftReport(BaseModel)`: `feature_name: str`, `psi_value: float`, `kl_divergence: float`, `is_drifted: bool` (PSI > 0.1), `requires_retrain: bool` (PSI > 0.2), `reference_distribution: dict[str, float]`, `current_distribution: dict[str, float]`, `computed_at: datetime`
 
-- [ ] **1.8 — Kafka event schemas (`backend/src/core/events.py`)**
-  - [ ] `TransactionEvent(BaseModel)`: `event_id: str`, `tenant_id: UUID`, `transaction_id: str`, `timestamp: datetime`, `amount: Decimal`, `currency: str`, `merchant_id: str`, `merchant_category_code: str`, `customer_id: str`, `payment_method: str`, `device_fingerprint: str | None`, `ip_address: str | None`, `city: str | None`, `country: str = "IN"`
-  - [ ] `ChargebackEvent(BaseModel)`: wraps `ChargebackNotification` with `event_type: Literal["chargeback.received", "chargeback.evidence_ready", "chargeback.submitted", "chargeback.resolved"]`
-  - [ ] `ReturnEvent(BaseModel)`: wraps `ReturnScoreRequest` + `ReturnScoreResponse` with `event_type: Literal["return.scored", "return.decision_overridden"]`
-  - [ ] `AlertEvent(BaseModel)`: wraps `AnomalyAlert` with `event_type: Literal["alert.fraud_spike", "alert.abuse_ring"]`
-  - [ ] Define `TOPIC_MAP: dict[str, type[BaseModel]]` mapping topic names to event schemas: `{"transactions.raw": TransactionEvent, "chargebacks.incoming": ChargebackEvent, ...}`
+- [x] **1.8 — Kafka event schemas (`backend/src/core/events.py`)**
+  - [x] `TransactionEvent(BaseModel)`: `event_id: str`, `tenant_id: UUID`, `transaction_id: str`, `timestamp: datetime`, `amount: Decimal`, `currency: str`, `merchant_id: str`, `merchant_category_code: str`, `customer_id: str`, `payment_method: str`, `device_fingerprint: str | None`, `ip_address: str | None`, `city: str | None`, `country: str = "IN"`
+  - [x] `ChargebackEvent(BaseModel)`: wraps `ChargebackNotification` with `event_type: Literal["chargeback.received", "chargeback.evidence_ready", "chargeback.submitted", "chargeback.resolved"]`
+  - [x] `ReturnEvent(BaseModel)`: wraps `ReturnScoreRequest` + `ReturnScoreResponse` with `event_type: Literal["return.scored", "return.decision_overridden"]`
+  - [x] `AlertEvent(BaseModel)`: wraps `AnomalyAlert` with `event_type: Literal["alert.fraud_spike", "alert.abuse_ring"]`
+  - [x] Define `TOPIC_MAP: dict[str, type[BaseModel]]` mapping topic names to event schemas: `{"transactions.raw": TransactionEvent, "chargebacks.incoming": ChargebackEvent, ...}`
 
-- [ ] **1.9 — Avro schemas for Kafka topics**
-  - [ ] Create `data/schemas/transaction.avsc`: Avro schema mirroring `TransactionEvent` fields with `logicalType` annotations (e.g., `timestamp-millis` for datetimes, `decimal` with precision/scale for amounts)
-  - [ ] Create `data/schemas/chargeback_notification.avsc`: Avro schema mirroring `ChargebackNotification`
-  - [ ] Create `data/schemas/return_request.avsc`: Avro schema mirroring `ReturnScoreRequest`
+- [x] **1.9 — Avro schemas for Kafka topics**
+  - [x] Create `data/schemas/transaction.avsc`: Avro schema mirroring `TransactionEvent` fields with `logicalType` annotations (e.g., `timestamp-millis` for datetimes, `decimal` with precision/scale for amounts)
+  - [x] Create `data/schemas/chargeback_notification.avsc`: Avro schema mirroring `ChargebackNotification`
+  - [x] Create `data/schemas/return_request.avsc`: Avro schema mirroring `ReturnScoreRequest`
 
 ### Acceptance Criteria
 
