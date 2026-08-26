@@ -366,3 +366,10 @@ ai-risk-manager/
 ## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+## Module 2 Verification
+To manually verify the RLS isolation and repository layer for Module 2, run the verification script:
+```bash
+cd backend
+.\.venv\Scripts\python.exe scripts\verify_module2.py
+```
