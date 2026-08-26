@@ -24,7 +24,9 @@ class Settings(BaseSettings):
     APP_PORT: int = 8000
 
     # Security & JWT
-    JWT_SECRET: SecretStr = SecretStr("super_secret_jwt_signing_key_change_in_production_min_32_chars")
+    JWT_SECRET: SecretStr = SecretStr(
+        "super_secret_jwt_signing_key_change_in_production_min_32_chars"
+    )
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
 

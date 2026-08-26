@@ -11,9 +11,15 @@ class EvaluationRepository:
         self.session = session
 
     async def create_evaluation_run(
-        self, model_name: str, model_version: str, holdout_set_version: str,
-        holdout_set_hash: str, metrics: dict[str, Any], threshold: float,
-        report_url: str, is_champion: bool = False
+        self,
+        model_name: str,
+        model_version: str,
+        holdout_set_version: str,
+        holdout_set_hash: str,
+        metrics: dict[str, Any],
+        threshold: float,
+        report_url: str,
+        is_champion: bool = False,
     ) -> EvaluationRun:
         run = EvaluationRun(
             model_name=model_name,
@@ -23,7 +29,7 @@ class EvaluationRepository:
             metrics=metrics,
             threshold=threshold,
             report_url=report_url,
-            is_champion=is_champion
+            is_champion=is_champion,
         )
         self.session.add(run)
         await self.session.commit()

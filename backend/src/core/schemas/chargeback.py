@@ -12,6 +12,7 @@ from src.core.enums import CardNetwork, CaseStatus, ReasonCode
 
 class ChargebackNotification(BaseModel):
     """Raw chargeback notification received from a card network or acquirer."""
+
     notification_id: str
     network: CardNetwork
     arn: str
@@ -47,6 +48,7 @@ class ChargebackNotification(BaseModel):
 
 class EvidenceItem(BaseModel):
     """A single piece of evidence gathered for a chargeback case."""
+
     evidence_type: Literal[
         "delivery_proof",
         "avs_match",
@@ -54,7 +56,7 @@ class EvidenceItem(BaseModel):
         "customer_communication",
         "order_confirmation",
         "refund_receipt",
-        "ip_geolocation"
+        "ip_geolocation",
     ]
     source: str
     content: str | None = None
@@ -65,6 +67,7 @@ class EvidenceItem(BaseModel):
 
 class EvidenceBundle(BaseModel):
     """Collection of all evidence items associated with a case."""
+
     case_id: UUID
     items: list[EvidenceItem]
     completeness_score: float
@@ -73,6 +76,7 @@ class EvidenceBundle(BaseModel):
 
 class RepresentmentDraft(BaseModel):
     """AI-generated representment package ready for human review."""
+
     case_id: UUID
     narrative: str
     evidence_summary: str
@@ -86,6 +90,7 @@ class RepresentmentDraft(BaseModel):
 
 class ChargebackIngestRequest(BaseModel):
     """Request payload for ingesting a new chargeback webhook."""
+
     raw_payload: dict[str, Any]
     source_ip: str | None = None
     webhook_signature: str | None = None
@@ -93,6 +98,7 @@ class ChargebackIngestRequest(BaseModel):
 
 class ChargebackIngestResponse(BaseModel):
     """Response returned upon successful chargeback ingestion."""
+
     case_id: UUID
     status: CaseStatus
     deadline: datetime

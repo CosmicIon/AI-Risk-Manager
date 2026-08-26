@@ -14,6 +14,7 @@ from src.core.schemas.return_request import ReturnScoreRequest, ReturnScoreRespo
 
 class TransactionEvent(BaseModel):
     """Raw transaction ingestion event flowing from Kafka."""
+
     event_id: str
     tenant_id: UUID
     transaction_id: str
@@ -32,17 +33,19 @@ class TransactionEvent(BaseModel):
 
 class ChargebackEvent(BaseModel):
     """Chargeback lifecycle event."""
+
     event_type: Literal[
         "chargeback.received",
         "chargeback.evidence_ready",
         "chargeback.submitted",
-        "chargeback.resolved"
+        "chargeback.resolved",
     ]
     payload: ChargebackNotification
 
 
 class ReturnEvent(BaseModel):
     """Return scoring lifecycle event."""
+
     event_type: Literal["return.scored", "return.decision_overridden"]
     request: ReturnScoreRequest
     response: ReturnScoreResponse | None = None
@@ -50,6 +53,7 @@ class ReturnEvent(BaseModel):
 
 class AlertEvent(BaseModel):
     """System or fraud alert event."""
+
     event_type: Literal["alert.fraud_spike", "alert.abuse_ring"]
     payload: AnomalyAlert
 

@@ -29,6 +29,7 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
+
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency for obtaining a database session without tenant context.
@@ -37,6 +38,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         yield session
 
+
 async def get_db_session_with_tenant(tenant_id: UUID) -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency for obtaining a database session WITH tenant context enforced.
@@ -44,9 +46,7 @@ async def get_db_session_with_tenant(tenant_id: UUID) -> AsyncGenerator[AsyncSes
     """
     async with AsyncSessionLocal() as session:
         # Enforce RLS at the database engine level
-        await session.execute(
-            text(f"SET app.current_tenant = '{tenant_id}'")
-        )
+        await session.execute(text(f"SET app.current_tenant = '{tenant_id}'"))
         try:
             yield session
         finally:

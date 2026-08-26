@@ -5,6 +5,7 @@ from enum import StrEnum
 
 class CardNetwork(StrEnum):
     """Supported card networks."""
+
     VISA = "VISA"
     MASTERCARD = "MASTERCARD"
     RUPAY = "RUPAY"
@@ -13,6 +14,7 @@ class CardNetwork(StrEnum):
 
 class ReasonCode(StrEnum):
     """Chargeback reason codes mapped to internal constants."""
+
     # Visa codes
     FRAUD_CARD_NOT_PRESENT = "10.4"
     MERCHANDISE_NOT_RECEIVED = "13.1"
@@ -34,11 +36,14 @@ class ReasonCode(StrEnum):
             return cls(str(raw_code).strip())
         except ValueError:
             # Fallback or generic code could be returned here
-            raise ValueError(f"Unknown reason code '{raw_code}' for network {network.value}") from None
+            raise ValueError(
+                f"Unknown reason code '{raw_code}' for network {network.value}"
+            ) from None
 
 
 class RiskTier(StrEnum):
     """Categorized risk levels for transactions and returns."""
+
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
@@ -47,6 +52,7 @@ class RiskTier(StrEnum):
 
 class CaseStatus(StrEnum):
     """Lifecycle states of a risk/chargeback case."""
+
     NEW = "NEW"
     EVIDENCE_GATHERING = "EVIDENCE_GATHERING"
     DRAFT_READY = "DRAFT_READY"
@@ -61,6 +67,7 @@ class CaseStatus(StrEnum):
 
 class CaseSource(StrEnum):
     """Origin of a case creation."""
+
     CHARGEBACK = "CHARGEBACK"
     RETURN = "RETURN"
     FRAUD_ALERT = "FRAUD_ALERT"
@@ -69,6 +76,7 @@ class CaseSource(StrEnum):
 
 class SpikeClassification(StrEnum):
     """Classification of detected velocity anomalies."""
+
     ORGANIC_SPIKE = "ORGANIC_SPIKE"
     ATTACK = "ATTACK"
     UNCERTAIN = "UNCERTAIN"
@@ -76,6 +84,7 @@ class SpikeClassification(StrEnum):
 
 class AlertSeverity(StrEnum):
     """Severity levels for system and fraud alerts."""
+
     INFO = "INFO"
     WARNING = "WARNING"
     CRITICAL = "CRITICAL"
@@ -84,6 +93,7 @@ class AlertSeverity(StrEnum):
 
 class NotificationChannel(StrEnum):
     """Supported channels for alert dispatch."""
+
     EMAIL = "EMAIL"
     SLACK = "SLACK"
     PAGERDUTY = "PAGERDUTY"

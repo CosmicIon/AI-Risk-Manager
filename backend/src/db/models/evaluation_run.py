@@ -22,4 +22,6 @@ class EvaluationRun(Base):
     threshold: Mapped[float] = mapped_column()
     is_champion: Mapped[bool] = mapped_column(default=False)
     report_url: Mapped[str] = mapped_column()
-    evaluated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    evaluated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

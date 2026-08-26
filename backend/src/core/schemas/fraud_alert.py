@@ -11,6 +11,7 @@ from src.core.enums import AlertSeverity, SpikeClassification
 
 class AnomalyAlert(BaseModel):
     """Alert generated when a streaming transaction spike is detected."""
+
     alert_id: UUID
     tenant_id: UUID
     detected_at: datetime
@@ -26,6 +27,7 @@ class AnomalyAlert(BaseModel):
 
 class FraudSpikeDetail(BaseModel):
     """Detailed analytics associated with a fraud spike alert."""
+
     alert_id: UUID
     transaction_ids: list[str]
     geographic_spread: dict[str, int]

@@ -19,8 +19,12 @@ async def db_setup():
         await session.refresh(tenant_b)
 
         # 2. Add cases for each tenant
-        case_a = Case(tenant_id=tenant_a.id, source="test", source_id="1", status="OPEN", metadata_data={})
-        case_b = Case(tenant_id=tenant_b.id, source="test", source_id="2", status="OPEN", metadata_data={})
+        case_a = Case(
+            tenant_id=tenant_a.id, source="test", source_id="1", status="OPEN", metadata_data={}
+        )
+        case_b = Case(
+            tenant_id=tenant_b.id, source="test", source_id="2", status="OPEN", metadata_data={}
+        )
         session.add_all([case_a, case_b])
         await session.commit()
 
@@ -33,6 +37,7 @@ async def db_setup():
         await session.delete(tenant_b)
         await session.commit()
 
+
 @pytest.mark.asyncio
 async def test_rls_tenant_isolation(db_setup):
     tenant_a, tenant_b, case_a, case_b = db_setup
@@ -42,7 +47,9 @@ async def test_rls_tenant_isolation(db_setup):
     session_a = await anext(gen_a)
     try:
         # Using raw SQL to ensure SQLAlchemy isn't doing any hidden filtering
-        result_a = await session_a.execute(text(f"SELECT id FROM risk_cases WHERE id IN ('{case_a.id}', '{case_b.id}')"))
+        result_a = await session_a.execute(
+            text(f"SELECT id FROM risk_cases WHERE id IN ('{case_a.id}', '{case_b.id}')")
+        )
         cases_a = result_a.fetchall()
         # Even though we queried for BOTH IDs, Postgres RLS should only return case_a
 
@@ -50,7 +57,9 @@ async def test_rls_tenant_isolation(db_setup):
         # RLS policies are bypassed UNLESS we use FORCE ROW LEVEL SECURITY on the table.
         # If this fails, we need to alter the table to FORCE ROW LEVEL SECURITY or test with a non-superuser role.
         if len(cases_a) == 2:
-            pytest.skip("RLS bypassed because test DB user is a superuser. Alter table to FORCE ROW LEVEL SECURITY for strict testing.")
+            pytest.skip(
+                "RLS bypassed because test DB user is a superuser. Alter table to FORCE ROW LEVEL SECURITY for strict testing."
+            )
 
         assert len(cases_a) == 1
         assert cases_a[0][0] == case_a.id
@@ -61,7 +70,9 @@ async def test_rls_tenant_isolation(db_setup):
     gen_b = get_db_session_with_tenant(tenant_b.id)
     session_b = await anext(gen_b)
     try:
-        result_b = await session_b.execute(text(f"SELECT id FROM risk_cases WHERE id IN ('{case_a.id}', '{case_b.id}')"))
+        result_b = await session_b.execute(
+            text(f"SELECT id FROM risk_cases WHERE id IN ('{case_a.id}', '{case_b.id}')")
+        )
         cases_b = result_b.fetchall()
         assert len(cases_b) == 1
         assert cases_b[0][0] == case_b.id

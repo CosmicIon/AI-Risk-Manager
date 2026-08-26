@@ -15,8 +15,12 @@ class ChargebackRecord(Base):
     __tablename__ = "risk_chargebacks"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    case_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("risk_cases.id", ondelete="CASCADE"), index=True)
-    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("risk_tenants.id", ondelete="CASCADE"), index=True)
+    case_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("risk_cases.id", ondelete="CASCADE"), index=True
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("risk_tenants.id", ondelete="CASCADE"), index=True
+    )
     network: Mapped[str] = mapped_column()
     arn: Mapped[str] = mapped_column()
     reason_code: Mapped[str] = mapped_column()
@@ -30,6 +34,4 @@ class ChargebackRecord(Base):
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    __table_args__ = (
-        Index("idx_tenant_arn", "tenant_id", "arn", unique=True),
-    )
+    __table_args__ = (Index("idx_tenant_arn", "tenant_id", "arn", unique=True),)

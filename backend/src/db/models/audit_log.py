@@ -15,8 +15,12 @@ class AuditLog(Base):
     __tablename__ = "risk_audit_logs"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("risk_tenants.id", ondelete="CASCADE"), index=True)
-    case_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("risk_cases.id", ondelete="SET NULL"), nullable=True, index=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("risk_tenants.id", ondelete="CASCADE"), index=True
+    )
+    case_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("risk_cases.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     actor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("risk_users.id", ondelete="CASCADE"))
     action: Mapped[str] = mapped_column()
     old_value: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)

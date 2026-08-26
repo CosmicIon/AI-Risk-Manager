@@ -12,6 +12,7 @@ from src.core.enums import RiskTier
 
 class ReturnScoreRequest(BaseModel):
     """Request payload to score the risk of a new return initiation."""
+
     request_id: str
     tenant_id: UUID
     customer_id: str
@@ -36,6 +37,7 @@ class ReturnScoreRequest(BaseModel):
 
 class FeatureVector(BaseModel):
     """Machine learning feature vector retrieved from the feature store."""
+
     customer_id: str
     features: dict[str, float]
     computed_at: datetime
@@ -45,6 +47,7 @@ class FeatureVector(BaseModel):
 
 class ReturnScoreResponse(BaseModel):
     """Risk score and policy decision for a return request."""
+
     request_id: str
     risk_score: int = Field(ge=0, le=100)
     risk_tier: RiskTier
@@ -64,6 +67,7 @@ class ReturnScoreResponse(BaseModel):
 
 class PolicyConfig(BaseModel):
     """Merchant-specific return policy configuration."""
+
     tenant_id: UUID
     low_threshold: int = 25
     medium_threshold: int = 50

@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 class CostWeightedMetrics(BaseModel):
     """Metrics incorporating the ₹-denominated cost of False Positives/Negatives."""
+
     precision: float
     recall: float
     f1: float
@@ -39,6 +40,7 @@ class CostWeightedMetrics(BaseModel):
 
 class EvaluationReport(BaseModel):
     """Result of an ML model evaluation run against a holdout dataset."""
+
     report_id: UUID
     model_name: str
     model_version: str
@@ -54,6 +56,7 @@ class EvaluationReport(BaseModel):
 
 class DriftReport(BaseModel):
     """Data and Concept Drift monitoring report."""
+
     feature_name: str
     psi_value: float
     kl_divergence: float

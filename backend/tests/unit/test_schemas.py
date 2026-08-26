@@ -16,6 +16,7 @@ from src.core.schemas.return_request import ReturnScoreRequest, ReturnScoreRespo
 
 # --- Chargeback Schemas ---
 
+
 def test_chargeback_deadline_visa():
     """Visa chargebacks should auto-compute a 30-day deadline."""
     received = datetime.now(UTC)
@@ -30,11 +31,12 @@ def test_chargeback_deadline_visa():
         transaction_amount=Decimal("1500.00"),
         merchant_id="merch-1",
         tenant_id=uuid4(),
-        received_at=received
+        received_at=received,
     )
     assert cb.deadline is not None
     assert cb.deadline == received + timedelta(days=30)
     assert cb.idempotency_key == "VISA:1234567890"
+
 
 def test_chargeback_deadline_mastercard():
     """Mastercard chargebacks should auto-compute a 45-day deadline."""
@@ -50,7 +52,7 @@ def test_chargeback_deadline_mastercard():
         transaction_amount=Decimal("2000.00"),
         merchant_id="merch-1",
         tenant_id=uuid4(),
-        received_at=received
+        received_at=received,
     )
     assert cb.deadline is not None
     assert cb.deadline == received + timedelta(days=45)
@@ -58,6 +60,7 @@ def test_chargeback_deadline_mastercard():
 
 
 # --- Return Score Schemas ---
+
 
 def test_return_score_request_valid():
     """Valid return score request."""
@@ -71,9 +74,10 @@ def test_return_score_request_valid():
         return_reason="defective",
         order_date=datetime.now(UTC) - timedelta(days=2),
         return_initiated_at=datetime.now(UTC),
-        product_category="electronics"
+        product_category="electronics",
     )
     assert req.return_amount == Decimal("2000.00")
+
 
 def test_return_score_request_invalid_amount():
     """Return amount > order amount should raise ValidationError."""
@@ -88,9 +92,10 @@ def test_return_score_request_invalid_amount():
             return_reason="defective",
             order_date=datetime.now(UTC),
             return_initiated_at=datetime.now(UTC),
-            product_category="electronics"
+            product_category="electronics",
         )
     assert "return_amount cannot exceed order_amount" in str(exc_info.value)
+
 
 def test_return_score_response_clamps_score():
     """Risk score should be clamped between 0 and 100."""
@@ -103,7 +108,7 @@ def test_return_score_response_clamps_score():
         top_features=[],
         model_version="v1",
         inference_latency_ms=4.5,
-        scored_at=datetime.now(UTC)
+        scored_at=datetime.now(UTC),
     )
     assert resp.risk_score == 100
 
@@ -116,12 +121,13 @@ def test_return_score_response_clamps_score():
         top_features=[],
         model_version="v1",
         inference_latency_ms=2.1,
-        scored_at=datetime.now(UTC)
+        scored_at=datetime.now(UTC),
     )
     assert resp2.risk_score == 0
 
 
 # --- Evaluation Schemas ---
+
 
 def test_cost_weighted_loss_computation():
     """Cost-weighted loss should be computed correctly based on FP/FN counts and costs."""
@@ -134,8 +140,8 @@ def test_cost_weighted_loss_computation():
         tn_count=800,
         fp_count=10,
         fn_count=100,
-        fp_cost_per_unit=Decimal("500.00"), # E.g., blocking a good customer
-        fn_cost_per_unit=Decimal("2000.00") # E.g., missing a fraudulent return
+        fp_cost_per_unit=Decimal("500.00"),  # E.g., blocking a good customer
+        fn_cost_per_unit=Decimal("2000.00"),  # E.g., missing a fraudulent return
     )
 
     assert metrics.total_fp_cost == Decimal("5000.00")
@@ -148,6 +154,7 @@ def test_cost_weighted_loss_computation():
 
 # --- Enums ---
 
+
 def test_enum_json_serialization():
     """Enums should serialize as their string values."""
     data = {"network": CardNetwork.VISA}
@@ -157,15 +164,17 @@ def test_enum_json_serialization():
 
 # --- Avro Schemas Parsing ---
 
+
 def test_avro_schemas_parseable():
     """Ensure Avro schema definitions in data/schemas/ are parseable by fastavro."""
     schemas_to_test = [
         "data/schemas/transaction.avsc",
         "data/schemas/chargeback_notification.avsc",
-        "data/schemas/return_request.avsc"
+        "data/schemas/return_request.avsc",
     ]
 
     import os
+
     # __file__ is backend/tests/unit/test_schemas.py
     # Up 3 levels to reach the AI-Risk-Manager root
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))

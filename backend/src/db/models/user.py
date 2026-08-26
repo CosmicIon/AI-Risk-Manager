@@ -13,7 +13,9 @@ class User(Base):
     __tablename__ = "risk_users"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("risk_tenants.id", ondelete="CASCADE"), index=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("risk_tenants.id", ondelete="CASCADE"), index=True
+    )
     email: Mapped[str] = mapped_column(unique=True, index=True)
     password_hash: Mapped[str] = mapped_column()
     role: Mapped[str] = mapped_column()  # admin, analyst, ml_engineer, compliance

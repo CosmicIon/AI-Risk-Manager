@@ -14,9 +14,15 @@ class ChargebackRepository:
         self.session = session
 
     async def create_chargeback(
-        self, case_id: uuid.UUID, tenant_id: uuid.UUID, network: str, arn: str,
-        reason_code: str, transaction_id: str, transaction_date: datetime,
-        transaction_amount: Decimal
+        self,
+        case_id: uuid.UUID,
+        tenant_id: uuid.UUID,
+        network: str,
+        arn: str,
+        reason_code: str,
+        transaction_id: str,
+        transaction_date: datetime,
+        transaction_amount: Decimal,
     ) -> ChargebackRecord:
         try:
             record = ChargebackRecord(
@@ -27,7 +33,7 @@ class ChargebackRepository:
                 reason_code=reason_code,
                 transaction_id=transaction_id,
                 transaction_date=transaction_date,
-                transaction_amount=transaction_amount
+                transaction_amount=transaction_amount,
             )
             self.session.add(record)
             await self.session.commit()
@@ -37,7 +43,9 @@ class ChargebackRepository:
             await self.session.rollback()
             raise ValueError(f"Chargeback with ARN {arn} already exists for this tenant.") from e
 
-    async def update_evidence_bundle(self, chargeback_id: uuid.UUID, bundle: dict) -> ChargebackRecord | None:
+    async def update_evidence_bundle(
+        self, chargeback_id: uuid.UUID, bundle: dict
+    ) -> ChargebackRecord | None:
         stmt = select(ChargebackRecord).where(ChargebackRecord.id == chargeback_id)
         result = await self.session.execute(stmt)
         record = result.scalar_one_or_none()
@@ -52,7 +60,9 @@ class ChargebackRepository:
 
     async def get_win_rate_stats(self) -> dict:
         # Implicitly filtered by tenant via RLS
-        stmt_total = select(func.count(ChargebackRecord.id)).where(ChargebackRecord.outcome.isnot(None))
+        stmt_total = select(func.count(ChargebackRecord.id)).where(
+            ChargebackRecord.outcome.isnot(None)
+        )
         stmt_won = select(func.count(ChargebackRecord.id)).where(ChargebackRecord.outcome == "WON")
 
         total = await self.session.scalar(stmt_total) or 0
@@ -60,8 +70,4 @@ class ChargebackRepository:
 
         rate = (won / total * 100) if total > 0 else 0.0
 
-        return {
-            "total_resolved": total,
-            "total_won": won,
-            "win_rate_percentage": round(rate, 2)
-        }
+        return {"total_resolved": total, "total_won": won, "win_rate_percentage": round(rate, 2)}

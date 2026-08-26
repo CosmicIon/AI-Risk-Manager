@@ -14,8 +14,14 @@ class CaseRepository:
         self.session = session
 
     async def create_case(
-        self, tenant_id: uuid.UUID, source: str, source_id: str,
-        status: str, metadata_data: dict, priority: int = 0, deadline: datetime | None = None
+        self,
+        tenant_id: uuid.UUID,
+        source: str,
+        source_id: str,
+        status: str,
+        metadata_data: dict,
+        priority: int = 0,
+        deadline: datetime | None = None,
     ) -> Case:
         try:
             new_case = Case(
@@ -25,7 +31,7 @@ class CaseRepository:
                 status=status,
                 metadata_data=metadata_data,
                 priority=priority,
-                deadline=deadline
+                deadline=deadline,
             )
             self.session.add(new_case)
             await self.session.commit()
@@ -33,7 +39,9 @@ class CaseRepository:
             return new_case
         except IntegrityError as e:
             await self.session.rollback()
-            raise ValueError(f"Case with source {source} and source_id {source_id} already exists.") from e
+            raise ValueError(
+                f"Case with source {source} and source_id {source_id} already exists."
+            ) from e
 
     async def update_case_status(
         self, case_id: uuid.UUID, new_status: str, actor_id: uuid.UUID, tenant_id: uuid.UUID
@@ -55,7 +63,7 @@ class CaseRepository:
             actor_id=actor_id,
             action="STATUS_CHANGE",
             old_value={"status": old_status},
-            new_value={"status": new_status}
+            new_value={"status": new_status},
         )
         self.session.add(audit)
 
@@ -68,8 +76,7 @@ class CaseRepository:
         # when using a session from get_db_session_with_tenant()
         now = datetime.now(UTC)
         stmt = select(Case).where(
-            Case.status.notin_(["WON", "LOST", "EXPIRED", "ACCEPTED_LOSS"]),
-            Case.deadline < now
+            Case.status.notin_(["WON", "LOST", "EXPIRED", "ACCEPTED_LOSS"]), Case.deadline < now
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
