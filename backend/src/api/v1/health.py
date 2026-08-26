@@ -1,7 +1,7 @@
 """Health and readiness probe router."""
 
 import logging
-from typing import Any
+
 from fastapi import APIRouter, status
 from pydantic import BaseModel
 
@@ -43,7 +43,7 @@ async def readiness_check() -> ReadinessResponse:
         "qdrant": "ok",
         "minio": "ok",
     }
-    
+
     # Non-blocking probe checks with fallback report
     # Individual driver checks will be active once clients are instantiated in Module 3
     all_ok = all(v == "ok" for v in checks.values())

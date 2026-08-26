@@ -1,10 +1,11 @@
-import uuid
 import pytest
 import pytest_asyncio
 from sqlalchemy import text
-from src.db.models.tenant import Tenant
+
 from src.db.models.case import Case
+from src.db.models.tenant import Tenant
 from src.db.session import AsyncSessionLocal, get_db_session_with_tenant
+
 
 @pytest_asyncio.fixture(scope="module")
 async def db_setup():
@@ -16,15 +17,15 @@ async def db_setup():
         await session.commit()
         await session.refresh(tenant_a)
         await session.refresh(tenant_b)
-        
+
         # 2. Add cases for each tenant
         case_a = Case(tenant_id=tenant_a.id, source="test", source_id="1", status="OPEN", metadata_data={})
         case_b = Case(tenant_id=tenant_b.id, source="test", source_id="2", status="OPEN", metadata_data={})
         session.add_all([case_a, case_b])
         await session.commit()
-        
+
         yield tenant_a, tenant_b, case_a, case_b
-        
+
         # Cleanup
         await session.delete(case_a)
         await session.delete(case_b)
@@ -35,7 +36,7 @@ async def db_setup():
 @pytest.mark.asyncio
 async def test_rls_tenant_isolation(db_setup):
     tenant_a, tenant_b, case_a, case_b = db_setup
-    
+
     # 3. Verify Tenant A can only see Case A
     gen_a = get_db_session_with_tenant(tenant_a.id)
     session_a = await anext(gen_a)
@@ -44,13 +45,13 @@ async def test_rls_tenant_isolation(db_setup):
         result_a = await session_a.execute(text(f"SELECT id FROM risk_cases WHERE id IN ('{case_a.id}', '{case_b.id}')"))
         cases_a = result_a.fetchall()
         # Even though we queried for BOTH IDs, Postgres RLS should only return case_a
-        
-        # NOTE: If we are running tests as the Postgres superuser (which we are by default), 
+
+        # NOTE: If we are running tests as the Postgres superuser (which we are by default),
         # RLS policies are bypassed UNLESS we use FORCE ROW LEVEL SECURITY on the table.
         # If this fails, we need to alter the table to FORCE ROW LEVEL SECURITY or test with a non-superuser role.
         if len(cases_a) == 2:
             pytest.skip("RLS bypassed because test DB user is a superuser. Alter table to FORCE ROW LEVEL SECURITY for strict testing.")
-        
+
         assert len(cases_a) == 1
         assert cases_a[0][0] == case_a.id
     finally:

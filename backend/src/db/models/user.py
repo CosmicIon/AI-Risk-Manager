@@ -1,11 +1,13 @@
 import uuid
 from datetime import datetime
+
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.types import DateTime
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
+from sqlalchemy.types import DateTime
 
 from src.db.models.base import Base
+
 
 class User(Base):
     __tablename__ = "risk_users"

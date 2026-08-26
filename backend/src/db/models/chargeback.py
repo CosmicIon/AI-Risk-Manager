@@ -2,13 +2,14 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
+
 from sqlalchemy import ForeignKey, Index
-from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import DateTime, Numeric
-from sqlalchemy.sql import func
 
 from src.db.models.base import Base
+
 
 class ChargebackRecord(Base):
     __tablename__ = "risk_chargebacks"

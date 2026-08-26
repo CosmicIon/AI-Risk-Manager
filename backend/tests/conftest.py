@@ -2,10 +2,11 @@
 
 import os
 import sys
+from collections.abc import AsyncGenerator
 from pathlib import Path
+
 import pytest
-from httpx import AsyncClient, ASGITransport
-from typing import AsyncGenerator
+from httpx import ASGITransport, AsyncClient
 
 # Ensure backend root is in sys.path
 backend_dir = Path(__file__).resolve().parent.parent

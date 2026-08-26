@@ -19,12 +19,12 @@ class ReasonCode(str, Enum):
     NOT_AS_DESCRIBED = "13.3"
     DUPLICATE_PROCESSING = "12.2"
     CANCELLED_RECURRING = "13.7"
-    
-    # Mastercard codes (mapping equivalent internal representation if needed, 
+
+    # Mastercard codes (mapping equivalent internal representation if needed,
     # but keeping raw values for direct network compliance)
     UNAUTHORIZED_TRANSACTION = "4837"
     CARDHOLDER_DISPUTE = "4853"
-    
+
     @classmethod
     def from_network_code(cls, network: CardNetwork, raw_code: str) -> "ReasonCode":
         """Map raw network reason codes to our internal ReasonCode enum."""

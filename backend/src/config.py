@@ -1,7 +1,8 @@
 """Application configuration settings based on Pydantic Settings."""
 
 from typing import Literal
-from pydantic import Field, SecretStr
+
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

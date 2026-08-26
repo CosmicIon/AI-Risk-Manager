@@ -1,8 +1,10 @@
-from typing import Optional, Any
+from typing import Any
+
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc
 
 from src.db.models.evaluation_run import EvaluationRun
+
 
 class EvaluationRepository:
     def __init__(self, session: AsyncSession):
@@ -28,7 +30,7 @@ class EvaluationRepository:
         await self.session.refresh(run)
         return run
 
-    async def get_champion_model(self, model_name: str) -> Optional[EvaluationRun]:
+    async def get_champion_model(self, model_name: str) -> EvaluationRun | None:
         stmt = (
             select(EvaluationRun)
             .where(EvaluationRun.model_name == model_name, EvaluationRun.is_champion == True)
@@ -38,7 +40,7 @@ class EvaluationRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def promote_to_champion(self, run_id: str, model_name: str) -> Optional[EvaluationRun]:
+    async def promote_to_champion(self, run_id: str, model_name: str) -> EvaluationRun | None:
         # Demote current champion
         current_champ = await self.get_champion_model(model_name)
         if current_champ:
@@ -48,13 +50,13 @@ class EvaluationRepository:
         stmt = select(EvaluationRun).where(EvaluationRun.id == run_id)
         result = await self.session.execute(stmt)
         new_champ = result.scalar_one_or_none()
-        
+
         if new_champ:
             new_champ.is_champion = True
-            
+
         await self.session.commit()
-        
+
         if new_champ:
             await self.session.refresh(new_champ)
-            
+
         return new_champ

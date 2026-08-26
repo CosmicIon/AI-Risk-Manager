@@ -19,7 +19,7 @@ class CostWeightedMetrics(BaseModel):
     tn_count: int
     fp_cost_per_unit: Decimal
     fn_cost_per_unit: Decimal
-    
+
     @property
     def total_fp_cost(self) -> Decimal:
         return self.fp_cost_per_unit * self.fp_count

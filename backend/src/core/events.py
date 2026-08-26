@@ -8,8 +8,8 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from src.core.schemas.chargeback import ChargebackNotification
-from src.core.schemas.return_request import ReturnScoreRequest, ReturnScoreResponse
 from src.core.schemas.fraud_alert import AnomalyAlert
+from src.core.schemas.return_request import ReturnScoreRequest, ReturnScoreResponse
 
 
 class TransactionEvent(BaseModel):
@@ -33,9 +33,9 @@ class TransactionEvent(BaseModel):
 class ChargebackEvent(BaseModel):
     """Chargeback lifecycle event."""
     event_type: Literal[
-        "chargeback.received", 
-        "chargeback.evidence_ready", 
-        "chargeback.submitted", 
+        "chargeback.received",
+        "chargeback.evidence_ready",
+        "chargeback.submitted",
         "chargeback.resolved"
     ]
     payload: ChargebackNotification

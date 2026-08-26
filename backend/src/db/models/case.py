@@ -1,14 +1,16 @@
 import uuid
 from datetime import datetime
 from typing import Any
+
 from sqlalchemy import ForeignKey, Index, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.types import DateTime
-from sqlalchemy.sql import func
 from sqlalchemy import text as sa_text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.sql import func
+from sqlalchemy.types import DateTime
 
 from src.db.models.base import Base
+
 
 class Case(Base):
     __tablename__ = "risk_cases"

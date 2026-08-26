@@ -1,12 +1,14 @@
 import uuid
 from datetime import datetime
 from typing import Any
-from sqlalchemy.orm import Mapped, mapped_column
+
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.types import DateTime
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
+from sqlalchemy.types import DateTime
 
 from src.db.models.base import Base
+
 
 class EvaluationRun(Base):
     __tablename__ = "risk_evaluations"

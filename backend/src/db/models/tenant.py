@@ -1,12 +1,14 @@
 import uuid
-from decimal import Decimal
 from datetime import datetime
-from sqlalchemy.orm import Mapped, mapped_column
+from decimal import Decimal
+
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.types import Numeric, DateTime
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
+from sqlalchemy.types import DateTime, Numeric
 
 from src.db.models.base import Base
+
 
 class Tenant(Base):
     __tablename__ = "risk_tenants"

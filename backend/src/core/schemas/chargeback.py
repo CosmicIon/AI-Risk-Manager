@@ -48,12 +48,12 @@ class ChargebackNotification(BaseModel):
 class EvidenceItem(BaseModel):
     """A single piece of evidence gathered for a chargeback case."""
     evidence_type: Literal[
-        "delivery_proof", 
-        "avs_match", 
-        "3ds_log", 
-        "customer_communication", 
-        "order_confirmation", 
-        "refund_receipt", 
+        "delivery_proof",
+        "avs_match",
+        "3ds_log",
+        "customer_communication",
+        "order_confirmation",
+        "refund_receipt",
         "ip_geolocation"
     ]
     source: str

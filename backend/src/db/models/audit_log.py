@@ -1,13 +1,15 @@
 import uuid
 from datetime import datetime
 from typing import Any
-from sqlalchemy import ForeignKey, Index
-from sqlalchemy.orm import Mapped, mapped_column
+
+from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.types import DateTime
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
+from sqlalchemy.types import DateTime
 
 from src.db.models.base import Base
+
 
 class AuditLog(Base):
     __tablename__ = "risk_audit_logs"
@@ -22,5 +24,5 @@ class AuditLog(Base):
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     ip_address: Mapped[str | None] = mapped_column(nullable=True)
 
-    # Note: For production with high volume, this table is partitioned by month on `timestamp` 
+    # Note: For production with high volume, this table is partitioned by month on `timestamp`
     # to meet retention compliance requirements. We will add partitioning setup in Alembic.
