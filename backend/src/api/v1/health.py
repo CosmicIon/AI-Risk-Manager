@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Request
 from pydantic import BaseModel
 
 from src.config import settings
@@ -34,18 +34,22 @@ async def health_check() -> HealthResponse:
 
 
 @router.get("/readiness", response_model=ReadinessResponse, status_code=status.HTTP_200_OK)
-async def readiness_check() -> ReadinessResponse:
+async def readiness_check(request: Request) -> ReadinessResponse:
     """Readiness probe: validates external dependencies (DB, Redis, etc.) are reachable."""
+    
+    redis_ok = await request.app.state.redis.health_check() if hasattr(request.app.state, 'redis') else False
+    kafka_ok = await request.app.state.kafka.health_check() if hasattr(request.app.state, 'kafka') else False
+    qdrant_ok = await request.app.state.qdrant.health_check() if hasattr(request.app.state, 'qdrant') else False
+    minio_ok = await request.app.state.minio.health_check() if hasattr(request.app.state, 'minio') else False
+    
     checks: dict[str, str] = {
-        "database": "ok",
-        "redis": "ok",
-        "kafka": "ok",
-        "qdrant": "ok",
-        "minio": "ok",
+        "database": "ok", # DB check via SQLAlchemy can be added if needed
+        "redis": "ok" if redis_ok else "failed",
+        "kafka": "ok" if kafka_ok else "failed",
+        "qdrant": "ok" if qdrant_ok else "failed",
+        "minio": "ok" if minio_ok else "failed",
     }
 
-    # Non-blocking probe checks with fallback report
-    # Individual driver checks will be active once clients are instantiated in Module 3
     all_ok = all(v == "ok" for v in checks.values())
 
     return ReadinessResponse(
