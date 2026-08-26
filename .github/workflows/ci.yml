@@ -1,0 +1,104 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-backend:
+    name: Lint & Type Check (Backend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv and dependencies
+        run: |
+          pip install uv
+          cd backend && uv sync
+
+      - name: Run Ruff Linter & Formatter Check
+        run: |
+          cd backend
+          uv run ruff check src/ tests/
+          uv run ruff format --check src/ tests/
+
+      - name: Run Mypy Type Checker
+        run: |
+          cd backend
+          uv run mypy src/
+
+  test-backend:
+    name: Backend Unit & Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: riskmanager
+          POSTGRES_USER: riskmanager
+          POSTGRES_PASSWORD: dev_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv and dependencies
+        run: |
+          pip install uv
+          cd backend && uv sync
+
+      - name: Run Test Suite with Coverage
+        run: |
+          cd backend
+          uv run pytest tests/unit/ -v --cov=src --cov-report=xml
+
+  build-dashboard:
+    name: Build Next.js Dashboard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: dashboard/package.json
+
+      - name: Install Dependencies
+        run: |
+          cd dashboard
+          npm ci
+
+      - name: Build Next.js
+        run: |
+          cd dashboard
+          npm run build

@@ -1,0 +1,10 @@
+[project]
+name = "ai-risk-manager-workspace"
+version = "0.1.0"
+description = "AI Risk Manager — Detection, Scoring, and Chargeback Evidence Automation for BFSI"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv.workspace]
+members = ["backend"]

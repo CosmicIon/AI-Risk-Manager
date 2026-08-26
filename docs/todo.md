@@ -32,18 +32,18 @@
 
 ### Implementation Checklist
 
-- [ ] **0.1 — Root workspace configuration**
-  - [ ] Create root `pyproject.toml` with workspace definition pointing to `backend/`
-  - [ ] Create `backend/pyproject.toml` with dependencies: `fastapi>=0.115`, `uvicorn[standard]`, `pydantic>=2.0`, `pydantic-settings`, `sqlalchemy[asyncio]>=2.0`, `asyncpg`, `alembic`, `redis[hiredis]>=5.0`, `aiokafka`, `celery[redis]>=5.3`, `onnxruntime>=1.17`, `lightgbm>=4.0`, `langgraph>=0.2`, `langchain-google-genai`, `qdrant-client>=1.9`, `shap>=0.45`, `scikit-learn>=1.4`, `great-expectations>=0.18`, `opentelemetry-api`, `opentelemetry-sdk`, `opentelemetry-instrumentation-fastapi`, `langfuse>=2.0`, `prometheus-client`, `httpx`, `python-multipart`, `python-jose[cryptography]`, `passlib[bcrypt]`, `boto3` (for MinIO/S3)
-  - [ ] Add dev dependencies: `pytest>=8.0`, `pytest-asyncio>=0.23`, `pytest-cov`, `httpx` (for `TestClient`), `factory-boy`, `faker`, `ruff`, `mypy`, `testcontainers[postgres,redis,kafka]`
+- [x] **0.1 — Root workspace configuration**
+  - [x] Create root `pyproject.toml` with workspace definition pointing to `backend/`
+  - [x] Create `backend/pyproject.toml` with dependencies: `fastapi>=0.115`, `uvicorn[standard]`, `pydantic>=2.0`, `pydantic-settings`, `sqlalchemy[asyncio]>=2.0`, `asyncpg`, `alembic`, `redis[hiredis]>=5.0`, `aiokafka`, `celery[redis]>=5.3`, `onnxruntime>=1.17`, `lightgbm>=4.0`, `langgraph>=0.2`, `langchain-google-genai`, `qdrant-client>=1.9`, `shap>=0.45`, `scikit-learn>=1.4`, `great-expectations>=0.18`, `opentelemetry-api`, `opentelemetry-sdk`, `opentelemetry-instrumentation-fastapi`, `langfuse>=2.0`, `prometheus-client`, `httpx`, `python-multipart`, `python-jose[cryptography]`, `passlib[bcrypt]`, `boto3` (for MinIO/S3)
+  - [x] Add dev dependencies: `pytest>=8.0`, `pytest-asyncio>=0.23`, `pytest-cov`, `httpx` (for `TestClient`), `factory-boy`, `faker`, `ruff`, `mypy`, `testcontainers[postgres,redis,kafka]`
 
-- [ ] **0.2 — FastAPI application skeleton**
-  - [ ] Create `backend/src/main.py`: instantiate `FastAPI(title="AI Risk Manager", version="0.1.0")`, include CORS middleware, mount health router
-  - [ ] Create `backend/src/config.py`: define `class Settings(BaseSettings)` with fields: `DATABASE_URL: str`, `REDIS_URL: str`, `KAFKA_BOOTSTRAP_SERVERS: str`, `QDRANT_URL: str`, `NEO4J_URI: str`, `NEO4J_USER: str`, `NEO4J_PASSWORD: SecretStr`, `GEMINI_API_KEY: SecretStr`, `LANGFUSE_PUBLIC_KEY: str`, `LANGFUSE_SECRET_KEY: SecretStr`, `MINIO_ENDPOINT: str`, `MINIO_ACCESS_KEY: str`, `MINIO_SECRET_KEY: SecretStr`, `JWT_SECRET: SecretStr`, `JWT_ALGORITHM: str = "HS256"`, `ENVIRONMENT: Literal["dev", "staging", "prod"] = "dev"`. Use `model_config = SettingsConfigDict(env_file=".env")`
-  - [ ] Create `backend/src/api/v1/health.py`: implement `GET /health` (returns `{"status": "ok"}`), `GET /readiness` (checks DB + Redis + Kafka connectivity, returns per-dependency status)
+- [x] **0.2 — FastAPI application skeleton**
+  - [x] Create `backend/src/main.py`: instantiate `FastAPI(title="AI Risk Manager", version="0.1.0")`, include CORS middleware, mount health router
+  - [x] Create `backend/src/config.py`: define `class Settings(BaseSettings)` with fields: `DATABASE_URL: str`, `REDIS_URL: str`, `KAFKA_BOOTSTRAP_SERVERS: str`, `QDRANT_URL: str`, `NEO4J_URI: str`, `NEO4J_USER: str`, `NEO4J_PASSWORD: SecretStr`, `GEMINI_API_KEY: SecretStr`, `LANGFUSE_PUBLIC_KEY: str`, `LANGFUSE_SECRET_KEY: SecretStr`, `MINIO_ENDPOINT: str`, `MINIO_ACCESS_KEY: str`, `MINIO_SECRET_KEY: SecretStr`, `JWT_SECRET: SecretStr`, `JWT_ALGORITHM: str = "HS256"`, `ENVIRONMENT: Literal["dev", "staging", "prod"] = "dev"`. Use `model_config = SettingsConfigDict(env_file=".env")`
+  - [x] Create `backend/src/api/v1/health.py`: implement `GET /health` (returns `{"status": "ok"}`), `GET /readiness` (checks DB + Redis + Kafka connectivity, returns per-dependency status)
 
-- [ ] **0.3 — Docker Compose local stack**
-  - [ ] Create `infra/docker/docker-compose.yml` with services:
+- [x] **0.3 — Docker Compose local stack**
+  - [x] Create `infra/docker/docker-compose.yml` with services:
     - `postgres`: image `postgres:16-alpine`, port `5432`, volume `pgdata`, env `POSTGRES_DB=riskmanager`, `POSTGRES_USER=riskmanager`, `POSTGRES_PASSWORD=dev_password`, healthcheck `pg_isready`
     - `redis`: image `redis:7-alpine`, port `6379`, healthcheck `redis-cli ping`
     - `kafka`: image `bitnami/kafka:3.7` (KRaft mode), ports `9092:9092`, env `KAFKA_CFG_NODE_ID=0`, `KAFKA_CFG_PROCESS_ROLES=broker,controller`, `KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093`, `KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093`, `KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true`
@@ -51,34 +51,33 @@
     - `neo4j`: image `neo4j:5-community`, ports `7474:7474`, `7687:7687`, env `NEO4J_AUTH=neo4j/dev_password`, `NEO4J_PLUGINS=["graph-data-science"]`
     - `minio`: image `minio/minio:latest`, command `server /data --console-address ":9001"`, ports `9000:9000`, `9001:9001`, env `MINIO_ROOT_USER=minioadmin`, `MINIO_ROOT_PASSWORD=minioadmin`
     - `langfuse`: image `langfuse/langfuse:2`, port `3001`, depends_on `postgres`, env pointing to the shared postgres
-  - [ ] Create `infra/docker/Dockerfile.backend`: multi-stage build — `python:3.12-slim` base, install `uv`, copy `pyproject.toml`, `uv sync --frozen`, copy `src/`, `CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]`
-  - [ ] Create `infra/docker/Dockerfile.dashboard`: multi-stage build — `node:22-alpine`, `npm ci`, `npm run build`, `CMD ["npm", "start"]`
-  - [ ] Create `infra/docker/Dockerfile.streaming`: based on `Dockerfile.backend`, `CMD ["faust", "-A", "src.streaming.app", "worker", "-l", "info"]`
+  - [x] Create `infra/docker/Dockerfile.backend`: multi-stage build — `python:3.12-slim` base, install `uv`, copy `pyproject.toml`, `uv sync --frozen`, copy `src/`, `CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]`
+  - [x] Create `infra/docker/Dockerfile.dashboard`: multi-stage build — `node:22-alpine`, `npm ci`, `npm run build`, `CMD ["npm", "start"]`
+  - [x] Create `infra/docker/Dockerfile.streaming`: based on `Dockerfile.backend`, `CMD ["faust", "-A", "src.streaming.app", "worker", "-l", "info"]`
 
-- [ ] **0.4 — Environment template and gitignore**
-  - [ ] Create `.env.example` with all `Settings` fields documented (placeholder values)
-  - [ ] Create `.gitignore`: Python (`__pycache__`, `*.pyc`, `.venv`, `dist/`), Node (`node_modules/`, `.next/`), IDE (`.vscode/`, `.idea/`), data (`data/holdout/`, `models/*/v*/`), secrets (`.env`), Docker (`pgdata`, `qdrant_data`)
+- [x] **0.4 — Environment template and gitignore**
+  - [x] Create `.env.example` with all `Settings` fields documented (placeholder values)
+  - [x] Create `.gitignore`: Python (`__pycache__`, `*.pyc`, `.venv`, `dist/`), Node (`node_modules/`, `.next/`), IDE (`.vscode/`, `.idea/`), data (`data/holdout/`, `models/*/v*/`), secrets (`.env`), Docker (`pgdata`, `qdrant_data`)
 
-- [ ] **0.5 — Makefile with development commands**
-  - [ ] `make up`: `docker compose -f infra/docker/docker-compose.yml up -d`
-  - [ ] `make down`: `docker compose -f infra/docker/docker-compose.yml down -v`
-  - [ ] `make backend-dev`: `cd backend && uvicorn src.main:app --reload --port 8000`
-  - [ ] `make dashboard-dev`: `cd dashboard && npm run dev`
-  - [ ] `make test`: `cd backend && pytest tests/ -v --cov=src`
-  - [ ] `make lint`: `cd backend && ruff check src/ tests/ && mypy src/`
-  - [ ] `make migrate`: `cd backend && alembic upgrade head`
-  - [ ] `make seed`: `cd backend && python scripts/seed_db.py`
+- [x] **0.5 — Makefile with development commands**
+  - [x] `make up`: `docker compose -f infra/docker/docker-compose.yml up -d`
+  - [x] `make down`: `docker compose -f infra/docker/docker-compose.yml down -v`
+  - [x] `make backend-dev`: `cd backend && uvicorn src.main:app --reload --port 8000`
+  - [x] `make dashboard-dev`: `cd dashboard && npm run dev`
+  - [x] `make test`: `cd backend && pytest tests/ -v --cov=src`
+  - [x] `make lint`: `cd backend && ruff check src/ tests/ && mypy src/`
+  - [x] `make migrate`: `cd backend && alembic upgrade head`
+  - [x] `make seed`: `cd backend && python scripts/seed_db.py`
 
-- [ ] **0.6 — CI pipeline (GitHub Actions)**
-  - [ ] Create `.github/workflows/ci.yml`: trigger on push/PR to `main`, jobs:
+- [x] **0.6 — CI pipeline (GitHub Actions)**
+  - [x] Create `.github/workflows/ci.yml`: trigger on push/PR to `main`, jobs:
     - `lint`: run `ruff check`, `mypy`
     - `test-backend`: spin up postgres + redis via `services`, run `pytest tests/unit/ -v --cov --cov-fail-under=80`
     - `test-dashboard`: `npm ci && npm run lint && npm run build`
 
-- [ ] **0.7 — Next.js dashboard scaffolding**
-  - [ ] Initialize Next.js 15 in `dashboard/` using `npx -y create-next-app@latest ./` with App Router, TypeScript, ESLint, no Tailwind (vanilla CSS per project requirements)
-  - [ ] Verify `npm run dev` starts successfully on port 3000
-  - [ ] Create placeholder `dashboard/src/app/page.tsx` with text "AI Risk Manager — Dashboard"
+- [x] **0.7 — Next.js dashboard scaffolding**
+  - [x] Initialize Next.js 15 in `dashboard/` with App Router, TypeScript, ESLint, Vanilla CSS design tokens
+  - [x] Create `dashboard/src/app/globals.css`, `dashboard/src/app/layout.tsx`, and `dashboard/src/app/page.tsx`
 
 ### Acceptance Criteria
 
