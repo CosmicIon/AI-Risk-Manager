@@ -1,11 +1,11 @@
-import logging
-import json
 import asyncio
+import json
+import logging
 from typing import Any
 
 import boto3
-from botocore.exceptions import ClientError
 from botocore.client import Config
+from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class ObjectStoreClient:
                     except ClientError as e:
                         logger.error(f"Failed to create bucket {bucket}: {e}")
                         raise
-        
+
         await asyncio.to_thread(_create_buckets)
 
     async def upload_file(self, bucket: str, key: str, data: bytes, content_type: str = "application/octet-stream") -> str:
@@ -47,23 +47,23 @@ class ObjectStoreClient:
                 ContentType=content_type
             )
             return f"{self.endpoint_url}/{bucket}/{key}"
-        
+
         return await asyncio.to_thread(_upload)
 
     async def download_file(self, bucket: str, key: str) -> bytes:
         def _download():
             response = self.client.get_object(Bucket=bucket, Key=key)
             return response['Body'].read()
-        
+
         return await asyncio.to_thread(_download)
 
     async def upload_model_artifact(self, model_name: str, version: str, model_bytes: bytes, metadata: dict[str, Any]) -> str:
         model_key = f"{model_name}/{version}/model.onnx"
         meta_key = f"{model_name}/{version}/metadata.json"
-        
+
         url = await self.upload_file("models", model_key, model_bytes, "application/octet-stream")
         await self.upload_file("models", meta_key, json.dumps(metadata).encode('utf-8'), "application/json")
-        
+
         return url
 
     async def download_holdout_set(self, version: str) -> bytes:
@@ -78,5 +78,5 @@ class ObjectStoreClient:
             except Exception as e:
                 logger.error(f"MinIO health check failed: {e}")
                 return False
-                
+
         return await asyncio.to_thread(_check)

@@ -23,13 +23,13 @@ FEATURE_NAMES = [
 
 def compute_features(chargeback: dict, evidence: dict) -> dict[str, float]:
     """Computes 20 features for chargeback win probability scoring."""
-    features = {f: 0.0 for f in FEATURE_NAMES}
-    
+    features = dict.fromkeys(FEATURE_NAMES, 0.0)
+
     # Evidence features
     items = evidence.get("items", [])
     features["evidence_item_count"] = len(items)
     features["evidence_completeness_score"] = evidence.get("completeness_score", 0.0)
-    
+
     for item in items:
         t = item.get("evidence_type")
         if t == "delivery_proof":
@@ -40,10 +40,10 @@ def compute_features(chargeback: dict, evidence: dict) -> dict[str, float]:
             features["has_avs_match"] = 1.0
         elif t == "customer_communication":
             features["has_customer_communication"] = 1.0
-            
+
     # Chargeback data
     features["days_to_deadline"] = 15.0 # mock
     features["transaction_age_days"] = 30.0 # mock
     features["time_to_dispute_days"] = 10.0 # mock
-    
+
     return features

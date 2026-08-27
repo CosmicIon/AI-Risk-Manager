@@ -1,21 +1,22 @@
-import os
-import json
 import argparse
+import json
+import os
 from datetime import datetime
-import pandas as pd
-import numpy as np
+
 import lightgbm as lgb
-from sklearn.model_selection import train_test_split
+import pandas as pd
 from onnxmltools.convert import convert_lightgbm
 from onnxmltools.convert.common.data_types import FloatTensorType
+from sklearn.model_selection import train_test_split
 
-from src.ml.models.return_risk.config import FEATURE_NAMES, CATEGORICAL_FEATURES, HYPERPARAMETERS
+from src.ml.models.return_risk.config import CATEGORICAL_FEATURES, FEATURE_NAMES, HYPERPARAMETERS
 from src.ml.models.return_risk.features import compute_features
+
 
 def load_and_prepare_data(data_path: str):
     print(f"Loading data from {data_path}...")
     df = pd.read_parquet(data_path)
-    
+
     print("Extracting features...")
     # In a real pipeline, we'd have historical aggregations.
     # Here, we map the columns to the feature vector.
@@ -29,10 +30,10 @@ def load_and_prepare_data(data_path: str):
         }
         feats = compute_features(row["customer_id"], order, [])
         features_list.append(feats)
-        
+
     X = pd.DataFrame(features_list)[FEATURE_NAMES]
     y = df["is_abusive"].astype(int)
-    
+
     return X, y
 
 def train(X, y) -> lgb.Booster:
@@ -41,12 +42,12 @@ def train(X, y) -> lgb.Booster:
     for cat in CATEGORICAL_FEATURES:
         if cat in X.columns:
             X[cat] = X[cat].astype('category')
-            
+
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=HYPERPARAMETERS["seed"])
-    
+
     train_data = lgb.Dataset(X_train, label=y_train, categorical_feature=CATEGORICAL_FEATURES)
     val_data = lgb.Dataset(X_val, label=y_val, categorical_feature=CATEGORICAL_FEATURES, reference=train_data)
-    
+
     booster = lgb.train(
         HYPERPARAMETERS,
         train_data,
@@ -58,10 +59,10 @@ def train(X, y) -> lgb.Booster:
 def export_to_onnx(booster: lgb.Booster, output_path: str):
     print(f"Exporting model to {output_path}...")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    
+
     initial_types = [('float_input', FloatTensorType([None, len(FEATURE_NAMES)]))]
     onnx_model = convert_lightgbm(booster, initial_types=initial_types, target_opset=12)
-    
+
     with open(output_path, "wb") as f:
         f.write(onnx_model.SerializeToString())
 
@@ -82,13 +83,13 @@ def main():
     parser.add_argument("--data", required=True, help="Path to returns.parquet")
     parser.add_argument("--output", required=True, help="Output directory for model")
     args = parser.parse_args()
-    
+
     X, y = load_and_prepare_data(args.data)
     booster = train(X, y)
-    
+
     os.makedirs(args.output, exist_ok=True)
     export_to_onnx(booster, os.path.join(args.output, "model.onnx"))
-    
+
     # Save dummy metrics for now
     metrics = {"val_logloss": booster.best_score.get("valid_1", {}).get("binary_logloss", 0.0)}
     save_metadata(args.output, metrics)

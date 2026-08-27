@@ -1,11 +1,10 @@
 import json
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
 
 from aiokafka import AIOKafkaProducer
 from pydantic import BaseModel
 
-from src.config import settings
 from src.core.events import TOPIC_MAP
 from src.core.exceptions import SchemaValidationError
 
@@ -42,7 +41,7 @@ class TypedKafkaProducer:
     async def send_event(self, topic: str, event: BaseModel, key: str | None = None):
         if not self.producer:
             raise RuntimeError("Kafka producer is not started")
-        
+
         self._validate_event(topic, event)
         await self.producer.send_and_wait(topic, value=event.model_dump(mode="json"), key=key)
 
@@ -62,7 +61,7 @@ class TypedKafkaProducer:
             key_bytes = key.encode('utf-8') if key else None
             value_bytes = json.dumps(event.model_dump(mode="json"), default=str).encode('utf-8')
             batch.append(key=key_bytes, value=value_bytes, timestamp_ms=None)
-            
+
         await self.producer.send_batch(batch, topic, partition=None)
 
     async def health_check(self) -> bool:

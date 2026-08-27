@@ -9,12 +9,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.v1.health import router as health_router
 from src.config import settings
-from src.integrations.redis_client import RedisClient
 from src.integrations.kafka_producer import TypedKafkaProducer
-from src.integrations.qdrant_client import QdrantVectorStore
-from src.integrations.llm_client import GeminiLLMClient
 from src.integrations.langfuse_client import LangfuseTracer
+from src.integrations.llm_client import GeminiLLMClient
 from src.integrations.minio_client import ObjectStoreClient
+from src.integrations.qdrant_client import QdrantVectorStore
+from src.integrations.redis_client import RedisClient
 
 # Configure logging
 logging.basicConfig(
@@ -39,13 +39,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.qdrant = QdrantVectorStore(settings.QDRANT_URL)
     app.state.llm = GeminiLLMClient(settings.GEMINI_API_KEY.get_secret_value() if settings.GEMINI_API_KEY else "mock_key")
     app.state.langfuse = LangfuseTracer(
-        settings.LANGFUSE_PUBLIC_KEY, 
-        settings.LANGFUSE_SECRET_KEY.get_secret_value() if settings.LANGFUSE_SECRET_KEY else "mock_secret", 
+        settings.LANGFUSE_PUBLIC_KEY,
+        settings.LANGFUSE_SECRET_KEY.get_secret_value() if settings.LANGFUSE_SECRET_KEY else "mock_secret",
         settings.LANGFUSE_HOST
     )
     app.state.minio = ObjectStoreClient(
-        f"http://{settings.MINIO_ENDPOINT}", 
-        settings.MINIO_ACCESS_KEY, 
+        f"http://{settings.MINIO_ENDPOINT}",
+        settings.MINIO_ACCESS_KEY,
         settings.MINIO_SECRET_KEY.get_secret_value() if settings.MINIO_SECRET_KEY else "mock_secret"
     )
 

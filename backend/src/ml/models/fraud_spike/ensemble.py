@@ -1,10 +1,11 @@
-import numpy as np
 import uuid
-from datetime import datetime, UTC
-from typing import Literal
+from datetime import UTC, datetime
 
-from src.core.schemas.fraud_alert import AnomalyAlert
+import numpy as np
+
 from src.core.enums import AlertSeverity, SpikeClassification
+from src.core.schemas.fraud_alert import AnomalyAlert
+
 
 class FraudSpikeEnsemble:
     def __init__(self, iso_forest, lstm_autoencoder, lstm_threshold: float):
@@ -21,9 +22,9 @@ class FraudSpikeEnsemble:
         """
         iso_anomaly, iso_score = self.iso_forest.detect(point_features)
         iso_anomaly = bool(iso_anomaly[0])
-        
+
         lstm_anomaly, lstm_score = self.lstm.detect(sequence_features, self.lstm_threshold)
-        
+
         if iso_anomaly and lstm_anomaly:
             severity = AlertSeverity.CRITICAL
             spike = SpikeClassification.ATTACK

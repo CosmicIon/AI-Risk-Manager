@@ -3,13 +3,12 @@ from typing import Any
 
 from langfuse import Langfuse
 
-from src.config import settings
-
 logger = logging.getLogger(__name__)
 
 class LangfuseTracer:
     def __init__(self, public_key: str, secret_key: str, host: str):
         self.enabled = bool(public_key and secret_key and public_key != "mock_public_key")
+        self.client: Any
         if self.enabled:
             self.client = Langfuse(
                 public_key=public_key,
@@ -35,7 +34,7 @@ class LangfuseTracer:
     def create_generation(self, trace: Any | None, name: str, prompt: str, completion: str, model: str, tokens: dict[str, int] | None = None):
         if not self.enabled or not trace:
             return
-        
+
         usage = None
         if tokens:
             usage = {
@@ -43,7 +42,7 @@ class LangfuseTracer:
                 "completionTokens": tokens.get("output", 0),
                 "totalTokens": tokens.get("input", 0) + tokens.get("output", 0)
             }
-            
+
         trace.generation(
             name=name,
             model=model,

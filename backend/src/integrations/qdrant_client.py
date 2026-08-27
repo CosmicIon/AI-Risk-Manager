@@ -2,7 +2,14 @@ import logging
 from typing import Any
 
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.models import Distance, VectorParams, Filter, FieldCondition, MatchValue, PointStruct
+from qdrant_client.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    MatchValue,
+    PointStruct,
+    VectorParams,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +17,7 @@ class QdrantVectorStore:
     COLLECTION_NAME = "chargeback_cases"
 
     def __init__(self, qdrant_url: str):
-        self.client = AsyncQdrantClient(url=qdrant_url, timeout=10.0)
+        self.client = AsyncQdrantClient(url=qdrant_url, timeout=10)
 
     async def ensure_collection(self):
         try:
@@ -20,7 +27,7 @@ class QdrantVectorStore:
                     collection_name=self.COLLECTION_NAME,
                     vectors_config=VectorParams(size=1536, distance=Distance.COSINE)
                 )
-                
+
                 # Create payload indexes
                 for field in ["reason_code", "network", "amount_bucket", "outcome"]:
                     await self.client.create_payload_index(
@@ -47,12 +54,12 @@ class QdrantVectorStore:
     async def search_similar(
         self, query_embedding: list[float], reason_code: str | None = None, network: str | None = None, limit: int = 5
     ) -> list[dict[str, Any]]:
-        conditions = []
+        conditions: list[Any] = []
         if reason_code:
             conditions.append(FieldCondition(key="reason_code", match=MatchValue(value=reason_code)))
         if network:
             conditions.append(FieldCondition(key="network", match=MatchValue(value=network)))
-        
+
         query_filter = Filter(must=conditions) if conditions else None
 
         results = await self.client.query_points(

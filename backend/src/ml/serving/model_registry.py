@@ -1,8 +1,9 @@
 import logging
+
 import numpy as np
 
-from src.ml.serving.onnx_runtime import ONNXModelServer
 from src.core.exceptions import ModelInferenceError
+from src.ml.serving.onnx_runtime import ONNXModelServer
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class ModelRegistry:
             version = self.get_champion_version(model_name)
             if not version:
                 raise ModelInferenceError(f"No champion version set for {model_name}")
-                
+
         key = f"{model_name}:{version}"
         model = self.models.get(key)
         if not model:
@@ -47,18 +48,18 @@ class ModelRegistry:
     def predict_with_shadow(
         self, model_name: str, features: np.ndarray, shadow_version: str | None = None
     ) -> tuple[np.ndarray, np.ndarray | None]:
-        
+
         champion = self.get_model(model_name)
         champ_preds, _ = champion.predict_with_latency(features)
-        
+
         shadow_preds = None
         if shadow_version:
             try:
                 shadow = self.get_model(model_name, shadow_version)
                 shadow_preds, _ = shadow.predict_with_latency(features)
-                
+
                 # In production, we'd log the divergence between champ and shadow here.
             except Exception as e:
                 logger.warning(f"Shadow inference failed for {model_name}:{shadow_version} - {e}")
-                
+
         return champ_preds, shadow_preds

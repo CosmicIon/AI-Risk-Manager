@@ -1,16 +1,16 @@
 import numpy as np
-from sklearn.ensemble import IsolationForest
-import onnx
 from skl2onnx import convert_sklearn
 from skl2onnx.common.data_types import FloatTensorType
+from sklearn.ensemble import IsolationForest
+
 
 class IsolationForestDetector:
     def __init__(self, contamination=0.01, random_state=42):
         self.model = IsolationForest(contamination=contamination, random_state=random_state)
-        
+
     def fit(self, X: np.ndarray):
         self.model.fit(X)
-        
+
     def detect(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         # Returns (is_anomaly, anomaly_score)
         # sklearn returns 1 for inliers, -1 for outliers

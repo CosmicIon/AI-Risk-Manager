@@ -1,8 +1,8 @@
 import json
 import logging
-from typing import Any
-import redis.asyncio as redis
 from uuid import UUID
+
+import redis.asyncio as redis
 
 logger = logging.getLogger(__name__)
 
