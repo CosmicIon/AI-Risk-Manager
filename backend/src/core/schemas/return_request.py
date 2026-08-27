@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
@@ -53,7 +53,7 @@ class ReturnScoreResponse(BaseModel):
     risk_tier: RiskTier
     decision: Literal["auto_approve", "manual_review", "auto_deny"]
     explanation: str
-    top_features: list[dict[str, float]]
+    top_features: list[dict[str, Any]]
     model_version: str
     inference_latency_ms: float
     scored_at: datetime

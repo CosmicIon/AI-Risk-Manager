@@ -884,8 +884,8 @@ cd backend && pytest tests/integration/test_agent_pipeline.py -v
 
 ### Implementation Checklist
 
-- [ ] **8.1 — Return scoring service (`backend/src/services/return_scoring_service.py`)**
-  - [ ] `class ReturnScoringService`:
+- [x] **8.1 — Return scoring service (`backend/src/services/return_scoring_service.py`)**
+  - [x] `class ReturnScoringService`:
     - Dependencies: `ModelRegistry`, `RedisClient`, `CaseRepository`, `SHAPExplainer`, `ExplanationFormatter`
     - `async def score(request: ReturnScoreRequest, tenant: Tenant) -> ReturnScoreResponse`:
       1. Fetch features from Redis (`get_feature_vector`). If unavailable: compute on-the-fly from DB (degraded mode, set `is_degraded=True`)
@@ -902,8 +902,8 @@ cd backend && pytest tests/integration/test_agent_pipeline.py -v
       12. Return `ReturnScoreResponse` with all fields populated
     - Total latency budget: ≤ 50ms P50, ≤ 150ms P99. If feature fetch exceeds 100ms: timeout and use degraded features
 
-- [ ] **8.2 — Chargeback service (`backend/src/services/chargeback_service.py`)**
-  - [ ] `class ChargebackService`:
+- [x] **8.2 — Chargeback service (`backend/src/services/chargeback_service.py`)**
+  - [x] `class ChargebackService`:
     - Dependencies: `ChargebackRepository`, `CaseRepository`, `TypedKafkaProducer`, agent `process_chargeback`
     - `async def ingest(request: ChargebackIngestRequest, tenant: Tenant) -> ChargebackIngestResponse`:
       1. Parse raw payload into `ChargebackNotification` (with idempotency check)
@@ -920,8 +920,8 @@ cd backend && pytest tests/integration/test_agent_pipeline.py -v
     - `async def get_pending_reviews(tenant_id: UUID) -> list[Case]`: return cases with status DRAFT_READY ordered by deadline proximity
     - `async def get_deadline_alerts(tenant_id: UUID) -> list[Case]`: return cases approaching deadline (within 48h)
 
-- [ ] **8.3 — Fraud detection service (`backend/src/services/fraud_detection_service.py`)**
-  - [ ] `class FraudDetectionService`:
+- [x] **8.3 — Fraud detection service (`backend/src/services/fraud_detection_service.py`)**
+  - [x] `class FraudDetectionService`:
     - Dependencies: `TypedKafkaProducer`, `CaseRepository`, `NotificationService`
     - `async def handle_alert(alert: AnomalyAlert, tenant: Tenant)`:
       1. Create `Case` record (source=FRAUD_ALERT) if severity >= WARNING
@@ -930,24 +930,24 @@ cd backend && pytest tests/integration/test_agent_pipeline.py -v
     - `async def register_event(tenant_id: UUID, event_name: str, start: datetime, end: datetime)`: register a known sale/festival event to adjust anomaly thresholds
     - `async def get_active_alerts(tenant_id: UUID) -> list[AnomalyAlert]`
 
-- [ ] **8.4 — Case management service (`backend/src/services/case_management_service.py`)**
-  - [ ] `class CaseManagementService`:
+- [x] **8.4 — Case management service (`backend/src/services/case_management_service.py`)**
+  - [x] `class CaseManagementService`:
     - Dependencies: `CaseRepository`, audit trail integration
     - `async def assign(case_id: UUID, tenant_id: UUID, user_id: UUID, actor_id: UUID)`: assign case to analyst with audit log
     - `async def update_status(case_id: UUID, tenant_id: UUID, new_status: CaseStatus, actor_id: UUID, resolution: str | None = None)`: transition status with validation (e.g., can't go from LOST back to DRAFT_READY), write audit log
     - `async def get_dashboard_stats(tenant_id: UUID) -> dict`: aggregate case counts by status, source, priority. Include `avg_resolution_time`, `approaching_deadline_count`, `win_rate_last_90d`
     - `async def search(tenant_id: UUID, query: str, filters: dict, page: int, size: int) -> tuple[list[Case], int]`: full-text search + filter on cases
 
-- [ ] **8.5 — Notification service (`backend/src/services/notification_service.py`)**
-  - [ ] `class NotificationService`:
+- [x] **8.5 — Notification service (`backend/src/services/notification_service.py`)**
+  - [x] `class NotificationService`:
     - `async def send(channel: NotificationChannel, recipient: str, subject: str, body: str, metadata: dict)`: dispatch notification. For MVP: implement `EMAIL` (via SMTP/SendGrid) and `SLACK` (via webhook). `PAGERDUTY` and `SMS` as stubs raising `NotImplementedError`
     - `async def route_alert(alert: AnomalyAlert, tenant: Tenant)`: look up tenant notification config, send to appropriate channels based on severity mapping
     - `async def send_deadline_warning(case: Case, hours_remaining: int)`: templated deadline warning message
 
 ### Acceptance Criteria
 
-- [ ] `ReturnScoringService.score` returns response within 150ms P99 (with Redis warm)
-- [ ] `ReturnScoringService.score` falls back to degraded mode when Redis is down
+- [x] `ReturnScoringService.score` returns response within 150ms P99 (with Redis warm)
+- [x] `ReturnScoringService.score` falls back to degraded mode when Redis is down
 - [ ] `ChargebackService.ingest` is idempotent (duplicate ARN → error, not duplicate case)
 - [ ] `ChargebackService.review` writes audit log entries for every action
 - [ ] Case status transitions are validated (invalid transitions rejected)
@@ -984,70 +984,61 @@ cd backend && pytest tests/unit/test_case_management.py -v
 - `backend/src/api/v1/chargebacks.py`
 - `backend/src/api/v1/returns.py`
 - `backend/src/api/v1/fraud.py`
-- `backend/src/api/v1/cases.py`
-- `backend/src/api/v1/metrics.py`
-- `backend/src/api/v1/health.py` (update)
-- `backend/src/main.py` (update)
-- `backend/tests/integration/test_api_chargebacks.py`
-- `backend/tests/integration/test_api_returns.py`
-
-### Implementation Checklist
-
-- [ ] **9.1 — Authentication middleware (`backend/src/api/middleware/auth.py`)**
-  - [ ] JWT-based authentication using `python-jose`:
+- `backend/src/api/v1/cases.py`- [x] **9.1 — Authentication middleware (`backend/src/api/middleware/auth.py`)**
+  - [x] JWT-based authentication using `python-jose`:
     - `def create_access_token(user_id: UUID, tenant_id: UUID, role: str, expires_delta: timedelta = timedelta(hours=8)) -> str`
     - `async def verify_token(token: str) -> dict`: decode JWT, return payload with `user_id`, `tenant_id`, `role`
-  - [ ] RBAC decorator: `def require_role(*roles: str)` → FastAPI `Depends` that checks `current_user.role in roles`
-  - [ ] API key authentication (for machine-to-machine): `async def verify_api_key(x_api_key: str = Header())` → look up tenant by hashed API key
-  - [ ] Support both: JWT (for dashboard users) and API key (for webhook/integration callers)
+  - [x] RBAC decorator: `def require_role(*roles: str)` → FastAPI `Depends` that checks `current_user.role in roles`
+  - [x] API key authentication (for machine-to-machine): `async def verify_api_key(x_api_key: str = Header())` → look up tenant by hashed API key
+  - [x] Support both: JWT (for dashboard users) and API key (for webhook/integration callers)
 
-- [ ] **9.2 — Rate limiting middleware (`backend/src/api/middleware/rate_limit.py`)**
-  - [ ] Redis-backed sliding window rate limiter:
+- [x] **9.2 — Rate limiting middleware (`backend/src/api/middleware/rate_limit.py`)**
+  - [x] Redis-backed sliding window rate limiter:
     - `async def rate_limit(identifier: str, limit: int, window_seconds: int)`: uses `RedisClient.check_rate_limit`
     - Return `429 Too Many Requests` with `Retry-After` header when exceeded
-  - [ ] Per-endpoint configuration (from PRD §3.5):
+  - [x] Per-endpoint configuration (from PRD §3.5):
     - `/v1/returns/score`: 100 req/s per tenant
     - `/v1/chargebacks/ingest`: 500 req/s per source
     - `/v1/*` (dashboard): 120 req/min per user
 
-- [ ] **9.3 — Request ID middleware (`backend/src/api/middleware/request_id.py`)**
-  - [ ] Generate `X-Request-ID` (UUID4) if not present in request headers
-  - [ ] Propagate to all downstream calls (DB queries, Kafka events, LLM calls)
-  - [ ] Include in all response headers
-  - [ ] Set as OpenTelemetry trace context
+- [x] **9.3 — Request ID middleware (`backend/src/api/middleware/request_id.py`)**
+  - [x] Generate `X-Request-ID` (UUID4) if not present in request headers
+  - [x] Propagate to all downstream calls (DB queries, Kafka events, LLM calls)
+  - [x] Include in all response headers
+  - [x] Set as OpenTelemetry trace context
 
-- [ ] **9.4 — Chargeback endpoints (`backend/src/api/v1/chargebacks.py`)**
-  - [ ] `POST /v1/chargebacks/ingest`: accept `ChargebackIngestRequest`, auth via API key, rate limit 500/s. Returns `ChargebackIngestResponse` with `202 Accepted`
-  - [ ] `GET /v1/chargebacks/{case_id}`: retrieve full chargeback case with evidence, narrative, and score. Auth: JWT, roles `analyst`, `admin`
-  - [ ] `GET /v1/chargebacks/pending`: list cases with status `DRAFT_READY` for review queue. Supports pagination (`?page=1&size=20`) and sorting (`?sort=deadline_asc`)
-  - [ ] `POST /v1/chargebacks/{case_id}/review`: submit review action (`approve`, `edit`, `reject`). Auth: JWT, roles `analyst`, `admin`. Body: `{"action": "approve" | "edit" | "reject", "edits": {...}}`. Creates audit log entry
-  - [ ] `GET /v1/chargebacks/deadlines`: list approaching deadlines (within 48h). Auth: JWT
-  - [ ] `POST /v1/chargebacks/upload`: file upload endpoint for batch chargeback ingestion (CSV/ISO 8583). Auth: API key. Returns `{"accepted": int, "rejected": int, "errors": [...]}`
+- [x] **9.4 — Chargeback endpoints (`backend/src/api/v1/chargebacks.py`)**
+  - [x] `POST /v1/chargebacks/ingest`: accept `ChargebackIngestRequest`, auth via API key, rate limit 500/s. Returns `ChargebackIngestResponse` with `202 Accepted`
+  - [x] `GET /v1/chargebacks/{case_id}`: retrieve full chargeback case with evidence, narrative, and score. Auth: JWT, roles `analyst`, `admin`
+  - [x] `GET /v1/chargebacks/pending`: list cases with status `DRAFT_READY` for review queue. Supports pagination (`?page=1&size=20`) and sorting (`?sort=deadline_asc`)
+  - [x] `POST /v1/chargebacks/{case_id}/review`: submit review action (`approve`, `edit`, `reject`). Auth: JWT, roles `analyst`, `admin`. Body: `{"action": "approve" | "edit" | "reject", "edits": {...}}`. Creates audit log entry
+  - [x] `GET /v1/chargebacks/deadlines`: list approaching deadlines (within 48h). Auth: JWT
+  - [x] `POST /v1/chargebacks/upload`: file upload endpoint for batch chargeback ingestion (CSV/ISO 8583). Auth: API key. Returns `{"accepted": int, "rejected": int, "errors": [...]}`
 
-- [ ] **9.5 — Return scoring endpoints (`backend/src/api/v1/returns.py`)**
-  - [ ] `POST /v1/returns/score`: accept `ReturnScoreRequest`, auth via API key, rate limit 100/s/tenant. Returns `ReturnScoreResponse`. Must respond within 300ms hard ceiling (return `503` if timeout)
-  - [ ] `GET /v1/returns/history`: paginated history of return scoring decisions for a tenant. Supports filters: `?customer_id=`, `?risk_tier=`, `?date_from=`, `?date_to=`
-  - [ ] `PUT /v1/returns/policy`: update `PolicyConfig` for a tenant. Auth: JWT, role `admin`. Validates thresholds are in order (low < medium < high)
+- [x] **9.5 — Return scoring endpoints (`backend/src/api/v1/returns.py`)**
+  - [x] `POST /v1/returns/score`: accept `ReturnScoreRequest`, auth via API key, rate limit 100/s/tenant. Returns `ReturnScoreResponse`. Must respond within 300ms hard ceiling (return `503` if timeout)
+  - [x] `GET /v1/returns/history`: paginated history of return scoring decisions for a tenant. Supports filters: `?customer_id=`, `?risk_tier=`, `?date_from=`, `?date_to=`
+  - [x] `PUT /v1/returns/policy`: update `PolicyConfig` for a tenant. Auth: JWT, role `admin`. Validates thresholds are in order (low < medium < high)
 
-- [ ] **9.6 — Fraud alert endpoints (`backend/src/api/v1/fraud.py`)**
-  - [ ] `GET /v1/fraud/alerts`: list active alerts for a tenant. Supports filters: `?severity=`, `?classification=`, `?from=`, `?to=`
-  - [ ] `GET /v1/fraud/alerts/{alert_id}`: detailed alert view with transaction IDs, geographic spread, velocity profile
-  - [ ] `POST /v1/fraud/events`: register a known sale/festival event. Body: `{"name": str, "start": datetime, "end": datetime, "threshold_multiplier": float}`
-  - [ ] `POST /v1/fraud/alerts/{alert_id}/acknowledge`: mark alert as acknowledged. Auth: JWT, roles `analyst`, `admin`
+- [x] **9.6 — Fraud alert endpoints (`backend/src/api/v1/fraud.py`)**
+  - [x] `GET /v1/fraud/alerts`: list active alerts for a tenant. Supports filters: `?severity=`, `?classification=`, `?from=`, `?to=`
+  - [x] `GET /v1/fraud/alerts/{alert_id}`: detailed alert view with transaction IDs, geographic spread, velocity profile
+  - [x] `POST /v1/fraud/events`: register a known sale/festival event. Body: `{"name": str, "start": datetime, "end": datetime, "threshold_multiplier": float}`
+  - [x] `POST /v1/fraud/alerts/{alert_id}/acknowledge`: mark alert as acknowledged. Auth: JWT, roles `analyst`, `admin`
 
-- [ ] **9.7 — Case management endpoints (`backend/src/api/v1/cases.py`)**
-  - [ ] `GET /v1/cases`: list all cases with filters (`?source=`, `?status=`, `?assigned_to=`, `?priority=`) and pagination
-  - [ ] `GET /v1/cases/{case_id}`: full case detail with audit trail
-  - [ ] `PATCH /v1/cases/{case_id}`: update case (assign, change status). Auth: JWT
-  - [ ] `GET /v1/cases/{case_id}/audit`: audit trail for a specific case
-  - [ ] `GET /v1/cases/stats`: dashboard statistics (case counts by status/source, win rate, avg resolution time)
+- [x] **9.7 — Case management endpoints (`backend/src/api/v1/cases.py`)**
+  - [x] `GET /v1/cases`: list all cases with filters (`?source=`, `?status=`, `?assigned_to=`, `?priority=`) and pagination
+  - [x] `GET /v1/cases/{case_id}`: full case detail with audit trail
+  - [x] `PATCH /v1/cases/{case_id}`: update case (assign, change status). Auth: JWT
+  - [x] `GET /v1/cases/{case_id}/audit`: audit trail for a specific case
+  - [x] `GET /v1/cases/stats`: dashboard statistics (case counts by status/source, win rate, avg resolution time)
 
-- [ ] **9.8 — Metrics & evaluation endpoints (`backend/src/api/v1/metrics.py`)**
-  - [ ] `GET /v1/metrics/evaluation/{model_name}`: list evaluation runs for a model with metrics
-  - [ ] `GET /v1/metrics/evaluation/{model_name}/latest`: latest evaluation report
-  - [ ] `GET /v1/metrics/drift/{model_name}`: latest drift report per feature
-  - [ ] `GET /v1/metrics/cost-summary`: ₹-denominated cost summary: `{"total_fp_cost": Decimal, "total_fn_cost": Decimal, "total_savings": Decimal, "period": str}`
-  - [ ] `GET /v1/metrics/prometheus`: Prometheus-compatible metrics endpoint (histogram: inference_latency, counter: requests_total, gauge: active_cases)
+- [x] **9.8 — Metrics & evaluation endpoints (`backend/src/api/v1/metrics.py`)**
+  - [x] `GET /v1/metrics/evaluation/{model_name}`: list evaluation runs for a model with metrics
+  - [x] `GET /v1/metrics/evaluation/{model_name}/latest`: latest evaluation report
+  - [x] `GET /v1/metrics/drift/{model_name}`: latest drift report per feature
+  - [x] `GET /v1/metrics/cost-summary`: ₹-denominated cost summary: `{"total_fp_cost": Decimal, "total_fn_cost": Decimal, "total_savings": Decimal, "period": str}`
+  - [x] `GET /v1/metrics/prometheus`: Prometheus-compatible metrics endpoint (histogram: inference_latency, counter: requests_total, gauge: active_cases)
 
 - [ ] **9.9 — Router assembly (`backend/src/main.py` update)**
   - [ ] Include all routers under `/api/v1/` prefix

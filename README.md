@@ -327,6 +327,14 @@ cd backend
 pytest tests/integration/test_agent_pipeline.py -v
 ```
 
+### Verify Module 8 (Service Layer)
+To verify the wiring of the ML models, agents, stream data, and notifications through the service layer:
+```bash
+cd backend
+.\.venv\Scripts\Activate.ps1
+pytest tests/unit/test_services.py -v
+```
+
 ### Verify Dashboard Build
 ```bash
 cd dashboard

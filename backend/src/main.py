@@ -7,7 +7,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.v1.health import router as health_router
+from src.api.v1 import (
+    chargebacks_router,
+    returns_router,
+    fraud_router,
+    cases_router,
+    metrics_router,
+    health_router,
+)
+from src.api.middleware.request_id import RequestIDMiddleware
 from src.config import settings
 from src.integrations.kafka_producer import TypedKafkaProducer
 from src.integrations.langfuse_client import LangfuseTracer
@@ -90,9 +98,19 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # Mount middlewares
+    app.add_middleware(RequestIDMiddleware)
+
     # Mount base health routes
     app.include_router(health_router, prefix="")
+    
+    # Mount API v1 routes
     app.include_router(health_router, prefix="/api/v1")
+    app.include_router(chargebacks_router, prefix="/api/v1")
+    app.include_router(returns_router, prefix="/api/v1")
+    app.include_router(fraud_router, prefix="/api/v1")
+    app.include_router(cases_router, prefix="/api/v1")
+    app.include_router(metrics_router, prefix="/api/v1")
 
     return app
 
