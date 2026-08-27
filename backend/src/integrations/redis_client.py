@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class RedisClient:
     def __init__(self, redis_url: str):
-        self.pool = redis.ConnectionPool.from_url(
+        self.pool: redis.ConnectionPool = redis.ConnectionPool.from_url(
             redis_url,
             max_connections=50,
             decode_responses=True,
