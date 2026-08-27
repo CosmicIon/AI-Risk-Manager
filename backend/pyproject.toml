@@ -24,6 +24,7 @@ dependencies = [
     "shap>=0.45.1",
     "scikit-learn>=1.5.1",
     "skl2onnx>=1.16.0",
+    "torch>=2.0.0",
     "numpy>=1.26.4",
     "pandas>=2.2.2",
     "pyarrow>=17.0.0",
