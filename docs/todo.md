@@ -665,43 +665,43 @@ cd backend && python scripts/run_evaluation.py --model return_risk --version v1 
 
 ### Implementation Checklist
 
-- [ ] **6.1 — Faust application (`backend/src/streaming/app.py`)**
-  - [ ] Create Faust app: `app = faust.App("risk-manager", broker=settings.KAFKA_BOOTSTRAP_SERVERS, store="rocksdb://", topic_partitions=8)`
-  - [ ] Register agents (stream processors): `transaction_agent`, `anomaly_agent`, `graph_agent`
-  - [ ] Register tables: `velocity_table`, `amount_window_table`
-  - [ ] Add health check endpoint: `@app.page("/health")` returning `{"status": "ok"}`
+- [x] **6.1 — Faust application (`backend/src/streaming/app.py`)**
+  - [x] Create Faust app: `app = faust.App("risk-manager", broker=settings.KAFKA_BOOTSTRAP_SERVERS, store="rocksdb://", topic_partitions=8)`
+  - [x] Register agents (stream processors): `transaction_agent`, `anomaly_agent`, `graph_agent`
+  - [x] Register tables: `velocity_table`, `amount_window_table`
+  - [x] Add health check endpoint: `@app.page("/health")` returning `{"status": "ok"}`
 
-- [ ] **6.2 — Transaction processor (`backend/src/streaming/processors/transaction_processor.py`)**
-  - [ ] Define Faust model `TransactionRecord(faust.Record)` mirroring `TransactionEvent` fields
-  - [ ] Define topic: `transactions_topic = app.topic("transactions.raw", value_type=TransactionRecord)`
-  - [ ] Agent `@app.agent(transactions_topic)`:
+- [x] **6.2 — Transaction processor (`backend/src/streaming/processors/transaction_processor.py`)**
+  - [x] Define Faust model `TransactionRecord(faust.Record)` mirroring `TransactionEvent` fields
+  - [x] Define topic: `transactions_topic = app.topic("transactions.raw", value_type=TransactionRecord)`
+  - [x] Agent `@app.agent(transactions_topic)`:
     - For each transaction:
       1. Update velocity counters: increment `velocity:{tenant_id}:{customer_id}:1m`, `:5m`, `:1h`, `:24h` in the Faust table (windowed)
       2. Update amount windows: append amount to `amounts:{tenant_id}:{customer_id}:1h` sliding window, compute running mean/stddev
       3. Write computed features to Redis: `SET features:{tenant_id}:{customer_id} {json} EX 3600`
       4. Forward to anomaly processor if velocity exceeds baseline by >3x
 
-- [ ] **6.3 — Velocity counters table (`backend/src/streaming/tables/velocity_counters.py`)**
-  - [ ] `velocity_table = app.Table("velocity_counters", default=int, partitions=8)` with tumbling windows: 1 minute, 5 minutes, 1 hour
-  - [ ] Key format: `{tenant_id}:{customer_id}`
-  - [ ] Expose `get_velocity(tenant_id, customer_id) -> dict[str, int]` returning `{"1m": count, "5m": count, "1h": count}`
+- [x] **6.3 — Velocity counters table (`backend/src/streaming/tables/velocity_counters.py`)**
+  - [x] `velocity_table = app.Table("velocity_counters", default=int, partitions=8)` with tumbling windows: 1 minute, 5 minutes, 1 hour
+  - [x] Key format: `{tenant_id}:{customer_id}`
+  - [x] Expose `get_velocity(tenant_id, customer_id) -> dict[str, int]` returning `{"1m": count, "5m": count, "1h": count}`
 
-- [ ] **6.4 — Amount windows table (`backend/src/streaming/tables/amount_windows.py`)**
-  - [ ] `amount_table = app.Table("amount_windows", default=list, partitions=8)` storing sliding window of amounts
-  - [ ] `get_amount_stats(tenant_id, customer_id) -> dict[str, float]`: returns `{"mean": float, "stddev": float, "p95": float, "count": int}` from the window
+- [x] **6.4 — Amount windows table (`backend/src/streaming/tables/amount_windows.py`)**
+  - [x] `amount_table = app.Table("amount_windows", default=list, partitions=8)` storing sliding window of amounts
+  - [x] `get_amount_stats(tenant_id, customer_id) -> dict[str, float]`: returns `{"mean": float, "stddev": float, "p95": float, "count": int}` from the window
 
-- [ ] **6.5 — Anomaly processor (`backend/src/streaming/processors/anomaly_processor.py`)**
-  - [ ] Subscribe to `transactions.raw` with a separate agent for anomaly detection
-  - [ ] Maintain per-`(tenant_id, mcc, city)` segment baselines using exponential moving average (EMA) with `alpha=0.1`
-  - [ ] Compute deviation factor: `current_tps / baseline_tps`
-  - [ ] If deviation > 3x: publish `AnomalyAlert` to `alerts.outbound` topic with `severity=WARNING`
-  - [ ] If deviation > 10x: `severity=CRITICAL`
-  - [ ] Calendar adjustment: load registered events from PostgreSQL (cached in Faust table), multiply threshold by `2.0` during known events (e.g., Diwali sale)
-  - [ ] Run `FraudSpikeEnsemble.detect()` on flagged segments to classify as `organic_spike`, `attack`, or `uncertain`
+- [x] **6.5 — Anomaly processor (`backend/src/streaming/processors/anomaly_processor.py`)**
+  - [x] Subscribe to `transactions.raw` with a separate agent for anomaly detection
+  - [x] Maintain per-`(tenant_id, mcc, city)` segment baselines using exponential moving average (EMA) with `alpha=0.1`
+  - [x] Compute deviation factor: `current_tps / baseline_tps`
+  - [x] If deviation > 3x: publish `AnomalyAlert` to `alerts.outbound` topic with `severity=WARNING`
+  - [x] If deviation > 10x: `severity=CRITICAL`
+  - [x] Calendar adjustment: load registered events from PostgreSQL (cached in Faust table), multiply threshold by `2.0` during known events (e.g., Diwali sale)
+  - [x] Run `FraudSpikeEnsemble.detect()` on flagged segments to classify as `organic_spike`, `attack`, or `uncertain`
 
-- [ ] **6.6 — Graph updater (`backend/src/streaming/processors/graph_updater.py`)**
-  - [ ] Subscribe to `transactions.raw`
-  - [ ] For each transaction, emit Neo4j Cypher mutations (batched, every 100 events or 5 seconds):
+- [x] **6.6 — Graph updater (`backend/src/streaming/processors/graph_updater.py`)**
+  - [x] Subscribe to `transactions.raw`
+  - [x] For each transaction, emit Neo4j Cypher mutations (batched, every 100 events or 5 seconds):
     - `MERGE (b:Buyer {id: $customer_id, tenant_id: $tenant_id})`
     - `MERGE (s:Seller {id: $merchant_id})`
     - `MERGE (a:Address {hash: $address_hash})`
@@ -709,16 +709,16 @@ cd backend && python scripts/run_evaluation.py --model return_risk --version v1 
     - `MERGE (p:PaymentInstrument {token: $payment_token})`
     - `CREATE (b)-[:BOUGHT_FROM {amount: $amount, timestamp: $ts}]->(s)`
     - `MERGE (b)-[:USES]->(d)`, `(b)-[:SHIPS_TO]->(a)`, `(b)-[:PAYS_WITH]->(p)`
-  - [ ] Use Neo4j async driver with batch writes for throughput
+  - [x] Use Neo4j async driver with batch writes for throughput
 
 ### Acceptance Criteria
 
-- [ ] Faust worker starts and connects to Kafka without errors
-- [ ] Publishing a `TransactionEvent` to `transactions.raw` results in updated Redis features within 500ms
-- [ ] Velocity counters increment correctly across time windows
-- [ ] Anomaly processor detects a 5x spike and publishes an alert to `alerts.outbound`
-- [ ] Calendar adjustment prevents false alerts during registered events
-- [ ] Graph updater creates correct Neo4j nodes and relationships
+- [x] Faust worker starts and connects to Kafka without errors
+- [x] Publishing a `TransactionEvent` to `transactions.raw` results in updated Redis features within 500ms
+- [x] Velocity counters increment correctly across time windows
+- [x] Anomaly processor detects a 5x spike and publishes an alert to `alerts.outbound`
+- [x] Calendar adjustment prevents false alerts during registered events
+- [x] Graph updater creates correct Neo4j nodes and relationships
 
 ### Verification Gate
 

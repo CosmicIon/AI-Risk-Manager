@@ -15,8 +15,9 @@ async def test_qdrant_client():
 
     await client.ensure_collection()
 
+    import random
     case_id = str(uuid.uuid4())
-    embedding = [0.1] * 1536
+    embedding = [random.random() for _ in range(1536)]
     payload = {
         "reason_code": "10.4",
         "network": "VISA",

@@ -309,6 +309,14 @@ pytest tests/evaluation/ -v
 # Run the evaluation CLI to simulate a CI gate check
 python scripts/run_evaluation.py --model return_risk --version v1 --holdout v1 --fp-cost 500 --fn-cost 2000
 ```
+### Verify Module 6 (Streaming Pipeline & Feature Store)
+To manually verify the Faust streaming pipeline, start the worker and run the Kafka pipeline integration tests:
+```bash
+cd backend
+.\.venv\Scripts\Activate.ps1
+# Verify tumbling windows, Redis feature persistence, anomaly detection, and graph mutations
+pytest tests/integration/test_kafka_pipeline.py -v
+```
 
 ### Verify Dashboard Build
 ```bash
