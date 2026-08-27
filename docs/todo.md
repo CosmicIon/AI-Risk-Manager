@@ -766,18 +766,18 @@ kill %1  # stop Faust worker
 
 ### Implementation Checklist
 
-- [ ] **7.1 — Agent state definition (`backend/src/agents/state.py`)**
-  - [ ] Define `class ChargebackAgentState(TypedDict)`: `case_id: str`, `tenant_id: str`, `chargeback: dict` (serialized `ChargebackNotification`), `reason_code: str`, `network: str`, `evidence_checklist: list[str]`, `evidence_items: list[dict]`, `evidence_bundle: dict | None`, `narrative_draft: str | None`, `win_probability: float | None`, `recommendation: str | None`, `errors: list[str]`, `current_step: str`, `trace_id: str`
+- [x] **7.1 — Agent state definition (`backend/src/agents/state.py`)**
+  - [x] Define `class ChargebackAgentState(TypedDict)`: `case_id: str`, `tenant_id: str`, `chargeback: dict` (serialized `ChargebackNotification`), `reason_code: str`, `network: str`, `evidence_checklist: list[str]`, `evidence_items: list[dict]`, `evidence_bundle: dict | None`, `narrative_draft: str | None`, `win_probability: float | None`, `recommendation: str | None`, `errors: list[str]`, `current_step: str`, `trace_id: str`
 
-- [ ] **7.2 — Agent tools**
-  - [ ] `order_lookup.py`: `@tool def lookup_order(order_id: str, tenant_id: str) -> dict`: fetch from PostgreSQL — returns order details (items, amounts, dates, customer info, shipping address). Returns `{"found": False}` if not found. Wrapped with `EvidenceRetrievalError` handling
-  - [ ] `shipping_tracker.py`: `@tool def track_shipment(tracking_number: str, carrier: str) -> dict`: mock external shipping API call — returns `{"delivered": bool, "delivery_date": str, "signed_by": str, "proof_url": str}`. In production, integrate with Delhivery/Shiprocket/Bluedart APIs
-  - [ ] `payment_log_fetcher.py`: `@tool def fetch_payment_logs(transaction_id: str, tenant_id: str) -> dict`: fetch 3DS authentication logs, AVS match results, IP geolocation from payment gateway. Returns `{"3ds_authenticated": bool, "avs_match": str, "ip_country": str, "ip_city": str}`
-  - [ ] `similar_case_search.py`: `@tool def search_similar_cases(case_summary: str, reason_code: str, network: str, limit: int = 5) -> list[dict]`: embed `case_summary` using embedding model, search Qdrant with payload filters on `reason_code` + `network`. Returns top-k similar past cases with outcomes and winning narratives
-  - [ ] `template_renderer.py`: `@tool def render_template(network: str, reason_code: str, evidence: dict) -> str`: select the correct card network template (Visa/MC/RuPay), render with evidence fields. Templates stored as Jinja2 templates in `backend/src/agents/prompts/templates/`
+- [x] **7.2 — Agent tools**
+  - [x] `order_lookup.py`: `@tool def lookup_order(order_id: str, tenant_id: str) -> dict`: fetch from PostgreSQL — returns order details (items, amounts, dates, customer info, shipping address). Returns `{"found": False}` if not found. Wrapped with `EvidenceRetrievalError` handling
+  - [x] `shipping_tracker.py`: `@tool def track_shipment(tracking_number: str, carrier: str) -> dict`: mock external shipping API call — returns `{"delivered": bool, "delivery_date": str, "signed_by": str, "proof_url": str}`. In production, integrate with Delhivery/Shiprocket/Bluedart APIs
+  - [x] `payment_log_fetcher.py`: `@tool def fetch_payment_logs(transaction_id: str, tenant_id: str) -> dict`: fetch 3DS authentication logs, AVS match results, IP geolocation from payment gateway. Returns `{"3ds_authenticated": bool, "avs_match": str, "ip_country": str, "ip_city": str}`
+  - [x] `similar_case_search.py`: `@tool def search_similar_cases(case_summary: str, reason_code: str, network: str, limit: int = 5) -> list[dict]`: embed `case_summary` using embedding model, search Qdrant with payload filters on `reason_code` + `network`. Returns top-k similar past cases with outcomes and winning narratives
+  - [x] `template_renderer.py`: `@tool def render_template(network: str, reason_code: str, evidence: dict) -> str`: select the correct card network template (Visa/MC/RuPay), render with evidence fields. Templates stored as Jinja2 templates in `backend/src/agents/prompts/templates/`
 
-- [ ] **7.3 — Evidence assembler agent (`backend/src/agents/evidence_assembler.py`)**
-  - [ ] `def evidence_assembler_node(state: ChargebackAgentState) -> ChargebackAgentState`:
+- [x] **7.3 — Evidence assembler agent (`backend/src/agents/evidence_assembler.py`)**
+  - [x] `def evidence_assembler_node(state: ChargebackAgentState) -> ChargebackAgentState`:
     1. Extract `evidence_checklist` from state (set by reason code mapper)
     2. For each required evidence type, call the appropriate tool in parallel (using LangGraph's `Send` API):
        - `delivery_proof` → `track_shipment`
@@ -790,8 +790,8 @@ kill %1  # stop Faust worker
     5. If `completeness_score < 0.5`: set `recommendation = "accept_loss"` and skip narrative generation
     6. Log all tool calls to Langfuse via `LangfuseTracer`
 
-- [ ] **7.4 — Narrative generator agent (`backend/src/agents/narrative_generator.py`)**
-  - [ ] `async def narrative_generator_node(state: ChargebackAgentState) -> ChargebackAgentState`:
+- [x] **7.4 — Narrative generator agent (`backend/src/agents/narrative_generator.py`)**
+  - [x] `async def narrative_generator_node(state: ChargebackAgentState) -> ChargebackAgentState`:
     1. Retrieve similar winning cases from Qdrant (via `similar_case_search`)
     2. Build prompt using `representment_narrative.py` template:
        - Include reason code description, evidence summary, similar case narratives
@@ -804,8 +804,8 @@ kill %1  # stop Faust worker
     7. Update state with `narrative_draft`
     8. Log generation to Langfuse with prompt version, token usage, latency
 
-- [ ] **7.5 — Confidence scorer agent (`backend/src/agents/confidence_scorer.py`)**
-  - [ ] `async def confidence_scorer_node(state: ChargebackAgentState) -> ChargebackAgentState`:
+- [x] **7.5 — Confidence scorer agent (`backend/src/agents/confidence_scorer.py`)**
+  - [x] `async def confidence_scorer_node(state: ChargebackAgentState) -> ChargebackAgentState`:
     1. Extract features from evidence bundle and narrative using `chargeback_win/features.py`
     2. Run ONNX inference via `model_registry.get_model("chargeback_win")`
     3. Compute SHAP explanation
@@ -814,31 +814,31 @@ kill %1  # stop Faust worker
        - `win_probability <= 0.6` → `"accept_loss"` (but still allow human override)
     5. Update state
 
-- [ ] **7.6 — Prompt templates**
-  - [ ] `evidence_summary.py`: template for summarizing collected evidence into a structured format for the LLM
-  - [ ] `representment_narrative.py`: main narrative generation prompt with few-shot examples from similar cases, network-specific formatting rules. Include explicit instruction: "Do not fabricate evidence. Only reference evidence items provided in the context."
-  - [ ] `confidence_assessment.py`: prompt for the LLM to provide a qualitative assessment alongside the ML score
+- [x] **7.6 — Prompt templates**
+  - [x] `evidence_summary.py`: template for summarizing collected evidence into a structured format for the LLM
+  - [x] `representment_narrative.py`: main narrative generation prompt with few-shot examples from similar cases, network-specific formatting rules. Include explicit instruction: "Do not fabricate evidence. Only reference evidence items provided in the context."
+  - [x] `confidence_assessment.py`: prompt for the LLM to provide a qualitative assessment alongside the ML score
 
-- [ ] **7.7 — LangGraph orchestrator (`backend/src/agents/orchestrator.py`)**
-  - [ ] Build `StateGraph(ChargebackAgentState)` with nodes:
+- [x] **7.7 — LangGraph orchestrator (`backend/src/agents/orchestrator.py`)**
+  - [x] Build `StateGraph(ChargebackAgentState)` with nodes:
     1. `parse_notification` → extract and validate chargeback data, map reason code to evidence checklist
     2. `assemble_evidence` → `evidence_assembler_node`
     3. `generate_narrative` → `narrative_generator_node` (conditional: skip if `recommendation == "accept_loss"`)
     4. `score_confidence` → `confidence_scorer_node` (conditional: skip if no narrative)
     5. `human_review` → checkpoint node (LangGraph `interrupt_before` for human-in-the-loop)
     6. `finalize` → persist final case state to DB
-  - [ ] Add edges: `parse → assemble → generate (conditional) → score (conditional) → human_review → finalize`
-  - [ ] Add error handling edge: any node failure → `handle_error` node that logs the error, sets `status = "ERROR"`, and creates an alert
-  - [ ] Compile graph: `graph = workflow.compile(checkpointer=MemorySaver())` for state persistence across restarts
-  - [ ] Implement `async def process_chargeback(notification: ChargebackNotification, tenant_id: UUID) -> RepresentmentDraft`: entry point that creates initial state and invokes the graph
+  - [x] Add edges: `parse → assemble → generate (conditional) → score (conditional) → human_review → finalize`
+  - [x] Add error handling edge: any node failure → `handle_error` node that logs the error, sets `status = "ERROR"`, and creates an alert
+  - [x] Compile graph: `graph = workflow.compile(checkpointer=MemorySaver())` for state persistence across restarts
+  - [x] Implement `async def process_chargeback(notification: ChargebackNotification, tenant_id: UUID) -> RepresentmentDraft`: entry point that creates initial state and invokes the graph
 
-- [ ] **7.8 — Input sanitization for defense-only constraint**
-  - [ ] Implement `sanitize_input(text: str) -> str` in `backend/src/agents/tools/__init__.py`:
+- [x] **7.8 — Input sanitization for defense-only constraint**
+  - [x] Implement `sanitize_input(text: str) -> str` in `backend/src/agents/tools/__init__.py`:
     - Strip control characters
     - Detect and escape common prompt injection patterns (e.g., "ignore previous instructions", "system:", "assistant:")
     - Truncate inputs exceeding 10,000 characters
     - Log any sanitization actions to audit trail
-  - [ ] Apply `sanitize_input` to all text fields before passing to LLM (dispute description, customer communications)
+  - [x] Apply `sanitize_input` to all text fields before passing to LLM (dispute description, customer communications)
 
 ### Acceptance Criteria
 

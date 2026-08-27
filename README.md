@@ -318,6 +318,15 @@ cd backend
 pytest tests/integration/test_kafka_pipeline.py -v
 ```
 
+### Verify Module 7 (AI Agent Pipeline)
+To manually verify the LangGraph multi-agent pipeline for chargeback evidence assembly and narrative generation:
+```bash
+cd backend
+.\.venv\Scripts\Activate.ps1
+# Verify the state graph executes, falls back properly on missing evidence, and stops at human review
+pytest tests/integration/test_agent_pipeline.py -v
+```
+
 ### Verify Dashboard Build
 ```bash
 cd dashboard
