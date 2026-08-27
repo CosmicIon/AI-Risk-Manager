@@ -1,0 +1,37 @@
+{
+  "model_name": "chargeback_win",
+  "version": "v1",
+  "trained_at": "2026-08-27T14:29:06.231332",
+  "feature_names": [
+    "evidence_completeness_score",
+    "reason_code_historical_win_rate",
+    "amount_bucket",
+    "days_to_deadline",
+    "has_delivery_proof",
+    "has_3ds_log",
+    "has_avs_match",
+    "has_customer_communication",
+    "similar_case_best_outcome",
+    "merchant_historical_win_rate",
+    "network_factor",
+    "evidence_item_count",
+    "narrative_length",
+    "transaction_age_days",
+    "customer_dispute_rate",
+    "order_velocity_24h",
+    "digital_goods_flag",
+    "address_mismatch_flag",
+    "ip_distance_miles",
+    "time_to_dispute_days"
+  ],
+  "hyperparameters": {
+    "objective": "binary",
+    "metric": "binary_logloss",
+    "learning_rate": 0.05,
+    "n_estimators": 200,
+    "seed": 42
+  },
+  "metrics": {
+    "val_logloss": 0.7122805457651911
+  }
+}

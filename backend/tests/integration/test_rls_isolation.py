@@ -7,7 +7,7 @@ from src.db.models.tenant import Tenant
 from src.db.session import AsyncSessionLocal, get_db_session_with_tenant
 
 
-@pytest_asyncio.fixture(scope="module")
+@pytest_asyncio.fixture
 async def db_setup():
     async with AsyncSessionLocal() as session:
         # 1. Create two tenants using a global session

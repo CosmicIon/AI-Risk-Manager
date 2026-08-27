@@ -232,10 +232,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to access th
 
 ## Testing & Quality Verification
 
-Run the test suite and code quality checks to verify **Module 0 (Scaffolding)** and **Module 1 (Data Contracts)** manually:
+Run the test suites and code quality checks to verify the completed modules manually:
 
 ### Verify Module 0 (Infrastructure & FastAPI)
-
 1. **Check Docker Services:** Ensure the 7 core infrastructure services are running.
    ```bash
    docker compose -f infra/docker/docker-compose.yml ps
@@ -255,7 +254,6 @@ Run the test suite and code quality checks to verify **Module 0 (Scaffolding)** 
    *Both should return a 200 OK JSON response.*
 
 ### Verify Module 1 (Data Contracts & Schemas)
-
 1. **Run Pydantic and Avro Schema Tests:**
    This verifies all enums, data contracts, deadline computations, and `fastavro` schema parsing.
    ```bash
@@ -273,12 +271,40 @@ Run the test suite and code quality checks to verify **Module 0 (Scaffolding)** 
    mypy src/
    ```
 
+### Verify Module 2 (Database & Persistence)
+To manually verify the RLS isolation and repository layer for Module 2, run the verification script:
+```bash
+cd backend
+.\.venv\Scripts\python.exe scripts\verify_module2.py
+```
+
+### Verify Module 3 (Integrations)
+To verify the typed clients (Redis, Kafka, Qdrant, MinIO, LLM), you can check the `readiness` endpoint or run the integration tests:
+```bash
+cd backend
+.\.venv\Scripts\Activate.ps1
+pytest tests/integration/ -v
+pytest tests/unit/test_llm_client.py -v
+```
+
+### Verify Module 4 (ML Models & Serving)
+To test the synthetic data generation, ONNX Runtime serving, and SHAP explainability:
+```bash
+cd backend
+.\.venv\Scripts\Activate.ps1
+# Generate synthetic data
+python scripts/generate_synthetic_data.py
+# Run the verification script (checks ONNX latency and loads models)
+$env:PYTHONPATH="."; python -m scripts.verify_module_4
+# Run the ML unit tests
+pytest tests/unit/test_feature_engineering.py tests/unit/test_return_scoring.py tests/unit/test_fraud_detection.py -v
+```
+
 ### Verify Dashboard Build
 ```bash
 cd dashboard
 npm run build
 ```
-
 ---
 
 ## API Endpoints Reference
@@ -367,9 +393,3 @@ ai-risk-manager/
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
-## Module 2 Verification
-To manually verify the RLS isolation and repository layer for Module 2, run the verification script:
-```bash
-cd backend
-.\.venv\Scripts\python.exe scripts\verify_module2.py
-```

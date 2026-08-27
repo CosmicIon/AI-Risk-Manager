@@ -4,6 +4,8 @@ import time
 from typing import TypeVar
 import asyncio
 
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 import google.generativeai as genai
 from pydantic import BaseModel
 from google.generativeai.types import GenerationConfig

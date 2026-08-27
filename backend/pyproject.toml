@@ -90,3 +90,7 @@ pythonpath = ["."]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-ra -q --strict-markers"
+filterwarnings = [
+    "ignore:.*google.generativeai.*:FutureWarning",
+    "ignore:.*Qdrant client version.*:UserWarning"
+]
