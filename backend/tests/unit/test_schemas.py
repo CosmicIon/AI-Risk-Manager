@@ -185,5 +185,5 @@ def test_avro_schemas_parseable():
             schema_dict = json.load(f)
             # fastavro.parse_schema raises an exception if invalid
             parsed_schema = fastavro.parse_schema(schema_dict)
-            assert parsed_schema is not None
-            assert parsed_schema["type"] == "record"
+            assert isinstance(parsed_schema, dict)
+            assert parsed_schema.get("type") == "record"
