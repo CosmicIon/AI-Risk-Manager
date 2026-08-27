@@ -1,0 +1,99 @@
+name: Model Evaluation and Promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_name:
+        description: 'Name of the model to evaluate (e.g., return_risk)'
+        required: true
+        type: string
+      model_version:
+        description: 'Version of the model to evaluate'
+        required: true
+        type: string
+      holdout_version:
+        description: 'Holdout set version to use'
+        required: true
+        type: string
+      fp_cost:
+        description: 'Cost per False Positive'
+        required: true
+        type: string
+        default: "500"
+      fn_cost:
+        description: 'Cost per False Negative'
+        required: true
+        type: string
+        default: "2000"
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ai_risk_admin
+          POSTGRES_PASSWORD: admin_password
+          POSTGRES_DB: ai_risk_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
+      minio:
+        image: minio/minio
+        env:
+          MINIO_ROOT_USER: admin
+          MINIO_ROOT_PASSWORD: password
+        ports:
+          - 9000:9000
+        command: server /data
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "backend/pyproject.toml"
+          
+      - name: Install Dependencies
+        working-directory: ./backend
+        run: uv sync --all-extras
+        
+      - name: Run Evaluation
+        working-directory: ./backend
+        env:
+          DATABASE_URL: "postgresql+asyncpg://ai_risk_admin:admin_password@localhost:5432/ai_risk_db"
+          MINIO_URL: "http://localhost:9000"
+          MINIO_ACCESS_KEY: "admin"
+          MINIO_SECRET_KEY: "password"
+        run: |
+          uv run python -m scripts.run_evaluation \
+            --model-name ${{ github.event.inputs.model_name }} \
+            --model-version ${{ github.event.inputs.model_version }} \
+            --holdout-version ${{ github.event.inputs.holdout_version }} \
+            --fp-cost ${{ github.event.inputs.fp_cost }} \
+            --fn-cost ${{ github.event.inputs.fn_cost }}
+            
+      - name: Publish Evaluation Summary
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evaluation-summary
+          path: backend/eval_summary.json

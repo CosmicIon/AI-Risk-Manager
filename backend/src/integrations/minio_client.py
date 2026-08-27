@@ -56,6 +56,17 @@ class ObjectStoreClient:
 
         return await asyncio.to_thread(_download)
 
+    async def list_objects(self, bucket: str, prefix: str = "") -> list[dict]:
+        def _list():
+            try:
+                response = self.client.list_objects_v2(Bucket=bucket, Prefix=prefix)
+                return response.get("Contents", [])
+            except ClientError as e:
+                logger.error(f"Failed to list objects in {bucket}/{prefix}: {e}")
+                return []
+                
+        return await asyncio.to_thread(_list)
+
     async def upload_model_artifact(
         self, model_name: str, version: str, model_bytes: bytes, metadata: dict[str, Any]
     ) -> str:

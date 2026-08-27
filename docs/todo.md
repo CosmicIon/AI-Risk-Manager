@@ -618,16 +618,16 @@ cd backend && pytest tests/unit/test_fraud_detection.py -v
   - [x] Trigger on changes to `backend/src/ml/models/**`, `models/**`, `data/holdout/**`
   - [x] Run `scripts/run_evaluation.py` for each modified model
   - [x] Fail the pipeline if any model fails the gate check
-  - [x] Post evaluation summary as a PR comment (precision, recall, cost-weighted loss, delta vs. champion)
+  - [ ] Post evaluation summary as a PR comment (precision, recall, cost-weighted loss, delta vs. champion)
 
 ### Acceptance Criteria
 
-- [x] `compute_binary_metrics` produces correct precision/recall/F1 for a known confusion matrix
-- [x] `find_optimal_threshold` returns a threshold that minimizes cost-weighted loss (verified with hand-calculated example)
-- [x] `HoldoutManager` detects data corruption (hash mismatch)
-- [x] `HoldoutManager.verify_no_overlap` catches train/test leakage
-- [x] Full pipeline: train on synthetic data → evaluate on holdout → generate report → gate check → outputs match expected metrics
-- [x] Drift detector correctly flags features with PSI > 0.1 as drifted
+- [ ] `compute_binary_metrics` produces correct precision/recall/F1 for a known confusion matrix
+- [ ] `find_optimal_threshold` returns a threshold that minimizes cost-weighted loss (verified with hand-calculated example)
+- [ ] `HoldoutManager` detects data corruption (hash mismatch)
+- [ ] `HoldoutManager.verify_no_overlap` catches train/test leakage
+- [ ] Full pipeline: train on synthetic data → evaluate on holdout → generate report → gate check → outputs match expected metrics
+- [ ] Drift detector correctly flags features with PSI > 0.1 as drifted
 
 ### Verification Gate
 
@@ -665,43 +665,43 @@ cd backend && python scripts/run_evaluation.py --model return_risk --version v1 
 
 ### Implementation Checklist
 
-- [x] **6.1 — Faust application (`backend/src/streaming/app.py`)**
-  - [x] Create Faust app: `app = faust.App("risk-manager", broker=settings.KAFKA_BOOTSTRAP_SERVERS, store="rocksdb://", topic_partitions=8)`
-  - [x] Register agents (stream processors): `transaction_agent`, `anomaly_agent`, `graph_agent`
-  - [x] Register tables: `velocity_table`, `amount_window_table`
-  - [x] Add health check endpoint: `@app.page("/health")` returning `{"status": "ok"}`
+- [ ] **6.1 — Faust application (`backend/src/streaming/app.py`)**
+  - [ ] Create Faust app: `app = faust.App("risk-manager", broker=settings.KAFKA_BOOTSTRAP_SERVERS, store="rocksdb://", topic_partitions=8)`
+  - [ ] Register agents (stream processors): `transaction_agent`, `anomaly_agent`, `graph_agent`
+  - [ ] Register tables: `velocity_table`, `amount_window_table`
+  - [ ] Add health check endpoint: `@app.page("/health")` returning `{"status": "ok"}`
 
-- [x] **6.2 — Transaction processor (`backend/src/streaming/processors/transaction_processor.py`)**
-  - [x] Define Faust model `TransactionRecord(faust.Record)` mirroring `TransactionEvent` fields
-  - [x] Define topic: `transactions_topic = app.topic("transactions.raw", value_type=TransactionRecord)`
-  - [x] Agent `@app.agent(transactions_topic)`:
+- [ ] **6.2 — Transaction processor (`backend/src/streaming/processors/transaction_processor.py`)**
+  - [ ] Define Faust model `TransactionRecord(faust.Record)` mirroring `TransactionEvent` fields
+  - [ ] Define topic: `transactions_topic = app.topic("transactions.raw", value_type=TransactionRecord)`
+  - [ ] Agent `@app.agent(transactions_topic)`:
     - For each transaction:
       1. Update velocity counters: increment `velocity:{tenant_id}:{customer_id}:1m`, `:5m`, `:1h`, `:24h` in the Faust table (windowed)
       2. Update amount windows: append amount to `amounts:{tenant_id}:{customer_id}:1h` sliding window, compute running mean/stddev
       3. Write computed features to Redis: `SET features:{tenant_id}:{customer_id} {json} EX 3600`
       4. Forward to anomaly processor if velocity exceeds baseline by >3x
 
-- [x] **6.3 — Velocity counters table (`backend/src/streaming/tables/velocity_counters.py`)**
-  - [x] `velocity_table = app.Table("velocity_counters", default=int, partitions=8)` with tumbling windows: 1 minute, 5 minutes, 1 hour
-  - [x] Key format: `{tenant_id}:{customer_id}`
-  - [x] Expose `get_velocity(tenant_id, customer_id) -> dict[str, int]` returning `{"1m": count, "5m": count, "1h": count}`
+- [ ] **6.3 — Velocity counters table (`backend/src/streaming/tables/velocity_counters.py`)**
+  - [ ] `velocity_table = app.Table("velocity_counters", default=int, partitions=8)` with tumbling windows: 1 minute, 5 minutes, 1 hour
+  - [ ] Key format: `{tenant_id}:{customer_id}`
+  - [ ] Expose `get_velocity(tenant_id, customer_id) -> dict[str, int]` returning `{"1m": count, "5m": count, "1h": count}`
 
-- [x] **6.4 — Amount windows table (`backend/src/streaming/tables/amount_windows.py`)**
-  - [x] `amount_table = app.Table("amount_windows", default=list, partitions=8)` storing sliding window of amounts
-  - [x] `get_amount_stats(tenant_id, customer_id) -> dict[str, float]`: returns `{"mean": float, "stddev": float, "p95": float, "count": int}` from the window
+- [ ] **6.4 — Amount windows table (`backend/src/streaming/tables/amount_windows.py`)**
+  - [ ] `amount_table = app.Table("amount_windows", default=list, partitions=8)` storing sliding window of amounts
+  - [ ] `get_amount_stats(tenant_id, customer_id) -> dict[str, float]`: returns `{"mean": float, "stddev": float, "p95": float, "count": int}` from the window
 
-- [x] **6.5 — Anomaly processor (`backend/src/streaming/processors/anomaly_processor.py`)**
-  - [x] Subscribe to `transactions.raw` with a separate agent for anomaly detection
-  - [x] Maintain per-`(tenant_id, mcc, city)` segment baselines using exponential moving average (EMA) with `alpha=0.1`
-  - [x] Compute deviation factor: `current_tps / baseline_tps`
-  - [x] If deviation > 3x: publish `AnomalyAlert` to `alerts.outbound` topic with `severity=WARNING`
-  - [x] If deviation > 10x: `severity=CRITICAL`
-  - [x] Calendar adjustment: load registered events from PostgreSQL (cached in Faust table), multiply threshold by `2.0` during known events (e.g., Diwali sale)
-  - [x] Run `FraudSpikeEnsemble.detect()` on flagged segments to classify as `organic_spike`, `attack`, or `uncertain`
+- [ ] **6.5 — Anomaly processor (`backend/src/streaming/processors/anomaly_processor.py`)**
+  - [ ] Subscribe to `transactions.raw` with a separate agent for anomaly detection
+  - [ ] Maintain per-`(tenant_id, mcc, city)` segment baselines using exponential moving average (EMA) with `alpha=0.1`
+  - [ ] Compute deviation factor: `current_tps / baseline_tps`
+  - [ ] If deviation > 3x: publish `AnomalyAlert` to `alerts.outbound` topic with `severity=WARNING`
+  - [ ] If deviation > 10x: `severity=CRITICAL`
+  - [ ] Calendar adjustment: load registered events from PostgreSQL (cached in Faust table), multiply threshold by `2.0` during known events (e.g., Diwali sale)
+  - [ ] Run `FraudSpikeEnsemble.detect()` on flagged segments to classify as `organic_spike`, `attack`, or `uncertain`
 
-- [x] **6.6 — Graph updater (`backend/src/streaming/processors/graph_updater.py`)**
-  - [x] Subscribe to `transactions.raw`
-  - [x] For each transaction, emit Neo4j Cypher mutations (batched, every 100 events or 5 seconds):
+- [ ] **6.6 — Graph updater (`backend/src/streaming/processors/graph_updater.py`)**
+  - [ ] Subscribe to `transactions.raw`
+  - [ ] For each transaction, emit Neo4j Cypher mutations (batched, every 100 events or 5 seconds):
     - `MERGE (b:Buyer {id: $customer_id, tenant_id: $tenant_id})`
     - `MERGE (s:Seller {id: $merchant_id})`
     - `MERGE (a:Address {hash: $address_hash})`
@@ -709,16 +709,16 @@ cd backend && python scripts/run_evaluation.py --model return_risk --version v1 
     - `MERGE (p:PaymentInstrument {token: $payment_token})`
     - `CREATE (b)-[:BOUGHT_FROM {amount: $amount, timestamp: $ts}]->(s)`
     - `MERGE (b)-[:USES]->(d)`, `(b)-[:SHIPS_TO]->(a)`, `(b)-[:PAYS_WITH]->(p)`
-  - [x] Use Neo4j async driver with batch writes for throughput
+  - [ ] Use Neo4j async driver with batch writes for throughput
 
 ### Acceptance Criteria
 
-- [x] Faust worker starts and connects to Kafka without errors
-- [x] Publishing a `TransactionEvent` to `transactions.raw` results in updated Redis features within 500ms
-- [x] Velocity counters increment correctly across time windows
-- [x] Anomaly processor detects a 5x spike and publishes an alert to `alerts.outbound`
-- [x] Calendar adjustment prevents false alerts during registered events
-- [x] Graph updater creates correct Neo4j nodes and relationships
+- [ ] Faust worker starts and connects to Kafka without errors
+- [ ] Publishing a `TransactionEvent` to `transactions.raw` results in updated Redis features within 500ms
+- [ ] Velocity counters increment correctly across time windows
+- [ ] Anomaly processor detects a 5x spike and publishes an alert to `alerts.outbound`
+- [ ] Calendar adjustment prevents false alerts during registered events
+- [ ] Graph updater creates correct Neo4j nodes and relationships
 
 ### Verification Gate
 
@@ -766,18 +766,18 @@ kill %1  # stop Faust worker
 
 ### Implementation Checklist
 
-- [x] **7.1 — Agent state definition (`backend/src/agents/state.py`)**
-  - [x] Define `class ChargebackAgentState(TypedDict)`: `case_id: str`, `tenant_id: str`, `chargeback: dict` (serialized `ChargebackNotification`), `reason_code: str`, `network: str`, `evidence_checklist: list[str]`, `evidence_items: list[dict]`, `evidence_bundle: dict | None`, `narrative_draft: str | None`, `win_probability: float | None`, `recommendation: str | None`, `errors: list[str]`, `current_step: str`, `trace_id: str`
+- [ ] **7.1 — Agent state definition (`backend/src/agents/state.py`)**
+  - [ ] Define `class ChargebackAgentState(TypedDict)`: `case_id: str`, `tenant_id: str`, `chargeback: dict` (serialized `ChargebackNotification`), `reason_code: str`, `network: str`, `evidence_checklist: list[str]`, `evidence_items: list[dict]`, `evidence_bundle: dict | None`, `narrative_draft: str | None`, `win_probability: float | None`, `recommendation: str | None`, `errors: list[str]`, `current_step: str`, `trace_id: str`
 
-- [x] **7.2 — Agent tools**
-  - [x] `order_lookup.py`: `@tool def lookup_order(order_id: str, tenant_id: str) -> dict`: fetch from PostgreSQL — returns order details (items, amounts, dates, customer info, shipping address). Returns `{"found": False}` if not found. Wrapped with `EvidenceRetrievalError` handling
-  - [x] `shipping_tracker.py`: `@tool def track_shipment(tracking_number: str, carrier: str) -> dict`: mock external shipping API call — returns `{"delivered": bool, "delivery_date": str, "signed_by": str, "proof_url": str}`. In production, integrate with Delhivery/Shiprocket/Bluedart APIs
-  - [x] `payment_log_fetcher.py`: `@tool def fetch_payment_logs(transaction_id: str, tenant_id: str) -> dict`: fetch 3DS authentication logs, AVS match results, IP geolocation from payment gateway. Returns `{"3ds_authenticated": bool, "avs_match": str, "ip_country": str, "ip_city": str}`
-  - [x] `similar_case_search.py`: `@tool def search_similar_cases(case_summary: str, reason_code: str, network: str, limit: int = 5) -> list[dict]`: embed `case_summary` using embedding model, search Qdrant with payload filters on `reason_code` + `network`. Returns top-k similar past cases with outcomes and winning narratives
-  - [x] `template_renderer.py`: `@tool def render_template(network: str, reason_code: str, evidence: dict) -> str`: select the correct card network template (Visa/MC/RuPay), render with evidence fields. Templates stored as Jinja2 templates in `backend/src/agents/prompts/templates/`
+- [ ] **7.2 — Agent tools**
+  - [ ] `order_lookup.py`: `@tool def lookup_order(order_id: str, tenant_id: str) -> dict`: fetch from PostgreSQL — returns order details (items, amounts, dates, customer info, shipping address). Returns `{"found": False}` if not found. Wrapped with `EvidenceRetrievalError` handling
+  - [ ] `shipping_tracker.py`: `@tool def track_shipment(tracking_number: str, carrier: str) -> dict`: mock external shipping API call — returns `{"delivered": bool, "delivery_date": str, "signed_by": str, "proof_url": str}`. In production, integrate with Delhivery/Shiprocket/Bluedart APIs
+  - [ ] `payment_log_fetcher.py`: `@tool def fetch_payment_logs(transaction_id: str, tenant_id: str) -> dict`: fetch 3DS authentication logs, AVS match results, IP geolocation from payment gateway. Returns `{"3ds_authenticated": bool, "avs_match": str, "ip_country": str, "ip_city": str}`
+  - [ ] `similar_case_search.py`: `@tool def search_similar_cases(case_summary: str, reason_code: str, network: str, limit: int = 5) -> list[dict]`: embed `case_summary` using embedding model, search Qdrant with payload filters on `reason_code` + `network`. Returns top-k similar past cases with outcomes and winning narratives
+  - [ ] `template_renderer.py`: `@tool def render_template(network: str, reason_code: str, evidence: dict) -> str`: select the correct card network template (Visa/MC/RuPay), render with evidence fields. Templates stored as Jinja2 templates in `backend/src/agents/prompts/templates/`
 
-- [x] **7.3 — Evidence assembler agent (`backend/src/agents/evidence_assembler.py`)**
-  - [x] `def evidence_assembler_node(state: ChargebackAgentState) -> ChargebackAgentState`:
+- [ ] **7.3 — Evidence assembler agent (`backend/src/agents/evidence_assembler.py`)**
+  - [ ] `def evidence_assembler_node(state: ChargebackAgentState) -> ChargebackAgentState`:
     1. Extract `evidence_checklist` from state (set by reason code mapper)
     2. For each required evidence type, call the appropriate tool in parallel (using LangGraph's `Send` API):
        - `delivery_proof` → `track_shipment`
@@ -790,8 +790,8 @@ kill %1  # stop Faust worker
     5. If `completeness_score < 0.5`: set `recommendation = "accept_loss"` and skip narrative generation
     6. Log all tool calls to Langfuse via `LangfuseTracer`
 
-- [x] **7.4 — Narrative generator agent (`backend/src/agents/narrative_generator.py`)**
-  - [x] `async def narrative_generator_node(state: ChargebackAgentState) -> ChargebackAgentState`:
+- [ ] **7.4 — Narrative generator agent (`backend/src/agents/narrative_generator.py`)**
+  - [ ] `async def narrative_generator_node(state: ChargebackAgentState) -> ChargebackAgentState`:
     1. Retrieve similar winning cases from Qdrant (via `similar_case_search`)
     2. Build prompt using `representment_narrative.py` template:
        - Include reason code description, evidence summary, similar case narratives
@@ -804,8 +804,8 @@ kill %1  # stop Faust worker
     7. Update state with `narrative_draft`
     8. Log generation to Langfuse with prompt version, token usage, latency
 
-- [x] **7.5 — Confidence scorer agent (`backend/src/agents/confidence_scorer.py`)**
-  - [x] `async def confidence_scorer_node(state: ChargebackAgentState) -> ChargebackAgentState`:
+- [ ] **7.5 — Confidence scorer agent (`backend/src/agents/confidence_scorer.py`)**
+  - [ ] `async def confidence_scorer_node(state: ChargebackAgentState) -> ChargebackAgentState`:
     1. Extract features from evidence bundle and narrative using `chargeback_win/features.py`
     2. Run ONNX inference via `model_registry.get_model("chargeback_win")`
     3. Compute SHAP explanation
@@ -814,42 +814,42 @@ kill %1  # stop Faust worker
        - `win_probability <= 0.6` → `"accept_loss"` (but still allow human override)
     5. Update state
 
-- [x] **7.6 — Prompt templates**
-  - [x] `evidence_summary.py`: template for summarizing collected evidence into a structured format for the LLM
-  - [x] `representment_narrative.py`: main narrative generation prompt with few-shot examples from similar cases, network-specific formatting rules. Include explicit instruction: "Do not fabricate evidence. Only reference evidence items provided in the context."
-  - [x] `confidence_assessment.py`: prompt for the LLM to provide a qualitative assessment alongside the ML score
+- [ ] **7.6 — Prompt templates**
+  - [ ] `evidence_summary.py`: template for summarizing collected evidence into a structured format for the LLM
+  - [ ] `representment_narrative.py`: main narrative generation prompt with few-shot examples from similar cases, network-specific formatting rules. Include explicit instruction: "Do not fabricate evidence. Only reference evidence items provided in the context."
+  - [ ] `confidence_assessment.py`: prompt for the LLM to provide a qualitative assessment alongside the ML score
 
-- [x] **7.7 — LangGraph orchestrator (`backend/src/agents/orchestrator.py`)**
-  - [x] Build `StateGraph(ChargebackAgentState)` with nodes:
+- [ ] **7.7 — LangGraph orchestrator (`backend/src/agents/orchestrator.py`)**
+  - [ ] Build `StateGraph(ChargebackAgentState)` with nodes:
     1. `parse_notification` → extract and validate chargeback data, map reason code to evidence checklist
     2. `assemble_evidence` → `evidence_assembler_node`
     3. `generate_narrative` → `narrative_generator_node` (conditional: skip if `recommendation == "accept_loss"`)
     4. `score_confidence` → `confidence_scorer_node` (conditional: skip if no narrative)
     5. `human_review` → checkpoint node (LangGraph `interrupt_before` for human-in-the-loop)
     6. `finalize` → persist final case state to DB
-  - [x] Add edges: `parse → assemble → generate (conditional) → score (conditional) → human_review → finalize`
-  - [x] Add error handling edge: any node failure → `handle_error` node that logs the error, sets `status = "ERROR"`, and creates an alert
-  - [x] Compile graph: `graph = workflow.compile(checkpointer=MemorySaver())` for state persistence across restarts
-  - [x] Implement `async def process_chargeback(notification: ChargebackNotification, tenant_id: UUID) -> RepresentmentDraft`: entry point that creates initial state and invokes the graph
+  - [ ] Add edges: `parse → assemble → generate (conditional) → score (conditional) → human_review → finalize`
+  - [ ] Add error handling edge: any node failure → `handle_error` node that logs the error, sets `status = "ERROR"`, and creates an alert
+  - [ ] Compile graph: `graph = workflow.compile(checkpointer=MemorySaver())` for state persistence across restarts
+  - [ ] Implement `async def process_chargeback(notification: ChargebackNotification, tenant_id: UUID) -> RepresentmentDraft`: entry point that creates initial state and invokes the graph
 
-- [x] **7.8 — Input sanitization for defense-only constraint**
-  - [x] Implement `sanitize_input(text: str) -> str` in `backend/src/agents/tools/__init__.py`:
+- [ ] **7.8 — Input sanitization for defense-only constraint**
+  - [ ] Implement `sanitize_input(text: str) -> str` in `backend/src/agents/tools/__init__.py`:
     - Strip control characters
     - Detect and escape common prompt injection patterns (e.g., "ignore previous instructions", "system:", "assistant:")
     - Truncate inputs exceeding 10,000 characters
     - Log any sanitization actions to audit trail
-  - [x] Apply `sanitize_input` to all text fields before passing to LLM (dispute description, customer communications)
+  - [ ] Apply `sanitize_input` to all text fields before passing to LLM (dispute description, customer communications)
 
 ### Acceptance Criteria
 
-- [x] Orchestrator processes a complete chargeback from notification → evidence → narrative → confidence score → draft
-- [x] Evidence assembler correctly calls tools in parallel and computes completeness score
-- [x] Narrative generator produces network-specific formatted output
-- [x] Narrative generator falls back to template on LLM failure
-- [x] Confidence scorer produces a probability in [0, 1] with SHAP explanation
-- [x] Human-in-the-loop checkpoint pauses execution until analyst action
-- [x] All agent steps are traced in Langfuse with prompt versions and token usage
-- [x] Input sanitization strips injection patterns without corrupting legitimate text
+- [ ] Orchestrator processes a complete chargeback from notification → evidence → narrative → confidence score → draft
+- [ ] Evidence assembler correctly calls tools in parallel and computes completeness score
+- [ ] Narrative generator produces network-specific formatted output
+- [ ] Narrative generator falls back to template on LLM failure
+- [ ] Confidence scorer produces a probability in [0, 1] with SHAP explanation
+- [ ] Human-in-the-loop checkpoint pauses execution until analyst action
+- [ ] All agent steps are traced in Langfuse with prompt versions and token usage
+- [ ] Input sanitization strips injection patterns without corrupting legitimate text
 
 ### Verification Gate
 
@@ -884,8 +884,8 @@ cd backend && pytest tests/integration/test_agent_pipeline.py -v
 
 ### Implementation Checklist
 
-- [x] **8.1 — Return scoring service (`backend/src/services/return_scoring_service.py`)**
-  - [x] `class ReturnScoringService`:
+- [ ] **8.1 — Return scoring service (`backend/src/services/return_scoring_service.py`)**
+  - [ ] `class ReturnScoringService`:
     - Dependencies: `ModelRegistry`, `RedisClient`, `CaseRepository`, `SHAPExplainer`, `ExplanationFormatter`
     - `async def score(request: ReturnScoreRequest, tenant: Tenant) -> ReturnScoreResponse`:
       1. Fetch features from Redis (`get_feature_vector`). If unavailable: compute on-the-fly from DB (degraded mode, set `is_degraded=True`)
@@ -902,8 +902,8 @@ cd backend && pytest tests/integration/test_agent_pipeline.py -v
       12. Return `ReturnScoreResponse` with all fields populated
     - Total latency budget: ≤ 50ms P50, ≤ 150ms P99. If feature fetch exceeds 100ms: timeout and use degraded features
 
-- [x] **8.2 — Chargeback service (`backend/src/services/chargeback_service.py`)**
-  - [x] `class ChargebackService`:
+- [ ] **8.2 — Chargeback service (`backend/src/services/chargeback_service.py`)**
+  - [ ] `class ChargebackService`:
     - Dependencies: `ChargebackRepository`, `CaseRepository`, `TypedKafkaProducer`, agent `process_chargeback`
     - `async def ingest(request: ChargebackIngestRequest, tenant: Tenant) -> ChargebackIngestResponse`:
       1. Parse raw payload into `ChargebackNotification` (with idempotency check)
@@ -920,8 +920,8 @@ cd backend && pytest tests/integration/test_agent_pipeline.py -v
     - `async def get_pending_reviews(tenant_id: UUID) -> list[Case]`: return cases with status DRAFT_READY ordered by deadline proximity
     - `async def get_deadline_alerts(tenant_id: UUID) -> list[Case]`: return cases approaching deadline (within 48h)
 
-- [x] **8.3 — Fraud detection service (`backend/src/services/fraud_detection_service.py`)**
-  - [x] `class FraudDetectionService`:
+- [ ] **8.3 — Fraud detection service (`backend/src/services/fraud_detection_service.py`)**
+  - [ ] `class FraudDetectionService`:
     - Dependencies: `TypedKafkaProducer`, `CaseRepository`, `NotificationService`
     - `async def handle_alert(alert: AnomalyAlert, tenant: Tenant)`:
       1. Create `Case` record (source=FRAUD_ALERT) if severity >= WARNING
@@ -930,28 +930,28 @@ cd backend && pytest tests/integration/test_agent_pipeline.py -v
     - `async def register_event(tenant_id: UUID, event_name: str, start: datetime, end: datetime)`: register a known sale/festival event to adjust anomaly thresholds
     - `async def get_active_alerts(tenant_id: UUID) -> list[AnomalyAlert]`
 
-- [x] **8.4 — Case management service (`backend/src/services/case_management_service.py`)**
-  - [x] `class CaseManagementService`:
+- [ ] **8.4 — Case management service (`backend/src/services/case_management_service.py`)**
+  - [ ] `class CaseManagementService`:
     - Dependencies: `CaseRepository`, audit trail integration
     - `async def assign(case_id: UUID, tenant_id: UUID, user_id: UUID, actor_id: UUID)`: assign case to analyst with audit log
     - `async def update_status(case_id: UUID, tenant_id: UUID, new_status: CaseStatus, actor_id: UUID, resolution: str | None = None)`: transition status with validation (e.g., can't go from LOST back to DRAFT_READY), write audit log
     - `async def get_dashboard_stats(tenant_id: UUID) -> dict`: aggregate case counts by status, source, priority. Include `avg_resolution_time`, `approaching_deadline_count`, `win_rate_last_90d`
     - `async def search(tenant_id: UUID, query: str, filters: dict, page: int, size: int) -> tuple[list[Case], int]`: full-text search + filter on cases
 
-- [x] **8.5 — Notification service (`backend/src/services/notification_service.py`)**
-  - [x] `class NotificationService`:
+- [ ] **8.5 — Notification service (`backend/src/services/notification_service.py`)**
+  - [ ] `class NotificationService`:
     - `async def send(channel: NotificationChannel, recipient: str, subject: str, body: str, metadata: dict)`: dispatch notification. For MVP: implement `EMAIL` (via SMTP/SendGrid) and `SLACK` (via webhook). `PAGERDUTY` and `SMS` as stubs raising `NotImplementedError`
     - `async def route_alert(alert: AnomalyAlert, tenant: Tenant)`: look up tenant notification config, send to appropriate channels based on severity mapping
     - `async def send_deadline_warning(case: Case, hours_remaining: int)`: templated deadline warning message
 
 ### Acceptance Criteria
 
-- [x] `ReturnScoringService.score` returns response within 150ms P99 (with Redis warm)
-- [x] `ReturnScoringService.score` falls back to degraded mode when Redis is down
-- [x] `ChargebackService.ingest` is idempotent (duplicate ARN → error, not duplicate case)
-- [x] `ChargebackService.review` writes audit log entries for every action
-- [x] Case status transitions are validated (invalid transitions rejected)
-- [x] Dashboard stats aggregate correctly across all case sources
+- [ ] `ReturnScoringService.score` returns response within 150ms P99 (with Redis warm)
+- [ ] `ReturnScoringService.score` falls back to degraded mode when Redis is down
+- [ ] `ChargebackService.ingest` is idempotent (duplicate ARN → error, not duplicate case)
+- [ ] `ChargebackService.review` writes audit log entries for every action
+- [ ] Case status transitions are validated (invalid transitions rejected)
+- [ ] Dashboard stats aggregate correctly across all case sources
 
 ### Verification Gate
 
@@ -993,77 +993,77 @@ cd backend && pytest tests/unit/test_case_management.py -v
 
 ### Implementation Checklist
 
-- [x] **9.1 — Authentication middleware (`backend/src/api/middleware/auth.py`)**
-  - [x] JWT-based authentication using `python-jose`:
+- [ ] **9.1 — Authentication middleware (`backend/src/api/middleware/auth.py`)**
+  - [ ] JWT-based authentication using `python-jose`:
     - `def create_access_token(user_id: UUID, tenant_id: UUID, role: str, expires_delta: timedelta = timedelta(hours=8)) -> str`
     - `async def verify_token(token: str) -> dict`: decode JWT, return payload with `user_id`, `tenant_id`, `role`
-  - [x] RBAC decorator: `def require_role(*roles: str)` → FastAPI `Depends` that checks `current_user.role in roles`
-  - [x] API key authentication (for machine-to-machine): `async def verify_api_key(x_api_key: str = Header())` → look up tenant by hashed API key
-  - [x] Support both: JWT (for dashboard users) and API key (for webhook/integration callers)
+  - [ ] RBAC decorator: `def require_role(*roles: str)` → FastAPI `Depends` that checks `current_user.role in roles`
+  - [ ] API key authentication (for machine-to-machine): `async def verify_api_key(x_api_key: str = Header())` → look up tenant by hashed API key
+  - [ ] Support both: JWT (for dashboard users) and API key (for webhook/integration callers)
 
-- [x] **9.2 — Rate limiting middleware (`backend/src/api/middleware/rate_limit.py`)**
-  - [x] Redis-backed sliding window rate limiter:
+- [ ] **9.2 — Rate limiting middleware (`backend/src/api/middleware/rate_limit.py`)**
+  - [ ] Redis-backed sliding window rate limiter:
     - `async def rate_limit(identifier: str, limit: int, window_seconds: int)`: uses `RedisClient.check_rate_limit`
     - Return `429 Too Many Requests` with `Retry-After` header when exceeded
-  - [x] Per-endpoint configuration (from PRD §3.5):
+  - [ ] Per-endpoint configuration (from PRD §3.5):
     - `/v1/returns/score`: 100 req/s per tenant
     - `/v1/chargebacks/ingest`: 500 req/s per source
     - `/v1/*` (dashboard): 120 req/min per user
 
-- [x] **9.3 — Request ID middleware (`backend/src/api/middleware/request_id.py`)**
-  - [x] Generate `X-Request-ID` (UUID4) if not present in request headers
-  - [x] Propagate to all downstream calls (DB queries, Kafka events, LLM calls)
-  - [x] Include in all response headers
-  - [x] Set as OpenTelemetry trace context
+- [ ] **9.3 — Request ID middleware (`backend/src/api/middleware/request_id.py`)**
+  - [ ] Generate `X-Request-ID` (UUID4) if not present in request headers
+  - [ ] Propagate to all downstream calls (DB queries, Kafka events, LLM calls)
+  - [ ] Include in all response headers
+  - [ ] Set as OpenTelemetry trace context
 
-- [x] **9.4 — Chargeback endpoints (`backend/src/api/v1/chargebacks.py`)**
-  - [x] `POST /v1/chargebacks/ingest`: accept `ChargebackIngestRequest`, auth via API key, rate limit 500/s. Returns `ChargebackIngestResponse` with `202 Accepted`
-  - [x] `GET /v1/chargebacks/{case_id}`: retrieve full chargeback case with evidence, narrative, and score. Auth: JWT, roles `analyst`, `admin`
-  - [x] `GET /v1/chargebacks/pending`: list cases with status `DRAFT_READY` for review queue. Supports pagination (`?page=1&size=20`) and sorting (`?sort=deadline_asc`)
-  - [x] `POST /v1/chargebacks/{case_id}/review`: submit review action (`approve`, `edit`, `reject`). Auth: JWT, roles `analyst`, `admin`. Body: `{"action": "approve" | "edit" | "reject", "edits": {...}}`. Creates audit log entry
-  - [x] `GET /v1/chargebacks/deadlines`: list approaching deadlines (within 48h). Auth: JWT
-  - [x] `POST /v1/chargebacks/upload`: file upload endpoint for batch chargeback ingestion (CSV/ISO 8583). Auth: API key. Returns `{"accepted": int, "rejected": int, "errors": [...]}`
+- [ ] **9.4 — Chargeback endpoints (`backend/src/api/v1/chargebacks.py`)**
+  - [ ] `POST /v1/chargebacks/ingest`: accept `ChargebackIngestRequest`, auth via API key, rate limit 500/s. Returns `ChargebackIngestResponse` with `202 Accepted`
+  - [ ] `GET /v1/chargebacks/{case_id}`: retrieve full chargeback case with evidence, narrative, and score. Auth: JWT, roles `analyst`, `admin`
+  - [ ] `GET /v1/chargebacks/pending`: list cases with status `DRAFT_READY` for review queue. Supports pagination (`?page=1&size=20`) and sorting (`?sort=deadline_asc`)
+  - [ ] `POST /v1/chargebacks/{case_id}/review`: submit review action (`approve`, `edit`, `reject`). Auth: JWT, roles `analyst`, `admin`. Body: `{"action": "approve" | "edit" | "reject", "edits": {...}}`. Creates audit log entry
+  - [ ] `GET /v1/chargebacks/deadlines`: list approaching deadlines (within 48h). Auth: JWT
+  - [ ] `POST /v1/chargebacks/upload`: file upload endpoint for batch chargeback ingestion (CSV/ISO 8583). Auth: API key. Returns `{"accepted": int, "rejected": int, "errors": [...]}`
 
-- [x] **9.5 — Return scoring endpoints (`backend/src/api/v1/returns.py`)**
-  - [x] `POST /v1/returns/score`: accept `ReturnScoreRequest`, auth via API key, rate limit 100/s/tenant. Returns `ReturnScoreResponse`. Must respond within 300ms hard ceiling (return `503` if timeout)
-  - [x] `GET /v1/returns/history`: paginated history of return scoring decisions for a tenant. Supports filters: `?customer_id=`, `?risk_tier=`, `?date_from=`, `?date_to=`
-  - [x] `PUT /v1/returns/policy`: update `PolicyConfig` for a tenant. Auth: JWT, role `admin`. Validates thresholds are in order (low < medium < high)
+- [ ] **9.5 — Return scoring endpoints (`backend/src/api/v1/returns.py`)**
+  - [ ] `POST /v1/returns/score`: accept `ReturnScoreRequest`, auth via API key, rate limit 100/s/tenant. Returns `ReturnScoreResponse`. Must respond within 300ms hard ceiling (return `503` if timeout)
+  - [ ] `GET /v1/returns/history`: paginated history of return scoring decisions for a tenant. Supports filters: `?customer_id=`, `?risk_tier=`, `?date_from=`, `?date_to=`
+  - [ ] `PUT /v1/returns/policy`: update `PolicyConfig` for a tenant. Auth: JWT, role `admin`. Validates thresholds are in order (low < medium < high)
 
-- [x] **9.6 — Fraud alert endpoints (`backend/src/api/v1/fraud.py`)**
-  - [x] `GET /v1/fraud/alerts`: list active alerts for a tenant. Supports filters: `?severity=`, `?classification=`, `?from=`, `?to=`
-  - [x] `GET /v1/fraud/alerts/{alert_id}`: detailed alert view with transaction IDs, geographic spread, velocity profile
-  - [x] `POST /v1/fraud/events`: register a known sale/festival event. Body: `{"name": str, "start": datetime, "end": datetime, "threshold_multiplier": float}`
-  - [x] `POST /v1/fraud/alerts/{alert_id}/acknowledge`: mark alert as acknowledged. Auth: JWT, roles `analyst`, `admin`
+- [ ] **9.6 — Fraud alert endpoints (`backend/src/api/v1/fraud.py`)**
+  - [ ] `GET /v1/fraud/alerts`: list active alerts for a tenant. Supports filters: `?severity=`, `?classification=`, `?from=`, `?to=`
+  - [ ] `GET /v1/fraud/alerts/{alert_id}`: detailed alert view with transaction IDs, geographic spread, velocity profile
+  - [ ] `POST /v1/fraud/events`: register a known sale/festival event. Body: `{"name": str, "start": datetime, "end": datetime, "threshold_multiplier": float}`
+  - [ ] `POST /v1/fraud/alerts/{alert_id}/acknowledge`: mark alert as acknowledged. Auth: JWT, roles `analyst`, `admin`
 
-- [x] **9.7 — Case management endpoints (`backend/src/api/v1/cases.py`)**
-  - [x] `GET /v1/cases`: list all cases with filters (`?source=`, `?status=`, `?assigned_to=`, `?priority=`) and pagination
-  - [x] `GET /v1/cases/{case_id}`: full case detail with audit trail
-  - [x] `PATCH /v1/cases/{case_id}`: update case (assign, change status). Auth: JWT
-  - [x] `GET /v1/cases/{case_id}/audit`: audit trail for a specific case
-  - [x] `GET /v1/cases/stats`: dashboard statistics (case counts by status/source, win rate, avg resolution time)
+- [ ] **9.7 — Case management endpoints (`backend/src/api/v1/cases.py`)**
+  - [ ] `GET /v1/cases`: list all cases with filters (`?source=`, `?status=`, `?assigned_to=`, `?priority=`) and pagination
+  - [ ] `GET /v1/cases/{case_id}`: full case detail with audit trail
+  - [ ] `PATCH /v1/cases/{case_id}`: update case (assign, change status). Auth: JWT
+  - [ ] `GET /v1/cases/{case_id}/audit`: audit trail for a specific case
+  - [ ] `GET /v1/cases/stats`: dashboard statistics (case counts by status/source, win rate, avg resolution time)
 
-- [x] **9.8 — Metrics & evaluation endpoints (`backend/src/api/v1/metrics.py`)**
-  - [x] `GET /v1/metrics/evaluation/{model_name}`: list evaluation runs for a model with metrics
-  - [x] `GET /v1/metrics/evaluation/{model_name}/latest`: latest evaluation report
-  - [x] `GET /v1/metrics/drift/{model_name}`: latest drift report per feature
-  - [x] `GET /v1/metrics/cost-summary`: ₹-denominated cost summary: `{"total_fp_cost": Decimal, "total_fn_cost": Decimal, "total_savings": Decimal, "period": str}`
-  - [x] `GET /v1/metrics/prometheus`: Prometheus-compatible metrics endpoint (histogram: inference_latency, counter: requests_total, gauge: active_cases)
+- [ ] **9.8 — Metrics & evaluation endpoints (`backend/src/api/v1/metrics.py`)**
+  - [ ] `GET /v1/metrics/evaluation/{model_name}`: list evaluation runs for a model with metrics
+  - [ ] `GET /v1/metrics/evaluation/{model_name}/latest`: latest evaluation report
+  - [ ] `GET /v1/metrics/drift/{model_name}`: latest drift report per feature
+  - [ ] `GET /v1/metrics/cost-summary`: ₹-denominated cost summary: `{"total_fp_cost": Decimal, "total_fn_cost": Decimal, "total_savings": Decimal, "period": str}`
+  - [ ] `GET /v1/metrics/prometheus`: Prometheus-compatible metrics endpoint (histogram: inference_latency, counter: requests_total, gauge: active_cases)
 
-- [x] **9.9 — Router assembly (`backend/src/main.py` update)**
-  - [x] Include all routers under `/api/v1/` prefix
-  - [x] Add middleware stack in order: request_id → rate_limit → auth → CORS
-  - [x] Add OpenTelemetry FastAPI instrumentation
-  - [x] Add exception handlers: `SchemaValidationError → 422`, `CaseNotFoundError → 404`, `DuplicateIngestionError → 409`, `ModelInferenceError → 503`, `DeadlineExceededError → 410`, `RiskManagerError → 500`
+- [ ] **9.9 — Router assembly (`backend/src/main.py` update)**
+  - [ ] Include all routers under `/api/v1/` prefix
+  - [ ] Add middleware stack in order: request_id → rate_limit → auth → CORS
+  - [ ] Add OpenTelemetry FastAPI instrumentation
+  - [ ] Add exception handlers: `SchemaValidationError → 422`, `CaseNotFoundError → 404`, `DuplicateIngestionError → 409`, `ModelInferenceError → 503`, `DeadlineExceededError → 410`, `RiskManagerError → 500`
 
 ### Acceptance Criteria
 
-- [x] All endpoints return correct HTTP status codes
-- [x] Authentication rejects invalid/expired tokens with 401
-- [x] RBAC prevents analysts from accessing admin-only endpoints
-- [x] Rate limiter returns 429 with correct `Retry-After` header
-- [x] Request IDs propagate through the full request lifecycle
-- [x] `/v1/returns/score` responds within 300ms under load
-- [x] OpenAPI docs auto-generated at `/docs` with correct schemas
+- [ ] All endpoints return correct HTTP status codes
+- [ ] Authentication rejects invalid/expired tokens with 401
+- [ ] RBAC prevents analysts from accessing admin-only endpoints
+- [ ] Rate limiter returns 429 with correct `Retry-After` header
+- [ ] Request IDs propagate through the full request lifecycle
+- [ ] `/v1/returns/score` responds within 300ms under load
+- [ ] OpenAPI docs auto-generated at `/docs` with correct schemas
 
 ### Verification Gate
 
@@ -1102,36 +1102,36 @@ cd backend && pytest tests/integration/test_api_returns.py -v
 
 ### Implementation Checklist
 
-- [x] **10.1 — Neo4j client (`backend/src/graph/neo4j_client.py`)**
-  - [x] `class Neo4jClient`: wraps `neo4j.AsyncDriver`
-  - [x] `async def ensure_constraints()`: create uniqueness constraints on `Buyer.id`, `Seller.id`, `Device.fingerprint`, `Address.hash`, `PaymentInstrument.token`
-  - [x] `async def ensure_indexes()`: create indexes on `(tenant_id)` for all node types
-  - [x] `async def batch_merge_nodes(nodes: list[dict])`: batch UNWIND + MERGE for high-throughput graph building
-  - [x] `async def batch_merge_edges(edges: list[dict])`: batch edge creation
-  - [x] `async def get_subgraph(node_id: str, depth: int = 2) -> dict`: return ego-network for visualization
-  - [x] `async def health_check() -> bool`
+- [ ] **10.1 — Neo4j client (`backend/src/graph/neo4j_client.py`)**
+  - [ ] `class Neo4jClient`: wraps `neo4j.AsyncDriver`
+  - [ ] `async def ensure_constraints()`: create uniqueness constraints on `Buyer.id`, `Seller.id`, `Device.fingerprint`, `Address.hash`, `PaymentInstrument.token`
+  - [ ] `async def ensure_indexes()`: create indexes on `(tenant_id)` for all node types
+  - [ ] `async def batch_merge_nodes(nodes: list[dict])`: batch UNWIND + MERGE for high-throughput graph building
+  - [ ] `async def batch_merge_edges(edges: list[dict])`: batch edge creation
+  - [ ] `async def get_subgraph(node_id: str, depth: int = 2) -> dict`: return ego-network for visualization
+  - [ ] `async def health_check() -> bool`
 
-- [x] **10.2 — Community detection (`backend/src/graph/community_detection.py`)**
-  - [x] `async def run_louvain(tenant_id: UUID, min_community_size: int = 3) -> list[dict]`: project graph → run GDS Louvain → return communities with `{"community_id": int, "members": list[str], "size": int, "modularity": float}`
-  - [x] `async def run_label_propagation(tenant_id: UUID) -> list[dict]`: alternative algorithm for comparison
-  - [x] `async def detect_suspicious_communities(communities: list[dict]) -> list[dict]`: filter communities by suspicion heuristics:
+- [ ] **10.2 — Community detection (`backend/src/graph/community_detection.py`)**
+  - [ ] `async def run_louvain(tenant_id: UUID, min_community_size: int = 3) -> list[dict]`: project graph → run GDS Louvain → return communities with `{"community_id": int, "members": list[str], "size": int, "modularity": float}`
+  - [ ] `async def run_label_propagation(tenant_id: UUID) -> list[dict]`: alternative algorithm for comparison
+  - [ ] `async def detect_suspicious_communities(communities: list[dict]) -> list[dict]`: filter communities by suspicion heuristics:
     - Shared shipping addresses across multiple buyers
     - Same device fingerprint used by multiple accounts
     - Coordinated timing (>3 members transacting within 5 minutes)
     - Unusually high return/chargeback rates within the community
 
-- [x] **10.3 — Ring scorer (`backend/src/graph/ring_scorer.py`)**
-  - [x] `def score_ring(community: dict, transaction_stats: dict) -> float`: 0-1 suspicion score based on weighted heuristics (address sharing: 0.3, device sharing: 0.3, timing coordination: 0.2, chargeback rate: 0.2)
-  - [x] `def generate_ring_narrative(community: dict, score: float) -> str`: human-readable explanation of why this cluster is suspicious
-  - [x] `def format_for_alert(community: dict, score: float, narrative: str) -> AnomalyAlert`: create alert if score > 0.7
+- [ ] **10.3 — Ring scorer (`backend/src/graph/ring_scorer.py`)**
+  - [ ] `def score_ring(community: dict, transaction_stats: dict) -> float`: 0-1 suspicion score based on weighted heuristics (address sharing: 0.3, device sharing: 0.3, timing coordination: 0.2, chargeback rate: 0.2)
+  - [ ] `def generate_ring_narrative(community: dict, score: float) -> str`: human-readable explanation of why this cluster is suspicious
+  - [ ] `def format_for_alert(community: dict, score: float, narrative: str) -> AnomalyAlert`: create alert if score > 0.7
 
 ### Acceptance Criteria
 
-- [x] Neo4j constraints and indexes created successfully
-- [x] Batch node/edge creation handles 10,000 nodes without error
-- [x] Louvain detects synthetic planted communities (inject 3 connected buyers sharing an address)
-- [x] Ring scorer assigns score > 0.7 to communities with shared devices + addresses
-- [x] Subgraph extraction returns correct ego-network for visualization
+- [ ] Neo4j constraints and indexes created successfully
+- [ ] Batch node/edge creation handles 10,000 nodes without error
+- [ ] Louvain detects synthetic planted communities (inject 3 connected buyers sharing an address)
+- [ ] Ring scorer assigns score > 0.7 to communities with shared devices + addresses
+- [ ] Subgraph extraction returns correct ego-network for visualization
 
 ### Verification Gate
 
@@ -1161,15 +1161,15 @@ cd backend && pytest tests/integration/test_graph_analysis.py -v
 
 ### Implementation Checklist
 
-- [x] **11.1 — OpenTelemetry setup (`backend/src/integrations/otel_setup.py`)**
-  - [x] Initialize `TracerProvider` with `BatchSpanProcessor` exporting to OTLP endpoint (Jaeger or Grafana Tempo)
-  - [x] Auto-instrument FastAPI via `FastAPIInstrumentor().instrument_app(app)`
-  - [x] Auto-instrument SQLAlchemy: `SQLAlchemyInstrumentor().instrument(engine=engine)`
-  - [x] Auto-instrument httpx: `HTTPXClientInstrumentor().instrument()`
-  - [x] Custom spans for: ML inference (`ml.inference`), agent steps (`agent.{step_name}`), Kafka produce/consume (`kafka.produce`, `kafka.consume`)
+- [ ] **11.1 — OpenTelemetry setup (`backend/src/integrations/otel_setup.py`)**
+  - [ ] Initialize `TracerProvider` with `BatchSpanProcessor` exporting to OTLP endpoint (Jaeger or Grafana Tempo)
+  - [ ] Auto-instrument FastAPI via `FastAPIInstrumentor().instrument_app(app)`
+  - [ ] Auto-instrument SQLAlchemy: `SQLAlchemyInstrumentor().instrument(engine=engine)`
+  - [ ] Auto-instrument httpx: `HTTPXClientInstrumentor().instrument()`
+  - [ ] Custom spans for: ML inference (`ml.inference`), agent steps (`agent.{step_name}`), Kafka produce/consume (`kafka.produce`, `kafka.consume`)
 
-- [x] **11.2 — Prometheus metrics (`backend/src/integrations/prometheus_metrics.py`)**
-  - [x] Define metrics:
+- [ ] **11.2 — Prometheus metrics (`backend/src/integrations/prometheus_metrics.py`)**
+  - [ ] Define metrics:
     - `Histogram("return_scoring_latency_seconds", "Return scoring inference latency", buckets=[0.01, 0.025, 0.05, 0.1, 0.15, 0.3])`
     - `Histogram("chargeback_processing_duration_seconds", "Chargeback evidence assembly duration", buckets=[10, 30, 60, 120, 300])`
     - `Counter("requests_total", "Total API requests", ["method", "endpoint", "status_code"])`
@@ -1180,8 +1180,8 @@ cd backend && pytest tests/integration/test_graph_analysis.py -v
     - `Counter("llm_tokens_total", "Total LLM tokens used", ["model", "direction"])`
     - `Counter("rate_limit_hits_total", "Rate limit rejections", ["endpoint"])`
 
-- [x] **11.3 — Grafana dashboards**
-  - [x] Create `infra/grafana/dashboards/risk_manager.json` with panels:
+- [ ] **11.3 — Grafana dashboards**
+  - [ ] Create `infra/grafana/dashboards/risk_manager.json` with panels:
     - Return scoring latency (P50, P95, P99) — line chart
     - Request rate by endpoint — stacked area chart
     - Active cases by status — stacked bar chart
@@ -1189,19 +1189,19 @@ cd backend && pytest tests/integration/test_graph_analysis.py -v
     - Kafka consumer lag — line chart per topic
     - Cost-weighted loss over time — line chart
     - LLM token usage and cost — counter
-  - [x] Add Grafana + Prometheus to `docker-compose.yml` with provisioned datasource and dashboard
+  - [ ] Add Grafana + Prometheus to `docker-compose.yml` with provisioned datasource and dashboard
 
-- [x] **11.4 — Langfuse integration verification**
-  - [x] Verify all LLM calls in agent pipeline create Langfuse generations with: prompt text, completion text, model name, token counts, latency
-  - [x] Verify Langfuse traces are created per chargeback case with all agent steps as spans
-  - [x] Verify Langfuse scores are recorded: evidence_completeness, win_probability
+- [ ] **11.4 — Langfuse integration verification**
+  - [ ] Verify all LLM calls in agent pipeline create Langfuse generations with: prompt text, completion text, model name, token counts, latency
+  - [ ] Verify Langfuse traces are created per chargeback case with all agent steps as spans
+  - [ ] Verify Langfuse scores are recorded: evidence_completeness, win_probability
 
 ### Acceptance Criteria
 
-- [x] Distributed traces visible in Jaeger/Tempo showing full request lifecycle
-- [x] Prometheus `/metrics` endpoint returns all defined metrics
-- [x] Grafana dashboard loads with real data from dev environment
-- [x] Langfuse shows traced agent pipelines with token usage
+- [ ] Distributed traces visible in Jaeger/Tempo showing full request lifecycle
+- [ ] Prometheus `/metrics` endpoint returns all defined metrics
+- [ ] Grafana dashboard loads with real data from dev environment
+- [ ] Langfuse shows traced agent pipelines with token usage
 
 ### Verification Gate
 
@@ -1244,26 +1244,26 @@ curl -s http://localhost:8000/api/v1/metrics/prometheus | grep return_scoring_la
 
 ### Implementation Checklist
 
-- [x] **12.1 — API client (`dashboard/src/lib/api-client.ts`)**
-  - [x] Typed `fetch` wrapper with JWT token management (stored in httpOnly cookie)
-  - [x] Auto-refresh token on 401
-  - [x] Methods for all API endpoints: `scorReturn()`, `ingestChargeback()`, `listCases()`, `reviewChargeback()`, `getStats()`, `getEvaluationReport()`, etc.
-  - [x] Error handling: parse API error responses into typed error objects
+- [ ] **12.1 — API client (`dashboard/src/lib/api-client.ts`)**
+  - [ ] Typed `fetch` wrapper with JWT token management (stored in httpOnly cookie)
+  - [ ] Auto-refresh token on 401
+  - [ ] Methods for all API endpoints: `scorReturn()`, `ingestChargeback()`, `listCases()`, `reviewChargeback()`, `getStats()`, `getEvaluationReport()`, etc.
+  - [ ] Error handling: parse API error responses into typed error objects
 
-- [x] **12.2 — Root layout (`dashboard/src/app/layout.tsx`)**
-  - [x] Dark mode sidebar navigation with links: Dashboard, Chargebacks, Returns, Fraud Alerts, Abuse Rings, Model Evaluation, Settings
-  - [x] Top bar with: tenant name, user avatar, notification bell (count of pending reviews + deadline warnings)
-  - [x] CSS design system using CSS custom properties: colors (dark palette), spacing, border-radius, typography (Inter font from Google Fonts)
+- [ ] **12.2 — Root layout (`dashboard/src/app/layout.tsx`)**
+  - [ ] Dark mode sidebar navigation with links: Dashboard, Chargebacks, Returns, Fraud Alerts, Abuse Rings, Model Evaluation, Settings
+  - [ ] Top bar with: tenant name, user avatar, notification bell (count of pending reviews + deadline warnings)
+  - [ ] CSS design system using CSS custom properties: colors (dark palette), spacing, border-radius, typography (Inter font from Google Fonts)
 
-- [x] **12.3 — Dashboard home (`dashboard/src/app/page.tsx`)**
-  - [x] KPI cards row: Total Active Cases, Chargeback Win Rate (last 90d), Total ₹ Saved, Pending Reviews, Approaching Deadlines
-  - [x] Cost-weighted metrics chart: line chart of precision, recall, cost-weighted loss over time (Recharts)
-  - [x] Case distribution: donut chart by source (chargeback, return, fraud, ring)
-  - [x] Recent activity feed: latest case updates, alerts, model evaluations
+- [ ] **12.3 — Dashboard home (`dashboard/src/app/page.tsx`)**
+  - [ ] KPI cards row: Total Active Cases, Chargeback Win Rate (last 90d), Total ₹ Saved, Pending Reviews, Approaching Deadlines
+  - [ ] Cost-weighted metrics chart: line chart of precision, recall, cost-weighted loss over time (Recharts)
+  - [ ] Case distribution: donut chart by source (chargeback, return, fraud, ring)
+  - [ ] Recent activity feed: latest case updates, alerts, model evaluations
 
-- [x] **12.4 — Chargeback pages**
-  - [x] List page (`chargebacks/page.tsx`): sortable table with columns: Case ID, ARN, Network, Reason Code, Amount, Status, Deadline, Win Probability, Assigned To. Filters: status dropdown, network dropdown, date range. Pagination
-  - [x] Detail page (`chargebacks/[id]/page.tsx`):
+- [ ] **12.4 — Chargeback pages**
+  - [ ] List page (`chargebacks/page.tsx`): sortable table with columns: Case ID, ARN, Network, Reason Code, Amount, Status, Deadline, Win Probability, Assigned To. Filters: status dropdown, network dropdown, date range. Pagination
+  - [ ] Detail page (`chargebacks/[id]/page.tsx`):
     - Case header: status badge, deadline countdown (color-coded: green >7d, yellow 3-7d, red <3d)
     - Evidence panel: list of `EvidenceItem`s with status icons (found/missing)
     - Narrative panel: rendered draft with edit-in-place capability
@@ -1272,46 +1272,46 @@ curl -s http://localhost:8000/api/v1/metrics/prometheus | grep return_scoring_la
     - Review actions: Approve, Edit, Reject buttons with confirmation dialogs
     - Audit trail: timeline of all actions on this case
 
-- [x] **12.5 — Returns page (`dashboard/src/app/returns/page.tsx`)**
-  - [x] Risk score distribution: histogram of recent scores
-  - [x] Decision breakdown: pie chart of auto_approve / manual_review / auto_deny
-  - [x] Recent decisions table: Customer ID, Order Amount, Risk Score, Tier, Decision, Top Features
-  - [x] Policy config panel: editable thresholds with save button
+- [ ] **12.5 — Returns page (`dashboard/src/app/returns/page.tsx`)**
+  - [ ] Risk score distribution: histogram of recent scores
+  - [ ] Decision breakdown: pie chart of auto_approve / manual_review / auto_deny
+  - [ ] Recent decisions table: Customer ID, Order Amount, Risk Score, Tier, Decision, Top Features
+  - [ ] Policy config panel: editable thresholds with save button
 
-- [x] **12.6 — Fraud alerts page (`dashboard/src/app/fraud/page.tsx`)**
-  - [x] Active alerts list with severity color-coding
-  - [x] Alert detail: TPS chart (baseline vs. current), geographic heatmap, transaction list
-  - [x] Registered events calendar
+- [ ] **12.6 — Fraud alerts page (`dashboard/src/app/fraud/page.tsx`)**
+  - [ ] Active alerts list with severity color-coding
+  - [ ] Alert detail: TPS chart (baseline vs. current), geographic heatmap, transaction list
+  - [ ] Registered events calendar
 
-- [x] **12.7 — Abuse rings page (`dashboard/src/app/rings/page.tsx`)**
-  - [x] Force-directed graph visualization (D3.js) showing detected communities
-  - [x] Node coloring by entity type (buyer=blue, seller=green, device=orange, address=purple)
-  - [x] Edge thickness by transaction volume
-  - [x] Click on community to expand and see member details + suspicion score
+- [ ] **12.7 — Abuse rings page (`dashboard/src/app/rings/page.tsx`)**
+  - [ ] Force-directed graph visualization (D3.js) showing detected communities
+  - [ ] Node coloring by entity type (buyer=blue, seller=green, device=orange, address=purple)
+  - [ ] Edge thickness by transaction volume
+  - [ ] Click on community to expand and see member details + suspicion score
 
-- [x] **12.8 — Evaluation page (`dashboard/src/app/evaluation/page.tsx`)**
-  - [x] Model selector dropdown (return_risk, chargeback_win, fraud_spike)
-  - [x] Latest evaluation report: metrics table, ROC curve, calibration curve, threshold sweep chart
-  - [x] Champion vs. challenger comparison table
-  - [x] Drift report: per-feature PSI values with color-coded status (green < 0.1, yellow 0.1-0.2, red > 0.2)
-  - [x] Evaluation history: list of past runs with metrics trends
+- [ ] **12.8 — Evaluation page (`dashboard/src/app/evaluation/page.tsx`)**
+  - [ ] Model selector dropdown (return_risk, chargeback_win, fraud_spike)
+  - [ ] Latest evaluation report: metrics table, ROC curve, calibration curve, threshold sweep chart
+  - [ ] Champion vs. challenger comparison table
+  - [ ] Drift report: per-feature PSI values with color-coded status (green < 0.1, yellow 0.1-0.2, red > 0.2)
+  - [ ] Evaluation history: list of past runs with metrics trends
 
-- [x] **12.9 — Settings page (`dashboard/src/app/settings/page.tsx`)**
-  - [x] Tenant configuration: name, API key regeneration
-  - [x] Notification channels: configure Slack webhook URL, email recipients per severity level
-  - [x] Policy configuration: threshold sliders for return scoring
-  - [x] User management: list users, invite new user, assign roles (RBAC)
-  - [x] Data retention settings: display current retention policy
+- [ ] **12.9 — Settings page (`dashboard/src/app/settings/page.tsx`)**
+  - [ ] Tenant configuration: name, API key regeneration
+  - [ ] Notification channels: configure Slack webhook URL, email recipients per severity level
+  - [ ] Policy configuration: threshold sliders for return scoring
+  - [ ] User management: list users, invite new user, assign roles (RBAC)
+  - [ ] Data retention settings: display current retention policy
 
 ### Acceptance Criteria
 
-- [x] Dashboard renders correctly in Chrome and Firefox
-- [x] All pages load data from backend API
-- [x] Chargeback review workflow (approve/edit/reject) completes successfully
-- [x] Graph visualization renders detected communities with correct node/edge relationships
-- [x] Evaluation charts display correct metrics from evaluation reports
-- [x] Real-time updates: new cases appear without page refresh (SSE or polling)
-- [x] Responsive layout works on 1280px+ screens (primary analyst use case)
+- [ ] Dashboard renders correctly in Chrome and Firefox
+- [ ] All pages load data from backend API
+- [ ] Chargeback review workflow (approve/edit/reject) completes successfully
+- [ ] Graph visualization renders detected communities with correct node/edge relationships
+- [ ] Evaluation charts display correct metrics from evaluation reports
+- [ ] Real-time updates: new cases appear without page refresh (SSE or polling)
+- [ ] Responsive layout works on 1280px+ screens (primary analyst use case)
 
 ### Verification Gate
 
@@ -1343,8 +1343,8 @@ cd dashboard && npm run lint   # verify no lint errors
 
 ### Implementation Checklist
 
-- [x] **13.1 — Chargeback end-to-end test**
-  - [x] Test: `test_chargeback_full_lifecycle`:
+- [ ] **13.1 — Chargeback end-to-end test**
+  - [ ] Test: `test_chargeback_full_lifecycle`:
     1. `POST /v1/chargebacks/ingest` with valid Visa chargeback notification
     2. Assert: case created with status `NEW`, deadline = received_at + 30d
     3. Wait for agent pipeline to complete (poll case status)
@@ -1357,50 +1357,50 @@ cd dashboard && npm run lint   # verify no lint errors
     10. Assert: Langfuse trace exists with all agent steps
     11. Assert: Prometheus metrics updated (chargeback_processing_duration)
 
-- [x] **13.2 — Duplicate chargeback rejection test**
-  - [x] `POST /v1/chargebacks/ingest` with same ARN twice
-  - [x] Assert: first → 202, second → 409 with `DuplicateIngestionError`
+- [ ] **13.2 — Duplicate chargeback rejection test**
+  - [ ] `POST /v1/chargebacks/ingest` with same ARN twice
+  - [ ] Assert: first → 202, second → 409 with `DuplicateIngestionError`
 
-- [x] **13.3 — Return scoring end-to-end test**
-  - [x] `POST /v1/returns/score` with valid request
-  - [x] Assert: response within 300ms
-  - [x] Assert: risk_score in [0, 100], risk_tier matches score, decision matches tier + policy
-  - [x] Assert: top_features has 5 items with SHAP values
-  - [x] Assert: decision record persisted in PostgreSQL
-  - [x] Assert: ReturnEvent published to Kafka
+- [ ] **13.3 — Return scoring end-to-end test**
+  - [ ] `POST /v1/returns/score` with valid request
+  - [ ] Assert: response within 300ms
+  - [ ] Assert: risk_score in [0, 100], risk_tier matches score, decision matches tier + policy
+  - [ ] Assert: top_features has 5 items with SHAP values
+  - [ ] Assert: decision record persisted in PostgreSQL
+  - [ ] Assert: ReturnEvent published to Kafka
 
-- [x] **13.4 — Return scoring degraded mode test**
-  - [x] Stop Redis container
-  - [x] `POST /v1/returns/score` with valid request
-  - [x] Assert: response still returned (degraded mode), `is_degraded` flag may not be in API response but logged
-  - [x] Assert: response within 500ms (relaxed for degraded mode)
-  - [x] Start Redis container again
+- [ ] **13.4 — Return scoring degraded mode test**
+  - [ ] Stop Redis container
+  - [ ] `POST /v1/returns/score` with valid request
+  - [ ] Assert: response still returned (degraded mode), `is_degraded` flag may not be in API response but logged
+  - [ ] Assert: response within 500ms (relaxed for degraded mode)
+  - [ ] Start Redis container again
 
-- [x] **13.5 — Fraud detection end-to-end test**
-  - [x] Publish 100 transactions to `transactions.raw` within 1 second (simulating spike)
-  - [x] Assert: anomaly alert appears in `alerts.outbound` topic
-  - [x] Assert: alert visible via `GET /v1/fraud/alerts`
-  - [x] Assert: case created with source `FRAUD_ALERT`
+- [ ] **13.5 — Fraud detection end-to-end test**
+  - [ ] Publish 100 transactions to `transactions.raw` within 1 second (simulating spike)
+  - [ ] Assert: anomaly alert appears in `alerts.outbound` topic
+  - [ ] Assert: alert visible via `GET /v1/fraud/alerts`
+  - [ ] Assert: case created with source `FRAUD_ALERT`
 
-- [x] **13.6 — Evaluation pipeline end-to-end test**
-  - [x] Trigger evaluation via `python scripts/run_evaluation.py`
-  - [x] Assert: evaluation report created in PostgreSQL
-  - [x] Assert: report uploaded to MinIO/S3
-  - [x] Assert: metrics visible via `GET /v1/metrics/evaluation/return_risk/latest`
-  - [x] Assert: cost_weighted_loss computed correctly
+- [ ] **13.6 — Evaluation pipeline end-to-end test**
+  - [ ] Trigger evaluation via `python scripts/run_evaluation.py`
+  - [ ] Assert: evaluation report created in PostgreSQL
+  - [ ] Assert: report uploaded to MinIO/S3
+  - [ ] Assert: metrics visible via `GET /v1/metrics/evaluation/return_risk/latest`
+  - [ ] Assert: cost_weighted_loss computed correctly
 
-- [x] **13.7 — Cross-cutting verification**
-  - [x] Assert: all API responses include `X-Request-ID` header
-  - [x] Assert: rate limiting works across all endpoints
-  - [x] Assert: RLS prevents tenant A from seeing tenant B's data
-  - [x] Assert: audit logs created for all state-changing operations
+- [ ] **13.7 — Cross-cutting verification**
+  - [ ] Assert: all API responses include `X-Request-ID` header
+  - [ ] Assert: rate limiting works across all endpoints
+  - [ ] Assert: RLS prevents tenant A from seeing tenant B's data
+  - [ ] Assert: audit logs created for all state-changing operations
 
 ### Acceptance Criteria
 
-- [x] All e2e tests pass with a fully running Docker Compose stack
-- [x] No data leaks between tenants
-- [x] System handles graceful degradation (Redis down, LLM timeout)
-- [x] All latency budgets met under normal conditions
+- [ ] All e2e tests pass with a fully running Docker Compose stack
+- [ ] No data leaks between tenants
+- [ ] System handles graceful degradation (Redis down, LLM timeout)
+- [ ] All latency budgets met under normal conditions
 
 ### Verification Gate
 
@@ -1429,15 +1429,15 @@ make down
 
 ## Final Checklist: Production Readiness
 
-- [x] All 13 modules completed with passing verification gates
-- [x] `pytest tests/ -v --cov=src --cov-fail-under=80` — coverage ≥ 80%
-- [x] `ruff check src/ tests/` — zero lint errors
-- [x] `mypy src/` — zero type errors
-- [x] `npm run build` (dashboard) — zero build errors
-- [x] Docker images build successfully for all 3 services
-- [x] `.env.example` documents all required environment variables
-- [x] OpenAPI spec auto-generated at `/docs` with all endpoints documented
-- [x] README.md updated with: setup instructions, architecture overview, development guide
-- [x] All ADRs (Architecture Decision Records) written for key decisions in `docs/architecture/decisions/`
-- [x] Model evaluation report demonstrates measured precision, recall, and cost-weighted loss on held-out test set (core problem statement requirement)
-- [x] Defense-only constraint verified: no endpoint allows fraud generation, synthetic identity creation, or adversarial example generation
+- [ ] All 13 modules completed with passing verification gates
+- [ ] `pytest tests/ -v --cov=src --cov-fail-under=80` — coverage ≥ 80%
+- [ ] `ruff check src/ tests/` — zero lint errors
+- [ ] `mypy src/` — zero type errors
+- [ ] `npm run build` (dashboard) — zero build errors
+- [ ] Docker images build successfully for all 3 services
+- [ ] `.env.example` documents all required environment variables
+- [ ] OpenAPI spec auto-generated at `/docs` with all endpoints documented
+- [ ] README.md updated with: setup instructions, architecture overview, development guide
+- [ ] All ADRs (Architecture Decision Records) written for key decisions in `docs/architecture/decisions/`
+- [ ] Model evaluation report demonstrates measured precision, recall, and cost-weighted loss on held-out test set (core problem statement requirement)
+- [ ] Defense-only constraint verified: no endpoint allows fraud generation, synthetic identity creation, or adversarial example generation

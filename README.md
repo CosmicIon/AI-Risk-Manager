@@ -299,6 +299,16 @@ $env:PYTHONPATH="."; python -m scripts.verify_module_4
 # Run the ML unit tests
 pytest tests/unit/test_feature_engineering.py tests/unit/test_return_scoring.py tests/unit/test_fraud_detection.py -v
 ```
+### Verify Module 5 (Evaluation Harness & Drift Detection)
+To manually verify the cost-weighted loss metrics, holdout integrity checks, and evaluation pipeline:
+```bash
+cd backend
+.\.venv\Scripts\Activate.ps1
+# Verify cost-weighted loss calculation and evaluation harness pipeline
+pytest tests/evaluation/ -v
+# Run the evaluation CLI to simulate a CI gate check
+python scripts/run_evaluation.py --model return_risk --version v1 --holdout v1 --fp-cost 500 --fn-cost 2000
+```
 
 ### Verify Dashboard Build
 ```bash
