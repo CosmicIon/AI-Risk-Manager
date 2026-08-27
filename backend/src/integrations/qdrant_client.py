@@ -13,6 +13,7 @@ from qdrant_client.models import (
 
 logger = logging.getLogger(__name__)
 
+
 class QdrantVectorStore:
     COLLECTION_NAME = "chargeback_cases"
 
@@ -25,7 +26,7 @@ class QdrantVectorStore:
             if not any(c.name == self.COLLECTION_NAME for c in collections.collections):
                 await self.client.create_collection(
                     collection_name=self.COLLECTION_NAME,
-                    vectors_config=VectorParams(size=1536, distance=Distance.COSINE)
+                    vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
                 )
 
                 # Create payload indexes
@@ -33,7 +34,7 @@ class QdrantVectorStore:
                     await self.client.create_payload_index(
                         collection_name=self.COLLECTION_NAME,
                         field_name=field,
-                        field_schema="keyword"
+                        field_schema="keyword",
                     )
                 logger.info(f"Created Qdrant collection {self.COLLECTION_NAME}")
         except Exception as e:
@@ -42,21 +43,24 @@ class QdrantVectorStore:
 
     async def upsert_case(self, case_id: str, embedding: list[float], payload: dict[str, Any]):
         point = PointStruct(
-            id=case_id, # Qdrant supports UUID strings directly
+            id=case_id,  # Qdrant supports UUID strings directly
             vector=embedding,
-            payload=payload
+            payload=payload,
         )
-        await self.client.upsert(
-            collection_name=self.COLLECTION_NAME,
-            points=[point]
-        )
+        await self.client.upsert(collection_name=self.COLLECTION_NAME, points=[point])
 
     async def search_similar(
-        self, query_embedding: list[float], reason_code: str | None = None, network: str | None = None, limit: int = 5
+        self,
+        query_embedding: list[float],
+        reason_code: str | None = None,
+        network: str | None = None,
+        limit: int = 5,
     ) -> list[dict[str, Any]]:
         conditions: list[Any] = []
         if reason_code:
-            conditions.append(FieldCondition(key="reason_code", match=MatchValue(value=reason_code)))
+            conditions.append(
+                FieldCondition(key="reason_code", match=MatchValue(value=reason_code))
+            )
         if network:
             conditions.append(FieldCondition(key="network", match=MatchValue(value=network)))
 
@@ -67,7 +71,7 @@ class QdrantVectorStore:
             query=query_embedding,
             query_filter=query_filter,
             limit=limit,
-            with_payload=True
+            with_payload=True,
         )
 
         return [
@@ -75,7 +79,7 @@ class QdrantVectorStore:
                 "case_id": str(r.id),
                 "score": r.score,
                 "outcome": r.payload.get("outcome") if r.payload else None,
-                "narrative_summary": r.payload.get("narrative_summary") if r.payload else None
+                "narrative_summary": r.payload.get("narrative_summary") if r.payload else None,
             }
             for r in results.points
         ]

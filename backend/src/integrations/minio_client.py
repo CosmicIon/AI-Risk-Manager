@@ -9,6 +9,7 @@ from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
+
 class ObjectStoreClient:
     BUCKETS = ["models", "holdout", "evidence", "reports"]
 
@@ -16,17 +17,18 @@ class ObjectStoreClient:
         self.endpoint_url = endpoint_url
         # Use boto3 in a threadpool since it's synchronous
         self.client = boto3.client(
-            's3',
+            "s3",
             endpoint_url=endpoint_url,
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key,
-            config=Config(signature_version='s3v4')
+            config=Config(signature_version="s3v4"),
         )
 
     async def ensure_buckets(self):
         """Create all required buckets if they don't exist."""
+
         def _create_buckets():
-            existing = [b['Name'] for b in self.client.list_buckets().get('Buckets', [])]
+            existing = [b["Name"] for b in self.client.list_buckets().get("Buckets", [])]
             for bucket in self.BUCKETS:
                 if bucket not in existing:
                     try:
@@ -38,14 +40,11 @@ class ObjectStoreClient:
 
         await asyncio.to_thread(_create_buckets)
 
-    async def upload_file(self, bucket: str, key: str, data: bytes, content_type: str = "application/octet-stream") -> str:
+    async def upload_file(
+        self, bucket: str, key: str, data: bytes, content_type: str = "application/octet-stream"
+    ) -> str:
         def _upload():
-            self.client.put_object(
-                Bucket=bucket,
-                Key=key,
-                Body=data,
-                ContentType=content_type
-            )
+            self.client.put_object(Bucket=bucket, Key=key, Body=data, ContentType=content_type)
             return f"{self.endpoint_url}/{bucket}/{key}"
 
         return await asyncio.to_thread(_upload)
@@ -53,16 +52,20 @@ class ObjectStoreClient:
     async def download_file(self, bucket: str, key: str) -> bytes:
         def _download():
             response = self.client.get_object(Bucket=bucket, Key=key)
-            return response['Body'].read()
+            return response["Body"].read()
 
         return await asyncio.to_thread(_download)
 
-    async def upload_model_artifact(self, model_name: str, version: str, model_bytes: bytes, metadata: dict[str, Any]) -> str:
+    async def upload_model_artifact(
+        self, model_name: str, version: str, model_bytes: bytes, metadata: dict[str, Any]
+    ) -> str:
         model_key = f"{model_name}/{version}/model.onnx"
         meta_key = f"{model_name}/{version}/metadata.json"
 
         url = await self.upload_file("models", model_key, model_bytes, "application/octet-stream")
-        await self.upload_file("models", meta_key, json.dumps(metadata).encode('utf-8'), "application/json")
+        await self.upload_file(
+            "models", meta_key, json.dumps(metadata).encode("utf-8"), "application/json"
+        )
 
         return url
 

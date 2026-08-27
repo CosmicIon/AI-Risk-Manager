@@ -6,6 +6,7 @@ import redis.asyncio as redis
 
 logger = logging.getLogger(__name__)
 
+
 class RedisClient:
     def __init__(self, redis_url: str):
         self.pool = redis.ConnectionPool.from_url(
@@ -13,11 +14,13 @@ class RedisClient:
             max_connections=50,
             decode_responses=True,
             socket_timeout=2.0,
-            retry_on_timeout=True
+            retry_on_timeout=True,
         )
         self.client = redis.Redis(connection_pool=self.pool)
 
-    async def get_feature_vector(self, customer_id: str, tenant_id: UUID) -> dict[str, float] | None:
+    async def get_feature_vector(
+        self, customer_id: str, tenant_id: UUID
+    ) -> dict[str, float] | None:
         key = f"features:{tenant_id}:{customer_id}"
         data = await self.client.get(key)
         if data:
@@ -28,7 +31,9 @@ class RedisClient:
                 return None
         return None
 
-    async def set_feature_vector(self, customer_id: str, tenant_id: UUID, features: dict[str, float], ttl: int = 3600):
+    async def set_feature_vector(
+        self, customer_id: str, tenant_id: UUID, features: dict[str, float], ttl: int = 3600
+    ):
         key = f"features:{tenant_id}:{customer_id}"
         await self.client.set(key, json.dumps(features), ex=ttl)
 

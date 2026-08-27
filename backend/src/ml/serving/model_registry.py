@@ -7,6 +7,7 @@ from src.ml.serving.onnx_runtime import ONNXModelServer
 
 logger = logging.getLogger(__name__)
 
+
 class ModelRegistry:
     def __init__(self):
         # Format: "{model_name}:{version}" -> ONNXModelServer

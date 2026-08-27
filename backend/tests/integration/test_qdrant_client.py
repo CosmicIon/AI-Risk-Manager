@@ -22,7 +22,7 @@ async def test_qdrant_client():
         "network": "VISA",
         "amount_bucket": "high",
         "outcome": "WON",
-        "narrative_summary": "Test narrative"
+        "narrative_summary": "Test narrative",
     }
 
     await client.upsert_case(case_id, embedding, payload)

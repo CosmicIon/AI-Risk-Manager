@@ -36,6 +36,6 @@ async def test_kafka_producer():
 
     # Should fail validation
     with pytest.raises(SchemaValidationError):
-        await producer.send_event("transactions.raw", "not an event") # type: ignore
+        await producer.send_event("transactions.raw", "not an event")  # type: ignore
 
     await producer.stop()

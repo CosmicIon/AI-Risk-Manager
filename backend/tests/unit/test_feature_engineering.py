@@ -3,15 +3,8 @@ from src.ml.models.return_risk.features import compute_features
 
 
 def test_compute_features():
-    order = {
-        "order_amount": 100.0,
-        "return_amount": 50.0,
-        "category": "electronics"
-    }
-    history = [
-        {"return_amount": 20.0},
-        {"return_amount": 30.0}
-    ]
+    order = {"order_amount": 100.0, "return_amount": 50.0, "category": "electronics"}
+    history = [{"return_amount": 20.0}, {"return_amount": 30.0}]
 
     features = compute_features("cust_1", order, history)
 

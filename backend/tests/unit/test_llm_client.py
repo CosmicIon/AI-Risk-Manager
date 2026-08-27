@@ -8,6 +8,7 @@ class MockSchema(BaseModel):
     name: str
     age: int
 
+
 @pytest.mark.asyncio
 async def test_llm_client_mocked():
     client = GeminiLLMClient(api_key="mock_key")

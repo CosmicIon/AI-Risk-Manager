@@ -37,16 +37,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.redis = RedisClient(settings.REDIS_URL)
     app.state.kafka = TypedKafkaProducer(settings.KAFKA_BOOTSTRAP_SERVERS)
     app.state.qdrant = QdrantVectorStore(settings.QDRANT_URL)
-    app.state.llm = GeminiLLMClient(settings.GEMINI_API_KEY.get_secret_value() if settings.GEMINI_API_KEY else "mock_key")
+    app.state.llm = GeminiLLMClient(
+        settings.GEMINI_API_KEY.get_secret_value() if settings.GEMINI_API_KEY else "mock_key"
+    )
     app.state.langfuse = LangfuseTracer(
         settings.LANGFUSE_PUBLIC_KEY,
-        settings.LANGFUSE_SECRET_KEY.get_secret_value() if settings.LANGFUSE_SECRET_KEY else "mock_secret",
-        settings.LANGFUSE_HOST
+        settings.LANGFUSE_SECRET_KEY.get_secret_value()
+        if settings.LANGFUSE_SECRET_KEY
+        else "mock_secret",
+        settings.LANGFUSE_HOST,
     )
     app.state.minio = ObjectStoreClient(
         f"http://{settings.MINIO_ENDPOINT}",
         settings.MINIO_ACCESS_KEY,
-        settings.MINIO_SECRET_KEY.get_secret_value() if settings.MINIO_SECRET_KEY else "mock_secret"
+        settings.MINIO_SECRET_KEY.get_secret_value()
+        if settings.MINIO_SECRET_KEY
+        else "mock_secret",
     )
 
     # Start and ensure connections

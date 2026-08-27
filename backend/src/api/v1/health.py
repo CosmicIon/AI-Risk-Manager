@@ -37,13 +37,29 @@ async def health_check() -> HealthResponse:
 async def readiness_check(request: Request) -> ReadinessResponse:
     """Readiness probe: validates external dependencies (DB, Redis, etc.) are reachable."""
 
-    redis_ok = await request.app.state.redis.health_check() if hasattr(request.app.state, 'redis') else False
-    kafka_ok = await request.app.state.kafka.health_check() if hasattr(request.app.state, 'kafka') else False
-    qdrant_ok = await request.app.state.qdrant.health_check() if hasattr(request.app.state, 'qdrant') else False
-    minio_ok = await request.app.state.minio.health_check() if hasattr(request.app.state, 'minio') else False
+    redis_ok = (
+        await request.app.state.redis.health_check()
+        if hasattr(request.app.state, "redis")
+        else False
+    )
+    kafka_ok = (
+        await request.app.state.kafka.health_check()
+        if hasattr(request.app.state, "kafka")
+        else False
+    )
+    qdrant_ok = (
+        await request.app.state.qdrant.health_check()
+        if hasattr(request.app.state, "qdrant")
+        else False
+    )
+    minio_ok = (
+        await request.app.state.minio.health_check()
+        if hasattr(request.app.state, "minio")
+        else False
+    )
 
     checks: dict[str, str] = {
-        "database": "ok", # DB check via SQLAlchemy can be added if needed
+        "database": "ok",  # DB check via SQLAlchemy can be added if needed
         "redis": "ok" if redis_ok else "failed",
         "kafka": "ok" if kafka_ok else "failed",
         "qdrant": "ok" if qdrant_ok else "failed",

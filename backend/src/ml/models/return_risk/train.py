@@ -26,7 +26,7 @@ def load_and_prepare_data(data_path: str):
             "order_date": row["order_date"],
             "category": row["category"],
             "return_amount": row["return_amount"],
-            "order_amount": row["order_amount"]
+            "order_amount": row["order_amount"],
         }
         feats = compute_features(row["customer_id"], order, [])
         features_list.append(feats)
@@ -36,35 +36,42 @@ def load_and_prepare_data(data_path: str):
 
     return X, y
 
+
 def train(X, y) -> lgb.Booster:
     print("Training LightGBM model...")
     # Change categorical features to category dtype for LightGBM
     for cat in CATEGORICAL_FEATURES:
         if cat in X.columns:
-            X[cat] = X[cat].astype('category')
+            X[cat] = X[cat].astype("category")
 
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=HYPERPARAMETERS["seed"])
+    X_train, X_val, y_train, y_val = train_test_split(
+        X, y, test_size=0.2, random_state=HYPERPARAMETERS["seed"]
+    )
 
     train_data = lgb.Dataset(X_train, label=y_train, categorical_feature=CATEGORICAL_FEATURES)
-    val_data = lgb.Dataset(X_val, label=y_val, categorical_feature=CATEGORICAL_FEATURES, reference=train_data)
+    val_data = lgb.Dataset(
+        X_val, label=y_val, categorical_feature=CATEGORICAL_FEATURES, reference=train_data
+    )
 
     booster = lgb.train(
         HYPERPARAMETERS,
         train_data,
         valid_sets=[train_data, val_data],
-        callbacks=[lgb.early_stopping(stopping_rounds=50)]
+        callbacks=[lgb.early_stopping(stopping_rounds=50)],
     )
     return booster
+
 
 def export_to_onnx(booster: lgb.Booster, output_path: str):
     print(f"Exporting model to {output_path}...")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-    initial_types = [('float_input', FloatTensorType([None, len(FEATURE_NAMES)]))]
+    initial_types = [("float_input", FloatTensorType([None, len(FEATURE_NAMES)]))]
     onnx_model = convert_lightgbm(booster, initial_types=initial_types, target_opset=12)
 
     with open(output_path, "wb") as f:
         f.write(onnx_model.SerializeToString())
+
 
 def save_metadata(output_dir: str, train_metrics: dict):
     metadata = {
@@ -73,10 +80,11 @@ def save_metadata(output_dir: str, train_metrics: dict):
         "trained_at": datetime.now().isoformat(),
         "feature_names": FEATURE_NAMES,
         "hyperparameters": HYPERPARAMETERS,
-        "metrics": train_metrics
+        "metrics": train_metrics,
     }
     with open(os.path.join(output_dir, "metadata.json"), "w") as f:
         json.dump(metadata, f, indent=2)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -94,6 +102,7 @@ def main():
     metrics = {"val_logloss": booster.best_score.get("valid_1", {}).get("binary_logloss", 0.0)}
     save_metadata(args.output, metrics)
     print("Training complete.")
+
 
 if __name__ == "__main__":
     main()

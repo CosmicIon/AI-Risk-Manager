@@ -17,8 +17,9 @@ HYPERPARAMETERS = {
     "metric": "binary_logloss",
     "learning_rate": 0.05,
     "n_estimators": 200,
-    "seed": 42
+    "seed": 42,
 }
+
 
 def load_and_prepare_data(data_path: str):
     print(f"Loading chargeback data from {data_path}...")
@@ -39,9 +40,12 @@ def load_and_prepare_data(data_path: str):
 
     return X, y
 
+
 def train(X, y) -> lgb.Booster:
     print("Training LightGBM model for chargeback win prob...")
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=HYPERPARAMETERS["seed"])
+    X_train, X_val, y_train, y_val = train_test_split(
+        X, y, test_size=0.2, random_state=HYPERPARAMETERS["seed"]
+    )
 
     train_data = lgb.Dataset(X_train, label=y_train)
     val_data = lgb.Dataset(X_val, label=y_val, reference=train_data)
@@ -50,19 +54,21 @@ def train(X, y) -> lgb.Booster:
         HYPERPARAMETERS,
         train_data,
         valid_sets=[train_data, val_data],
-        callbacks=[lgb.early_stopping(stopping_rounds=20)]
+        callbacks=[lgb.early_stopping(stopping_rounds=20)],
     )
     return booster
+
 
 def export_to_onnx(booster: lgb.Booster, output_path: str):
     print(f"Exporting model to {output_path}...")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-    initial_types = [('float_input', FloatTensorType([None, len(FEATURE_NAMES)]))]
+    initial_types = [("float_input", FloatTensorType([None, len(FEATURE_NAMES)]))]
     onnx_model = convert_lightgbm(booster, initial_types=initial_types, target_opset=12)
 
     with open(output_path, "wb") as f:
         f.write(onnx_model.SerializeToString())
+
 
 def save_metadata(output_dir: str, train_metrics: dict):
     metadata = {
@@ -71,10 +77,11 @@ def save_metadata(output_dir: str, train_metrics: dict):
         "trained_at": datetime.now().isoformat(),
         "feature_names": FEATURE_NAMES,
         "hyperparameters": HYPERPARAMETERS,
-        "metrics": train_metrics
+        "metrics": train_metrics,
     }
     with open(os.path.join(output_dir, "metadata.json"), "w") as f:
         json.dump(metadata, f, indent=2)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -91,6 +98,7 @@ def main():
     metrics = {"val_logloss": booster.best_score.get("valid_1", {}).get("binary_logloss", 0.0)}
     save_metadata(args.output, metrics)
     print("Training complete.")
+
 
 if __name__ == "__main__":
     main()

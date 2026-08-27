@@ -11,8 +11,6 @@ def compute_features(customer_id: str, order: dict, history: list[dict]) -> dict
     # Defaults
     features = dict.fromkeys(FEATURE_NAMES, 0.0)
 
-
-
     # Basic logic from history if available
     if history:
         # Example logic for some features
@@ -31,11 +29,16 @@ def compute_features(customer_id: str, order: dict, history: list[dict]) -> dict
     features["current_return_amount"] = float(order.get("return_amount", 0.0))
     features["current_order_amount"] = float(order.get("order_amount", 0.0))
     if features["current_order_amount"] > 0:
-        features["return_to_order_amount_ratio"] = features["current_return_amount"] / features["current_order_amount"]
+        features["return_to_order_amount_ratio"] = (
+            features["current_return_amount"] / features["current_order_amount"]
+        )
 
     return features
 
-async def compute_features_from_redis(redis_client, customer_id: str, tenant_id: UUID, order: dict) -> FeatureVector:
+
+async def compute_features_from_redis(
+    redis_client, customer_id: str, tenant_id: UUID, order: dict
+) -> FeatureVector:
     """Fetches pre-computed features from Redis, computes missing on-the-fly."""
     is_degraded = False
 
@@ -54,5 +57,5 @@ async def compute_features_from_redis(redis_client, customer_id: str, tenant_id:
         features=computed,
         computed_at=datetime.now(),
         staleness_seconds=0.0,
-        is_degraded=is_degraded
+        is_degraded=is_degraded,
     )

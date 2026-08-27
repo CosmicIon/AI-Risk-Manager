@@ -9,10 +9,7 @@ from src.core.exceptions import ModelInferenceError
 class ONNXModelServer:
     def __init__(self, model_path: str):
         try:
-            self.session = ort.InferenceSession(
-                model_path,
-                providers=["CPUExecutionProvider"]
-            )
+            self.session = ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
             self.input_name = self.session.get_inputs()[0].name
             self.input_shape = self.session.get_inputs()[0].shape
         except Exception as e:
@@ -49,7 +46,7 @@ class ONNXModelServer:
             # Determine dummy shape
             shape = [1 if isinstance(s, str) or s is None else s for s in self.input_shape]
             if len(shape) == 0 or shape[0] == 0:
-                shape = [1, 50] # fallback for testing
+                shape = [1, 50]  # fallback for testing
 
             dummy = np.random.randn(*shape).astype(np.float32)
             self.predict(dummy)

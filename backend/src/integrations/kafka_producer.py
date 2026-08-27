@@ -10,6 +10,7 @@ from src.core.exceptions import SchemaValidationError
 
 logger = logging.getLogger(__name__)
 
+
 class TypedKafkaProducer:
     def __init__(self, bootstrap_servers: str):
         self.bootstrap_servers = bootstrap_servers
@@ -18,11 +19,11 @@ class TypedKafkaProducer:
     async def start(self):
         self.producer = AIOKafkaProducer(
             bootstrap_servers=self.bootstrap_servers,
-            value_serializer=lambda v: json.dumps(v, default=str).encode('utf-8'),
-            key_serializer=lambda k: k.encode('utf-8') if k else None,
+            value_serializer=lambda v: json.dumps(v, default=str).encode("utf-8"),
+            key_serializer=lambda k: k.encode("utf-8") if k else None,
             request_timeout_ms=5000,
             retry_backoff_ms=100,
-            acks="all"
+            acks="all",
         )
         await self.producer.start()
         logger.info(f"Kafka producer connected to {self.bootstrap_servers}")
@@ -36,7 +37,9 @@ class TypedKafkaProducer:
         if not expected_class:
             raise SchemaValidationError(f"Topic {topic} is not mapped in TOPIC_MAP.")
         if not isinstance(event, expected_class):
-            raise SchemaValidationError(f"Event for topic {topic} must be of type {expected_class.__name__}")
+            raise SchemaValidationError(
+                f"Event for topic {topic} must be of type {expected_class.__name__}"
+            )
 
     async def send_event(self, topic: str, event: BaseModel, key: str | None = None):
         if not self.producer:
@@ -45,7 +48,9 @@ class TypedKafkaProducer:
         self._validate_event(topic, event)
         await self.producer.send_and_wait(topic, value=event.model_dump(mode="json"), key=key)
 
-    async def send_batch(self, topic: str, events: list[BaseModel], key_fn: Callable[[BaseModel], str | None]):
+    async def send_batch(
+        self, topic: str, events: list[BaseModel], key_fn: Callable[[BaseModel], str | None]
+    ):
         if not self.producer:
             raise RuntimeError("Kafka producer is not started")
 
@@ -58,8 +63,8 @@ class TypedKafkaProducer:
         batch = self.producer.create_batch()
         for event in events:
             key = key_fn(event)
-            key_bytes = key.encode('utf-8') if key else None
-            value_bytes = json.dumps(event.model_dump(mode="json"), default=str).encode('utf-8')
+            key_bytes = key.encode("utf-8") if key else None
+            value_bytes = json.dumps(event.model_dump(mode="json"), default=str).encode("utf-8")
             batch.append(key=key_bytes, value=value_bytes, timestamp_ms=None)
 
         await self.producer.send_batch(batch, topic, partition=None)

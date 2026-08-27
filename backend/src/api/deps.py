@@ -18,27 +18,34 @@ from src.integrations.redis_client import RedisClient
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/token")
 
+
 def get_redis(request: Request) -> RedisClient:
     return request.app.state.redis
+
 
 def get_kafka_producer(request: Request) -> TypedKafkaProducer:
     return request.app.state.kafka
 
+
 def get_qdrant(request: Request) -> QdrantVectorStore:
     return request.app.state.qdrant
+
 
 def get_llm(request: Request) -> GeminiLLMClient:
     return request.app.state.llm
 
+
 def get_langfuse(request: Request) -> LangfuseTracer:
     return request.app.state.langfuse
+
 
 def get_object_store(request: Request) -> ObjectStoreClient:
     return request.app.state.minio
 
+
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
-    session: Annotated[AsyncSession, Depends(get_db_session)]
+    session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
     try:
         user_id = uuid.UUID(token)
@@ -57,9 +64,10 @@ async def get_current_user(
         )
     return user
 
+
 async def get_current_tenant(
     user: Annotated[User, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_db_session)]
+    session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> Tenant:
     stmt = select(Tenant).where(Tenant.id == user.tenant_id)
     result = await session.execute(stmt)
@@ -68,8 +76,7 @@ async def get_current_tenant(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant not found")
     return tenant
 
-async def get_rls_session(
-    tenant: Annotated[Tenant, Depends(get_current_tenant)]
-):
+
+async def get_rls_session(tenant: Annotated[Tenant, Depends(get_current_tenant)]):
     async for session in get_db_session_with_tenant(tenant.id):
         yield session

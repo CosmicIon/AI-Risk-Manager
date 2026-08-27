@@ -18,8 +18,9 @@ FEATURE_NAMES = [
     "digital_goods_flag",
     "address_mismatch_flag",
     "ip_distance_miles",
-    "time_to_dispute_days"
+    "time_to_dispute_days",
 ]
+
 
 def compute_features(chargeback: dict, evidence: dict) -> dict[str, float]:
     """Computes 20 features for chargeback win probability scoring."""
@@ -42,8 +43,8 @@ def compute_features(chargeback: dict, evidence: dict) -> dict[str, float]:
             features["has_customer_communication"] = 1.0
 
     # Chargeback data
-    features["days_to_deadline"] = 15.0 # mock
-    features["transaction_age_days"] = 30.0 # mock
-    features["time_to_dispute_days"] = 10.0 # mock
+    features["days_to_deadline"] = 15.0  # mock
+    features["transaction_age_days"] = 30.0  # mock
+    features["time_to_dispute_days"] = 10.0  # mock
 
     return features

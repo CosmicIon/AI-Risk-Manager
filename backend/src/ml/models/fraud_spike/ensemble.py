@@ -13,7 +13,9 @@ class FraudSpikeEnsemble:
         self.lstm = lstm_autoencoder
         self.lstm_threshold = lstm_threshold
 
-    def detect(self, point_features: np.ndarray, sequence_features: np.ndarray, tenant_id: uuid.UUID) -> AnomalyAlert | None:
+    def detect(
+        self, point_features: np.ndarray, sequence_features: np.ndarray, tenant_id: uuid.UUID
+    ) -> AnomalyAlert | None:
         """
         Runs both models.
         Returns CRITICAL if both agree it's an anomaly.
@@ -32,7 +34,7 @@ class FraudSpikeEnsemble:
             severity = AlertSeverity.WARNING
             spike = SpikeClassification.UNCERTAIN
         else:
-            return None # Not an anomaly
+            return None  # Not an anomaly
 
         return AnomalyAlert(
             alert_id=uuid.uuid4(),
@@ -45,5 +47,5 @@ class FraudSpikeEnsemble:
             current_tps=50.0,
             deviation_factor=5.0,
             window_seconds=60,
-            is_calendar_adjusted=False
+            is_calendar_adjusted=False,
         )

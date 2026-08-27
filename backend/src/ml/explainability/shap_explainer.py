@@ -14,7 +14,9 @@ class SHAPExplainer:
         except Exception as e:
             raise RuntimeError(f"Failed to load LightGBM model for SHAP: {e}") from e
 
-    def explain(self, features: np.ndarray, feature_names: list[str], top_k: int = 5) -> list[dict[str, Any]]:
+    def explain(
+        self, features: np.ndarray, feature_names: list[str], top_k: int = 5
+    ) -> list[dict[str, Any]]:
         # SHAP values for the input features
         shap_values = self.explainer.shap_values(features)
 
@@ -32,10 +34,12 @@ class SHAPExplainer:
         results = []
         for idx in top_indices:
             val = vals[idx]
-            results.append({
-                "feature": feature_names[idx],
-                "shap_value": float(val),
-                "direction": "increases_risk" if val > 0 else "decreases_risk"
-            })
+            results.append(
+                {
+                    "feature": feature_names[idx],
+                    "shap_value": float(val),
+                    "direction": "increases_risk" if val > 0 else "decreases_risk",
+                }
+            )
 
         return results

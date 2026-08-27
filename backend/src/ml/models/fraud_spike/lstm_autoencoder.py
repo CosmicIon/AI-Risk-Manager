@@ -23,7 +23,7 @@ class LSTMAutoencoder(nn.Module):
     def detect(self, sequence: np.ndarray, threshold: float) -> tuple[bool, float]:
         self.eval()
         with torch.no_grad():
-            x = torch.FloatTensor(sequence).unsqueeze(0) # add batch dim
+            x = torch.FloatTensor(sequence).unsqueeze(0)  # add batch dim
             reconstructed = self(x)
             mse = torch.mean((x - reconstructed) ** 2).item()
             is_anomaly = mse > threshold
@@ -39,7 +39,7 @@ class LSTMAutoencoder(nn.Module):
             export_params=True,
             opset_version=12,
             do_constant_folding=True,
-            input_names=['sequence_input'],
-            output_names=['reconstructed'],
-            dynamic_axes={'sequence_input': {0: 'batch_size'}, 'reconstructed': {0: 'batch_size'}}
+            input_names=["sequence_input"],
+            output_names=["reconstructed"],
+            dynamic_axes={"sequence_input": {0: "batch_size"}, "reconstructed": {0: "batch_size"}},
         )

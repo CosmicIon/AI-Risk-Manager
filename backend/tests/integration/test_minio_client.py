@@ -6,8 +6,12 @@ from src.integrations.minio_client import ObjectStoreClient
 
 @pytest.mark.asyncio
 async def test_minio_client():
-    secret = settings.MINIO_SECRET_KEY.get_secret_value() if settings.MINIO_SECRET_KEY else "minioadmin"
-    client = ObjectStoreClient(f"http://{settings.MINIO_ENDPOINT}", settings.MINIO_ACCESS_KEY, secret)
+    secret = (
+        settings.MINIO_SECRET_KEY.get_secret_value() if settings.MINIO_SECRET_KEY else "minioadmin"
+    )
+    client = ObjectStoreClient(
+        f"http://{settings.MINIO_ENDPOINT}", settings.MINIO_ACCESS_KEY, secret
+    )
 
     is_healthy = await client.health_check()
     assert is_healthy, "MinIO health check failed"
