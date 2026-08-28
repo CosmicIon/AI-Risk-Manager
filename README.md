@@ -14,19 +14,18 @@
 ## Table of Contents
 
 - [Key Objectives](#key-objectives)
-- [Architecture Overview](#architecture-overview)
+- [The Industry Problem (What It Fixes)](#the-industry-problem-what-it-fixes)
+- [Why Use This Project?](#why-use-this-project)
+- [Risk Analyst Dashboard Guide](#risk-analyst-dashboard-guide)
 - [Core Risk Modules](#core-risk-modules)
+- [Architecture Overview](#architecture-overview)
 - [Technology Stack](#technology-stack)
 - [Prerequisites](#prerequisites)
 - [Quickstart: Running Locally](#quickstart-running-locally)
-  - [1. Clone and Configure](#1-clone-and-configure)
-  - [2. Start Infrastructure Services](#2-start-infrastructure-services)
-  - [3. Run Backend API](#3-run-backend-api)
-  - [4. Run Next.js Dashboard](#4-run-nextjs-dashboard)
 - [Testing & Quality Verification](#testing--quality-verification)
 - [API Endpoints Reference](#api-endpoints-reference)
 - [Evaluation & Cost-Weighted Loss](#evaluation--cost-weighted-loss)
-- [Security, Compliance & Defense-Only Guardrails](#security-compliance--defense-only-guardrails)
+- [Security, Compliance & Guardrails](#security-compliance--guardrails)
 - [Project Directory Structure](#project-directory-structure)
 
 ---
@@ -38,6 +37,88 @@
 3. **Stream Anomaly Detection:** Detect transaction velocity spikes and distinguish organic sale events from fraud attacks.
 4. **Abuse-Ring Sentinel:** Uncover coordinated fraud rings via Neo4j entity graphs and Louvain community detection.
 5. **Measured Precision & Recall:** Rigorous model evaluation pipeline computing ₹-denominated false-positive and false-negative costs on versioned held-out datasets.
+
+---
+
+## The Industry Problem (What It Fixes)
+
+In the modern e-commerce, Fintech, and digital payments landscape, merchants and payment aggregators face sophisticated fraud typologies that outpace traditional rules-based engines.
+
+**Real-Life BFSI Problems Solved:**
+1. **Chargeback SLA Breaches:** When a cardholder initiates a dispute (e.g., Visa Reason Code 10.4 "Other Fraud"), merchants have a strict, non-negotiable window (often 20-30 days) to submit "representment" packages. Manually gathering AVS checks, 3DS authentication logs, and IP geolocation proof takes days. Missed network deadlines result in automatic financial liability and increased chargeback ratios (which can lead to acquiring bank fines).
+2. **Static & Vulnerable Return Policies:** Retailers typically treat all returns equally to reduce friction. Legitimate buyers suffer from delayed refunds, while organized return-fraud rings exploit systemic loopholes to return counterfeit goods (Wardrobing/Bricking). Static rule engines cannot adapt dynamically to evolving abuse patterns.
+3. **Siloed Data Leading to Unseen Connections:** Fraudsters operate in orchestrated rings—using synthetic identities, rotating IPs, and shared drop-shipping addresses. Relational databases view transactions in isolation, failing to connect a new fraudulent transaction to a previously known bad actor via a shared device fingerprint.
+4. **Black-Box ML Rejections:** Financial regulators (like the RBI) and customer support teams require transparent decision-making. Standard Deep Learning models output opaque "reject" scores, leaving human analysts unable to justify an account block to a frustrated customer or compliance auditor.
+
+---
+
+## Why Use This Project?
+
+**AI Risk Manager** bridges the gap between raw data engineering and operational risk management. It is designed to be deployed directly into a merchant's payment or order management flow.
+
+- **Stop Revenue Leaks via Autonomous Agents:** Replace error-prone manual chargeback reviews with LangGraph agents that query disparate databases, assemble proof, and auto-generate network-compliant dispute narratives in seconds.
+- **Dynamic Risk Friction:** Score return and refund requests in real-time (<100ms inference). Fast-track refunds for high-LTV, loyal customers while routing high-risk requests for manual review or outright denial.
+- **Explainable AI (XAI) at the Core:** Every ML decision is accompanied by a SHAP (SHapley Additive exPlanations) breakdown, translating complex tree-based decisions into human-readable insights (e.g., *"Velocity of purchases in the last 1 hour is 5x higher than normal"*).
+- **Financial Rigor (Cost-Weighted Loss):** In BFSI, false positives (blocking a good customer) and false negatives (allowing a fraudster) have vastly different financial impacts. The platform evaluates models based on actual ₹ impact, dynamically thresholding approvals based on the average order value.
+
+---
+
+## Risk Analyst Dashboard Guide
+
+The Next.js 15 dashboard is the operational command center for Risk Analysts. It provides a highly responsive, dark-mode interface designed for high-throughput case resolution.
+
+### 1. Dashboard Home (Overview)
+- **Purpose:** A high-level operational snapshot of the organization's risk exposure.
+- **Cost-Weighted Chart:** Tracks the financial efficiency of the ML models over the week. It maps Precision/Recall against actual ₹ loss prevented vs. ₹ lost to false positives.
+- **Case Distribution:** A dynamic Recharts pie chart breaking down active risk vectors (Chargebacks, Returns, Fraud Alerts, Abuse Rings).
+- **Audit Feed:** A real-time log of the most critical events requiring immediate analyst attention (e.g., impending Visa/Mastercard deadlines).
+
+### 2. Chargebacks Module
+- **Purpose:** Dispute lifecycle management and representment generation.
+- **How to Use It:** 
+  - The module displays a Kanban-style list of active chargeback disputes prioritized by Card Network deadlines.
+  - Analysts click into a **Case Detail View**. By the time the analyst opens the case, the backend LangGraph AI Agent has already aggregated Proof of Delivery, IP matches, and drafted a **Representment Narrative**.
+  - The analyst reviews the draft for accuracy, edits if necessary, and clicks **Submit to Network** to fight the dispute, or **Accept Liability** if the evidence is insufficient.
+
+### 3. Return Scoring Module
+- **Purpose:** Real-time visibility into customer return/refund requests.
+- **How to Use It:**
+  - Displays a live feed of requests with their ML-assigned risk scores (0-100).
+  - **Color-Coded Tiers:** Green (Low Risk / Auto-Approve), Yellow (Medium Risk / Human Review), Red (High Risk / Auto-Deny).
+  - **SHAP Explanations:** Clicking a specific request expands the view to reveal the exact features that drove the score (e.g., *"Customer lifetime value is low"* combined with *"IP distance from shipping address > 500km"*).
+
+### 4. Fraud Alerts Module
+- **Purpose:** Monitoring of streaming anomalies detected via the Kafka/Faust pipeline.
+- **How to Use It:**
+  - Analysts view sudden transaction velocity spikes.
+  - Includes a **Calendar Adjustments** feature. Analysts can register events like "Diwali Flash Sale" or "Big Billion Days" to dynamically adjust the AI's baseline expectations, preventing legitimate traffic spikes from generating thousands of false-positive alerts.
+
+---
+
+## Core Risk Modules
+
+### 1. Chargeback Evidence Responder
+- **Trigger:** Webhook/file ingestion of Visa, Mastercard, and RuPay dispute notifications.
+- **Workflow:** 
+  - Resolves reason codes (`10.4`, `13.1`, `4837`, etc.) to specific evidence checklists.
+  - Parallel agent tools retrieve proof of delivery, AVS matches, 3DS authentication logs, and IP geolocation.
+  - LLM synthesizes structured representment narratives referencing verified evidence only.
+  - ML confidence model scores win probability to guide human-in-the-loop sign-off.
+
+### 2. Return-Risk Scorer
+- **Trigger:** Synchronous return initiation requests (`POST /api/v1/returns/score`).
+- **Engine:** LightGBM classifier served via ONNX Runtime (<5ms P99 inference latency).
+- **Explainability:** Top-5 SHAP values translated into human-readable customer/analyst explanations.
+- **Policy Engine:** Auto-approve, manual review, or auto-deny with customer lifetime value overrides.
+
+### 3. Fraud-Spike Detector
+- **Trigger:** Streaming transactions over Kafka.
+- **Engine:** Ensemble of Isolation Forest (point anomalies) and LSTM Autoencoder (sequence anomalies).
+- **Calendar-Aware Baselines:** Dynamic threshold adjustments for registered festival sales to minimize false positives.
+
+### 4. Abuse-Ring Sentinel
+- **Trigger:** Evolving transaction graph linking buyers, sellers, devices, addresses, and payment tokens.
+- **Engine:** Louvain and Label Propagation community detection algorithms scoring suspicious clusters in Neo4j.
 
 ---
 
@@ -81,33 +162,6 @@ graph TB
         DASH --- WH
     end
 ```
-
----
-
-## Core Risk Modules
-
-### 1. Chargeback Evidence Responder
-- **Trigger:** Webhook/file ingestion of Visa, Mastercard, and RuPay dispute notifications.
-- **Workflow:** 
-  - Resolves reason codes (`10.4`, `13.1`, `4837`, etc.) to specific evidence checklists.
-  - Parallel agent tools retrieve proof of delivery, AVS matches, 3DS authentication logs, and IP geolocation.
-  - LLM synthesizes structured representment narratives referencing verified evidence only.
-  - ML confidence model scores win probability to guide human-in-the-loop sign-off.
-
-### 2. Return-Risk Scorer
-- **Trigger:** Synchronous return initiation requests (`POST /api/v1/returns/score`).
-- **Engine:** LightGBM classifier served via ONNX Runtime (<5ms P99 inference latency).
-- **Explainability:** Top-5 SHAP values translated into human-readable customer/analyst explanations.
-- **Policy Engine:** Auto-approve, manual review, or auto-deny with customer lifetime value overrides.
-
-### 3. Fraud-Spike Detector
-- **Trigger:** Streaming transactions over Kafka.
-- **Engine:** Ensemble of Isolation Forest (point anomalies) and LSTM Autoencoder (sequence anomalies).
-- **Calendar-Aware Baselines:** Dynamic threshold adjustments for registered festival sales (e.g., Diwali, Big Billion Days) to minimize false positives.
-
-### 4. Abuse-Ring Sentinel
-- **Trigger:** Evolving transaction graph linking buyers, sellers, devices, addresses, and payment tokens.
-- **Engine:** Louvain and Label Propagation community detection algorithms scoring suspicious clusters.
 
 ---
 
@@ -235,7 +289,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to access th
 Run the test suites and code quality checks to verify the completed modules manually:
 
 ### Verify Module 0 (Infrastructure & FastAPI)
-1. **Check Docker Services:** Ensure the 7 core infrastructure services are running.
+1. **Check Docker Services:** Ensure the core infrastructure services are running.
    ```bash
    docker compose -f infra/docker/docker-compose.yml ps
    ```
@@ -261,8 +315,6 @@ Run the test suites and code quality checks to verify the completed modules manu
    .\.venv\Scripts\Activate.ps1
    pytest tests/unit/test_schemas.py -v --tb=short
    ```
-   *You should see 8 passing tests.*
-
 2. **Run Linting and Formatting Checks:**
    ```bash
    cd backend
@@ -279,7 +331,7 @@ cd backend
 ```
 
 ### Verify Module 3 (Integrations)
-To verify the typed clients (Redis, Kafka, Qdrant, MinIO, LLM), you can check the `readiness` endpoint or run the integration tests:
+To verify the typed clients (Redis, Kafka, Qdrant, MinIO, LLM):
 ```bash
 cd backend
 .\.venv\Scripts\Activate.ps1
@@ -294,41 +346,39 @@ cd backend
 .\.venv\Scripts\Activate.ps1
 # Generate synthetic data
 python scripts/generate_synthetic_data.py
-# Run the verification script (checks ONNX latency and loads models)
+# Run the verification script
 $env:PYTHONPATH="."; python -m scripts.verify_module_4
 # Run the ML unit tests
 pytest tests/unit/test_feature_engineering.py tests/unit/test_return_scoring.py tests/unit/test_fraud_detection.py -v
 ```
+
 ### Verify Module 5 (Evaluation Harness & Drift Detection)
-To manually verify the cost-weighted loss metrics, holdout integrity checks, and evaluation pipeline:
+To manually verify the cost-weighted loss metrics and evaluation pipeline:
 ```bash
 cd backend
 .\.venv\Scripts\Activate.ps1
-# Verify cost-weighted loss calculation and evaluation harness pipeline
 pytest tests/evaluation/ -v
 # Run the evaluation CLI to simulate a CI gate check
-python scripts/run_evaluation.py --model return_risk --version v1 --holdout v1 --fp-cost 500 --fn-cost 2000
+python scripts/run_evaluation.py --model-name return_risk --model-version v1 --holdout-version v1 --fp-cost 500 --fn-cost 2000
 ```
+
 ### Verify Module 6 (Streaming Pipeline & Feature Store)
-To manually verify the Faust streaming pipeline, start the worker and run the Kafka pipeline integration tests:
+To verify tumbling windows, Redis feature persistence, anomaly detection, and graph mutations:
 ```bash
 cd backend
 .\.venv\Scripts\Activate.ps1
-# Verify tumbling windows, Redis feature persistence, anomaly detection, and graph mutations
 pytest tests/integration/test_kafka_pipeline.py -v
 ```
 
 ### Verify Module 7 (AI Agent Pipeline)
-To manually verify the LangGraph multi-agent pipeline for chargeback evidence assembly and narrative generation:
+To manually verify the LangGraph multi-agent pipeline for chargeback evidence assembly:
 ```bash
 cd backend
 .\.venv\Scripts\Activate.ps1
-# Verify the state graph executes, falls back properly on missing evidence, and stops at human review
 pytest tests/integration/test_agent_pipeline.py -v
 ```
 
 ### Verify Module 8 (Service Layer)
-To verify the wiring of the ML models, agents, stream data, and notifications through the service layer:
 ```bash
 cd backend
 .\.venv\Scripts\Activate.ps1
@@ -336,7 +386,6 @@ pytest tests/unit/test_services.py -v
 ```
 
 ### Verify Module 9 (REST API Layer & Middleware)
-To manually verify the FastAPI routes, middleware (auth, rate limiting, request ID), and role-based access control (RBAC):
 ```bash
 cd backend
 .\.venv\Scripts\Activate.ps1
@@ -345,38 +394,24 @@ pytest tests/integration/test_api_returns.py -v
 ```
 
 ### Verify Module 10 (Graph Analysis / Abuse-Ring Sentinel)
-To manually verify the Neo4j graph pipeline, Louvain community detection, and abuse ring scorer:
+To manually verify the Neo4j graph pipeline and Louvain community detection:
 ```bash
 cd backend
 .\.venv\Scripts\Activate.ps1
 pytest tests/integration/test_graph_analysis.py -v
-# Note: You may see an asyncio proactor AttributeError on Windows during teardown; this does not affect functionality.
 ```
 
 ### Verify Module 11 (Observability & Monitoring)
-To manually verify the Prometheus metrics, Grafana dashboards, and OpenTelemetry instrumentation:
 ```bash
 # Restart the infra stack to include Prometheus and Grafana
 docker-compose -f infra/docker/docker-compose.yml up -d prometheus grafana
 
 # Check the Prometheus metrics endpoint
 curl -s http://localhost:8000/api/v1/metrics/prometheus | Select-String -Pattern "requests_total|return_scoring_latency"
-
-# Access the Grafana Dashboard
-# URL: http://localhost:3000
-# Default Login: admin / admin
-```
-
-### Verify Dashboard Build
-```bash
-cd dashboard
-npm run build
 ```
 
 ### Verify Module 13 (End-to-End Integration Tests)
-
-Run the full E2E test suite covering all four test files:
-
+Run the full E2E test suite covering all major business flows:
 ```bash
 cd backend
 python -m pytest tests/integration/test_e2e_chargeback_flow.py \
@@ -385,24 +420,11 @@ python -m pytest tests/integration/test_e2e_chargeback_flow.py \
                  tests/integration/test_e2e_evaluation_flow.py -v --tb=short
 # Expected: 28 tests pass
 ```
-
-Or run the **entire test suite** end-to-end (all modules):
-
+Or run the **entire test suite** end-to-end:
 ```bash
 cd backend
 python -m pytest tests/ -v --tb=short
-# Expected: 70+ tests pass, 1 skip (RLS superuser), graph analysis errors are
-#           benign Neo4j asyncio teardown warnings on Windows.
 ```
-
-**What the E2E tests cover:**
-
-| Test File | Tests | Coverage |
-|---|---|---|
-| `test_e2e_chargeback_flow.py` | 5 | Full lifecycle (ingest→pending→review), duplicate rejection, reject/edit actions, auth |
-| `test_e2e_return_scoring_flow.py` | 7 | Happy path across risk tiers, degraded mode, auth, policy update/validation |
-| `test_e2e_fraud_detection_flow.py` | 7 | Alert listing, severity/classification filtering, event registration, RBAC, acknowledgement |
-| `test_e2e_evaluation_flow.py` | 9 | Prometheus scraping, evaluation reports, cost summary, health/readiness probes, degraded status |
 
 ---
 
@@ -441,15 +463,14 @@ Where:
 - $C_{\text{FN}}$ = ₹-denominated cost of a False Negative (e.g., unintercepted fraudulent return or lost chargeback).
 
 Run the automated evaluation harness against versioned holdout test sets:
-
 ```bash
 cd backend
-python scripts/run_evaluation.py --model return_risk --version v1 --holdout v1 --fp-cost 500 --fn-cost 2000
+python scripts/run_evaluation.py --model-name return_risk --model-version v1 --holdout-version v1 --fp-cost 500 --fn-cost 2000
 ```
 
 ---
 
-## Security, Compliance & Defense-Only Guardrails
+## Security, Compliance & Guardrails
 
 - **Strictly Defense-Only:** All endpoints and models are inference-only. The system contains no capabilities for synthetic identity creation, transaction spoofing, or attack pattern generation.
 - **RBI Data Localization:** All state stores (Postgres, Qdrant, MinIO) run on-premises or in India-region VPCs without unencrypted cross-border data transfer.
@@ -491,4 +512,3 @@ ai-risk-manager/
 ## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
