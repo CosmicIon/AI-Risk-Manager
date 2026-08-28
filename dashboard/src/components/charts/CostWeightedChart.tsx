@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -29,6 +30,16 @@ const tooltipStyle = {
 };
 
 export default function CostWeightedChart() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div style={{ width: '100%', height: 280 }} />;
+  }
+
   return (
     <div style={{ width: '100%', height: 280 }}>
       <ResponsiveContainer width="100%" height="100%">

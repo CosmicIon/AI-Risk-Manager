@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 const data = [
@@ -19,6 +20,16 @@ const tooltipStyle = {
 };
 
 export default function CaseDistributionChart() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div style={{ width: '100%', height: 280 }} />;
+  }
+
   return (
     <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
       <PieChart width={300} height={280}>
