@@ -3,9 +3,13 @@ import argparse
 import sys
 import json
 from decimal import Decimal
+from pathlib import Path
 
-from src.core.config import settings
-from src.db.session import Database
+# Add backend root to sys.path so 'src' can be imported
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from src.config import settings
+from src.db.session import AsyncSessionLocal
 from src.db.repositories.evaluation_repo import EvaluationRepository
 from src.ml.serving.model_registry import ModelRegistry
 from src.ml.evaluation.holdout_manager import HoldoutManager
@@ -14,12 +18,11 @@ from src.ml.evaluation.harness import EvaluationHarness
 
 
 async def run_eval(model_name: str, model_version: str, holdout_version: str, fp_cost: str, fn_cost: str):
-    db = Database(settings.DATABASE_URL)
-    
+    minio_scheme = "https" if settings.MINIO_SECURE else "http"
     object_store = ObjectStoreClient(
-        endpoint_url=settings.MINIO_URL,
+        endpoint_url=f"{minio_scheme}://{settings.MINIO_ENDPOINT}",
         access_key=settings.MINIO_ACCESS_KEY,
-        secret_key=settings.MINIO_SECRET_KEY,
+        secret_key=settings.MINIO_SECRET_KEY.get_secret_value() if hasattr(settings.MINIO_SECRET_KEY, "get_secret_value") else settings.MINIO_SECRET_KEY,
     )
     
     registry = ModelRegistry()
@@ -45,7 +48,7 @@ async def run_eval(model_name: str, model_version: str, holdout_version: str, fp
     fp_cost_dec = Decimal(fp_cost)
     fn_cost_dec = Decimal(fn_cost)
     
-    async with db.session() as session:
+    async with AsyncSessionLocal() as session:
         repo = EvaluationRepository(session)
         
         # Determine champion
