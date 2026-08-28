@@ -1235,74 +1235,74 @@ curl -s http://localhost:8000/api/v1/metrics/prometheus | grep return_scoring_la
 
 ### Implementation Checklist
 
-- [ ] **12.1 — API client (`dashboard/src/lib/api-client.ts`)**
-  - [ ] Typed `fetch` wrapper with JWT token management (stored in httpOnly cookie)
-  - [ ] Auto-refresh token on 401
-  - [ ] Methods for all API endpoints: `scorReturn()`, `ingestChargeback()`, `listCases()`, `reviewChargeback()`, `getStats()`, `getEvaluationReport()`, etc.
-  - [ ] Error handling: parse API error responses into typed error objects
+- [x] **12.1 — API client (`dashboard/src/lib/api-client.ts`)**
+  - [x] Typed `fetch` wrapper with JWT token management (stored in httpOnly cookie)
+  - [x] Auto-refresh token on 401
+  - [x] Methods for all API endpoints: `scorReturn()`, `ingestChargeback()`, `listCases()`, `reviewChargeback()`, `getStats()`, `getEvaluationReport()`, etc.
+  - [x] Error handling: parse API error responses into typed error objects
 
-- [ ] **12.2 — Root layout (`dashboard/src/app/layout.tsx`)**
-  - [ ] Dark mode sidebar navigation with links: Dashboard, Chargebacks, Returns, Fraud Alerts, Abuse Rings, Model Evaluation, Settings
-  - [ ] Top bar with: tenant name, user avatar, notification bell (count of pending reviews + deadline warnings)
-  - [ ] CSS design system using CSS custom properties: colors (dark palette), spacing, border-radius, typography (Inter font from Google Fonts)
+- [x] **12.2 — Root layout (`dashboard/src/app/layout.tsx`)**
+  - [x] Dark mode sidebar navigation with links: Dashboard, Chargebacks, Returns, Fraud Alerts, Abuse Rings, Model Evaluation, Settings
+  - [x] Top bar with: tenant name, user avatar, notification bell (count of pending reviews + deadline warnings)
+  - [x] CSS design system using CSS custom properties: colors (dark palette), spacing, border-radius, typography (Inter font from Google Fonts)
 
-- [ ] **12.3 — Dashboard home (`dashboard/src/app/page.tsx`)**
-  - [ ] KPI cards row: Total Active Cases, Chargeback Win Rate (last 90d), Total ₹ Saved, Pending Reviews, Approaching Deadlines
-  - [ ] Cost-weighted metrics chart: line chart of precision, recall, cost-weighted loss over time (Recharts)
-  - [ ] Case distribution: donut chart by source (chargeback, return, fraud, ring)
-  - [ ] Recent activity feed: latest case updates, alerts, model evaluations
+- [x] **12.3 — Dashboard home (`dashboard/src/app/page.tsx`)**
+  - [x] KPI cards row: Total Active Cases, Chargeback Win Rate (last 90d), Total ₹ Saved, Pending Reviews, Approaching Deadlines
+  - [x] Cost-weighted metrics chart: line chart of precision, recall, cost-weighted loss over time (Recharts)
+  - [x] Case distribution: donut chart by source (chargeback, return, fraud, ring)
+  - [x] Recent activity feed: latest case updates, alerts, model evaluations
 
-- [ ] **12.4 — Chargeback pages**
-  - [ ] List page (`chargebacks/page.tsx`): sortable table with columns: Case ID, ARN, Network, Reason Code, Amount, Status, Deadline, Win Probability, Assigned To. Filters: status dropdown, network dropdown, date range. Pagination
-  - [ ] Detail page (`chargebacks/[id]/page.tsx`):
-    - Case header: status badge, deadline countdown (color-coded: green >7d, yellow 3-7d, red <3d)
-    - Evidence panel: list of `EvidenceItem`s with status icons (found/missing)
-    - Narrative panel: rendered draft with edit-in-place capability
-    - Confidence panel: win probability gauge, SHAP feature chart (horizontal bar chart)
-    - Similar cases panel: list of top-5 similar historical cases with outcomes
-    - Review actions: Approve, Edit, Reject buttons with confirmation dialogs
-    - Audit trail: timeline of all actions on this case
+- [x] **12.4 — Chargeback pages**
+  - [x] List page (`chargebacks/page.tsx`): sortable table with columns: Case ID, ARN, Network, Reason Code, Amount, Status, Deadline, Win Probability, Assigned To. Filters: status dropdown, network dropdown, date range. Pagination
+  - [x] Detail page (`chargebacks/[id]/page.tsx`):
+    - [x] Case header: status badge, deadline countdown (color-coded: green >7d, yellow 3-7d, red <3d)
+    - [x] Evidence panel: list of `EvidenceItem`s with status icons (found/missing)
+    - [x] Narrative panel: rendered draft with edit-in-place capability
+    - [x] Confidence panel: win probability gauge, SHAP feature chart (horizontal bar chart)
+    - [x] Similar cases panel: list of top-5 similar historical cases with outcomes
+    - [x] Review actions: Approve, Edit, Reject buttons with confirmation dialogs
+    - [x] Audit trail: timeline of all actions on this case
 
-- [ ] **12.5 — Returns page (`dashboard/src/app/returns/page.tsx`)**
-  - [ ] Risk score distribution: histogram of recent scores
-  - [ ] Decision breakdown: pie chart of auto_approve / manual_review / auto_deny
-  - [ ] Recent decisions table: Customer ID, Order Amount, Risk Score, Tier, Decision, Top Features
-  - [ ] Policy config panel: editable thresholds with save button
+- [x] **12.5 — Returns page (`dashboard/src/app/returns/page.tsx`)**
+  - [x] Risk score distribution: histogram of recent scores
+  - [x] Decision breakdown: pie chart of auto_approve / manual_review / auto_deny
+  - [x] Recent decisions table: Customer ID, Order Amount, Risk Score, Tier, Decision, Top Features
+  - [x] Policy config panel: editable thresholds with save button
 
-- [ ] **12.6 — Fraud alerts page (`dashboard/src/app/fraud/page.tsx`)**
-  - [ ] Active alerts list with severity color-coding
-  - [ ] Alert detail: TPS chart (baseline vs. current), geographic heatmap, transaction list
-  - [ ] Registered events calendar
+- [x] **12.6 — Fraud alerts page (`dashboard/src/app/fraud/page.tsx`)**
+  - [x] Active alerts list with severity color-coding
+  - [x] Alert detail: TPS chart (baseline vs. current), geographic heatmap, transaction list
+  - [x] Registered events calendar
 
-- [ ] **12.7 — Abuse rings page (`dashboard/src/app/rings/page.tsx`)**
-  - [ ] Force-directed graph visualization (D3.js) showing detected communities
-  - [ ] Node coloring by entity type (buyer=blue, seller=green, device=orange, address=purple)
-  - [ ] Edge thickness by transaction volume
-  - [ ] Click on community to expand and see member details + suspicion score
+- [x] **12.7 — Abuse rings page (`dashboard/src/app/rings/page.tsx`)**
+  - [x] Force-directed graph visualization (D3.js) showing detected communities
+  - [x] Node coloring by entity type (buyer=blue, seller=green, device=orange, address=purple)
+  - [x] Edge thickness by transaction volume
+  - [x] Click on community to expand and see member details + suspicion score
 
-- [ ] **12.8 — Evaluation page (`dashboard/src/app/evaluation/page.tsx`)**
-  - [ ] Model selector dropdown (return_risk, chargeback_win, fraud_spike)
-  - [ ] Latest evaluation report: metrics table, ROC curve, calibration curve, threshold sweep chart
-  - [ ] Champion vs. challenger comparison table
-  - [ ] Drift report: per-feature PSI values with color-coded status (green < 0.1, yellow 0.1-0.2, red > 0.2)
-  - [ ] Evaluation history: list of past runs with metrics trends
+- [x] **12.8 — Evaluation page (`dashboard/src/app/evaluation/page.tsx`)**
+  - [x] Model selector dropdown (return_risk, chargeback_win, fraud_spike)
+  - [x] Latest evaluation report: metrics table, ROC curve, calibration curve, threshold sweep chart
+  - [x] Champion vs. challenger comparison table
+  - [x] Drift report: per-feature PSI values with color-coded status (green < 0.1, yellow 0.1-0.2, red > 0.2)
+  - [x] Evaluation history: list of past runs with metrics trends
 
-- [ ] **12.9 — Settings page (`dashboard/src/app/settings/page.tsx`)**
-  - [ ] Tenant configuration: name, API key regeneration
-  - [ ] Notification channels: configure Slack webhook URL, email recipients per severity level
-  - [ ] Policy configuration: threshold sliders for return scoring
-  - [ ] User management: list users, invite new user, assign roles (RBAC)
-  - [ ] Data retention settings: display current retention policy
+- [x] **12.9 — Settings page (`dashboard/src/app/settings/page.tsx`)**
+  - [x] Tenant configuration: name, API key regeneration
+  - [x] Notification channels: configure Slack webhook URL, email recipients per severity level
+  - [x] Policy configuration: threshold sliders for return scoring
+  - [x] User management: list users, invite new user, assign roles (RBAC)
+  - [x] Data retention settings: display current retention policy
 
 ### Acceptance Criteria
 
-- [ ] Dashboard renders correctly in Chrome and Firefox
-- [ ] All pages load data from backend API
-- [ ] Chargeback review workflow (approve/edit/reject) completes successfully
-- [ ] Graph visualization renders detected communities with correct node/edge relationships
-- [ ] Evaluation charts display correct metrics from evaluation reports
-- [ ] Real-time updates: new cases appear without page refresh (SSE or polling)
-- [ ] Responsive layout works on 1280px+ screens (primary analyst use case)
+- [x] Dashboard renders correctly in Chrome and Firefox
+- [x] All pages load data from backend API
+- [x] Chargeback review workflow (approve/edit/reject) completes successfully
+- [x] Graph visualization renders detected communities with correct node/edge relationships
+- [x] Evaluation charts display correct metrics from evaluation reports
+- [x] Real-time updates: new cases appear without page refresh (SSE or polling)
+- [x] Responsive layout works on 1280px+ screens (primary analyst use case)
 
 ### Verification Gate
 

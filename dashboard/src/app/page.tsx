@@ -1,86 +1,117 @@
-export default function HomePage() {
+import KPICard from '@/components/dashboard/KPICard';
+import CostWeightedChart from '@/components/charts/CostWeightedChart';
+import CaseDistributionChart from '@/components/charts/CaseDistributionChart';
+import { Briefcase, IndianRupee, ShieldAlert, Timer } from 'lucide-react';
+
+export default function DashboardHome() {
   return (
-    <main
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100vh",
-        padding: "2rem",
-        textAlign: "center",
-      }}
-    >
-      <div
-        style={{
-          background: "var(--bg-secondary)",
-          border: "1px solid var(--border-subtle)",
-          borderRadius: "var(--radius-lg)",
-          padding: "3rem",
-          maxWidth: "600px",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
-        }}
-      >
-        <div
-          style={{
-            display: "inline-block",
-            padding: "0.25rem 0.75rem",
-            borderRadius: "var(--radius-sm)",
-            background: "var(--accent-glow)",
-            color: "var(--accent-primary)",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            marginBottom: "1rem",
-          }}
-        >
-          Track 02 — BFSI Defense
+    <div>
+      <div className="flex justify-between items-center" style={{ marginBottom: 'var(--spacing-6)' }}>
+        <div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-primary)' }}>Dashboard Overview</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Real-time metrics and system health monitoring.</p>
         </div>
-        <h1
-          style={{
-            fontSize: "2rem",
-            fontWeight: 700,
-            marginBottom: "1rem",
-            color: "var(--text-primary)",
-          }}
-        >
-          AI Risk Manager
-        </h1>
-        <p
-          style={{
-            color: "var(--text-secondary)",
-            lineHeight: 1.6,
-            marginBottom: "2rem",
-          }}
-        >
-          Real-time detection, scoring, and auto-responder system for fraud,
-          returns, and chargeback loss prevention.
-        </p>
-        <div
-          style={{
-            display: "flex",
-            gap: "1rem",
-            justifyContent: "center",
-          }}
-        >
-          <a
-            href="http://localhost:8000/docs"
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              padding: "0.75rem 1.5rem",
-              background: "var(--accent-primary)",
-              color: "#ffffff",
-              borderRadius: "var(--radius-md)",
-              fontWeight: 500,
-              textDecoration: "none",
-            }}
-          >
-            Backend API Docs
-          </a>
+        <div className="flex gap-2">
+          <button className="btn btn-outline">Export Report</button>
+          <button className="btn btn-primary">Refresh Data</button>
         </div>
       </div>
-    </main>
+
+      <div className="dashboard-grid">
+        <KPICard 
+          title="Total Active Cases" 
+          value="1,248" 
+          change="12% from last week" 
+          trend="up" 
+          icon={Briefcase} 
+          color="var(--primary)" 
+        />
+        <KPICard 
+          title="Chargeback Win Rate" 
+          value="82.4%" 
+          change="3.2% from last week" 
+          trend="up" 
+          icon={ShieldAlert} 
+          color="var(--success)" 
+        />
+        <KPICard 
+          title="Total ₹ Saved" 
+          value="₹14.2M" 
+          change="₹1.2M this month" 
+          trend="up" 
+          icon={IndianRupee} 
+          color="var(--warning)" 
+        />
+        <KPICard 
+          title="Pending Reviews" 
+          value="45" 
+          change="12 approaching deadline" 
+          trend="down" 
+          icon={Timer} 
+          color="var(--danger)" 
+        />
+      </div>
+
+      <div className="charts-grid">
+        <div className="card">
+          <div className="card-header">
+            <h2 className="card-title">Model Performance & Cost-Weighted Loss</h2>
+            <p className="card-description">Tracking precision, recall, and total financial loss prevented.</p>
+          </div>
+          <div className="chart-container">
+            <CostWeightedChart />
+          </div>
+        </div>
+        
+        <div className="card">
+          <div className="card-header">
+            <h2 className="card-title">Case Distribution</h2>
+            <p className="card-description">Active cases broken down by source.</p>
+          </div>
+          <div className="chart-container">
+            <CaseDistributionChart />
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <h2 className="card-title">Recent Activity Feed</h2>
+          <p className="card-description">Latest alerts, model evaluations, and system updates.</p>
+        </div>
+        <div className="activity-feed">
+          <div className="activity-item">
+            <div className="activity-icon" style={{ backgroundColor: 'var(--danger)' }}>
+              <ShieldAlert size={16} />
+            </div>
+            <div className="activity-content">
+              <h4>Fraud Ring Detected</h4>
+              <p>Abuse-Ring Sentinel identified a new community of 12 suspicious seller accounts.</p>
+              <div className="activity-time">10 minutes ago</div>
+            </div>
+          </div>
+          <div className="activity-item">
+            <div className="activity-icon" style={{ backgroundColor: 'var(--success)' }}>
+              <Briefcase size={16} />
+            </div>
+            <div className="activity-content">
+              <h4>Chargeback Case Won</h4>
+              <p>Case #CB-9921 resolved in merchant's favor. ₹45,000 recovered.</p>
+              <div className="activity-time">1 hour ago</div>
+            </div>
+          </div>
+          <div className="activity-item">
+            <div className="activity-icon" style={{ backgroundColor: 'var(--warning)' }}>
+              <Timer size={16} />
+            </div>
+            <div className="activity-content">
+              <h4>Deadline Approaching</h4>
+              <p>5 chargeback cases require review within the next 24 hours.</p>
+              <div className="activity-time">3 hours ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
