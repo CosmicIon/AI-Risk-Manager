@@ -7,10 +7,9 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import SERVICE_NAME, SERVICE_VERSION, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.semconv.resource import ResourceAttributes
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +27,8 @@ def setup_opentelemetry(app: FastAPI, engine=None):
     # Set up TracerProvider
     resource = Resource.create(
         {
-            ResourceAttributes.SERVICE_NAME: "ai-risk-manager-backend",
-            ResourceAttributes.SERVICE_VERSION: "1.0.0",
+            SERVICE_NAME: "ai-risk-manager-backend",
+            SERVICE_VERSION: "1.0.0",
         }
     )
 
