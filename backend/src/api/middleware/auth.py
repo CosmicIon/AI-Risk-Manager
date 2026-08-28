@@ -43,9 +43,9 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Security(secu
     try:
         token = credentials.credentials
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id_str: str = payload.get("sub")
-        tenant_id_str: str = payload.get("tenant_id")
-        role: str = payload.get("role")
+        user_id_str: str | None = payload.get("sub")
+        tenant_id_str: str | None = payload.get("tenant_id")
+        role: str | None = payload.get("role")
 
         if user_id_str is None or tenant_id_str is None or role is None:
             raise HTTPException(
