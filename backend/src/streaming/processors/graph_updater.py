@@ -13,9 +13,10 @@ neo4j_driver: neo4j.AsyncDriver | None = None
 @app.task
 async def setup_neo4j():
     global neo4j_driver
+    password = settings.NEO4J_PASSWORD.get_secret_value() if hasattr(settings.NEO4J_PASSWORD, "get_secret_value") else settings.NEO4J_PASSWORD
     neo4j_driver = AsyncGraphDatabase.driver(
         settings.NEO4J_URI,
-        auth=(settings.NEO4J_USER, settings.NEO4J_PASSWORD)
+        auth=(settings.NEO4J_USER, password)
     )
 
 

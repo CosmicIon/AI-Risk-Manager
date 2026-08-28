@@ -1093,36 +1093,36 @@ cd backend && pytest tests/integration/test_api_returns.py -v
 
 ### Implementation Checklist
 
-- [ ] **10.1 — Neo4j client (`backend/src/graph/neo4j_client.py`)**
-  - [ ] `class Neo4jClient`: wraps `neo4j.AsyncDriver`
-  - [ ] `async def ensure_constraints()`: create uniqueness constraints on `Buyer.id`, `Seller.id`, `Device.fingerprint`, `Address.hash`, `PaymentInstrument.token`
-  - [ ] `async def ensure_indexes()`: create indexes on `(tenant_id)` for all node types
-  - [ ] `async def batch_merge_nodes(nodes: list[dict])`: batch UNWIND + MERGE for high-throughput graph building
-  - [ ] `async def batch_merge_edges(edges: list[dict])`: batch edge creation
-  - [ ] `async def get_subgraph(node_id: str, depth: int = 2) -> dict`: return ego-network for visualization
-  - [ ] `async def health_check() -> bool`
+- [x] **10.1 — Neo4j client (`backend/src/graph/neo4j_client.py`)**
+  - [x] `class Neo4jClient`: wraps `neo4j.AsyncDriver`
+  - [x] `async def ensure_constraints()`: create uniqueness constraints on `Buyer.id`, `Seller.id`, `Device.fingerprint`, `Address.hash`, `PaymentInstrument.token`
+  - [x] `async def ensure_indexes()`: create indexes on `(tenant_id)` for all node types
+  - [x] `async def batch_merge_nodes(nodes: list[dict])`: batch UNWIND + MERGE for high-throughput graph building
+  - [x] `async def batch_merge_edges(edges: list[dict])`: batch edge creation
+  - [x] `async def get_subgraph(node_id: str, depth: int = 2) -> dict`: return ego-network for visualization
+  - [x] `async def health_check() -> bool`
 
-- [ ] **10.2 — Community detection (`backend/src/graph/community_detection.py`)**
-  - [ ] `async def run_louvain(tenant_id: UUID, min_community_size: int = 3) -> list[dict]`: project graph → run GDS Louvain → return communities with `{"community_id": int, "members": list[str], "size": int, "modularity": float}`
-  - [ ] `async def run_label_propagation(tenant_id: UUID) -> list[dict]`: alternative algorithm for comparison
-  - [ ] `async def detect_suspicious_communities(communities: list[dict]) -> list[dict]`: filter communities by suspicion heuristics:
+- [x] **10.2 — Community detection (`backend/src/graph/community_detection.py`)**
+  - [x] `async def run_louvain(tenant_id: UUID, min_community_size: int = 3) -> list[dict]`: project graph → run GDS Louvain → return communities with `{"community_id": int, "members": list[str], "size": int, "modularity": float}`
+  - [x] `async def run_label_propagation(tenant_id: UUID) -> list[dict]`: alternative algorithm for comparison
+  - [x] `async def detect_suspicious_communities(communities: list[dict]) -> list[dict]`: filter communities by suspicion heuristics:
     - Shared shipping addresses across multiple buyers
     - Same device fingerprint used by multiple accounts
     - Coordinated timing (>3 members transacting within 5 minutes)
     - Unusually high return/chargeback rates within the community
 
-- [ ] **10.3 — Ring scorer (`backend/src/graph/ring_scorer.py`)**
-  - [ ] `def score_ring(community: dict, transaction_stats: dict) -> float`: 0-1 suspicion score based on weighted heuristics (address sharing: 0.3, device sharing: 0.3, timing coordination: 0.2, chargeback rate: 0.2)
-  - [ ] `def generate_ring_narrative(community: dict, score: float) -> str`: human-readable explanation of why this cluster is suspicious
-  - [ ] `def format_for_alert(community: dict, score: float, narrative: str) -> AnomalyAlert`: create alert if score > 0.7
+- [x] **10.3 — Ring scorer (`backend/src/graph/ring_scorer.py`)**
+  - [x] `def score_ring(community: dict, transaction_stats: dict) -> float`: 0-1 suspicion score based on weighted heuristics (address sharing: 0.3, device sharing: 0.3, timing coordination: 0.2, chargeback rate: 0.2)
+  - [x] `def generate_ring_narrative(community: dict, score: float) -> str`: human-readable explanation of why this cluster is suspicious
+  - [x] `def format_for_alert(community: dict, score: float, narrative: str) -> AnomalyAlert`: create alert if score > 0.7
 
 ### Acceptance Criteria
 
-- [ ] Neo4j constraints and indexes created successfully
-- [ ] Batch node/edge creation handles 10,000 nodes without error
-- [ ] Louvain detects synthetic planted communities (inject 3 connected buyers sharing an address)
-- [ ] Ring scorer assigns score > 0.7 to communities with shared devices + addresses
-- [ ] Subgraph extraction returns correct ego-network for visualization
+- [x] Neo4j constraints and indexes created successfully
+- [x] Batch node/edge creation handles 10,000 nodes without error
+- [x] Louvain detects synthetic planted communities (inject 3 connected buyers sharing an address)
+- [x] Ring scorer assigns score > 0.7 to communities with shared devices + addresses
+- [x] Subgraph extraction returns correct ego-network for visualization
 
 ### Verification Gate
 

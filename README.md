@@ -335,6 +335,24 @@ cd backend
 pytest tests/unit/test_services.py -v
 ```
 
+### Verify Module 9 (REST API Layer & Middleware)
+To manually verify the FastAPI routes, middleware (auth, rate limiting, request ID), and role-based access control (RBAC):
+```bash
+cd backend
+.\.venv\Scripts\Activate.ps1
+pytest tests/integration/test_api_chargebacks.py -v
+pytest tests/integration/test_api_returns.py -v
+```
+
+### Verify Module 10 (Graph Analysis / Abuse-Ring Sentinel)
+To manually verify the Neo4j graph pipeline, Louvain community detection, and abuse ring scorer:
+```bash
+cd backend
+.\.venv\Scripts\Activate.ps1
+pytest tests/integration/test_graph_analysis.py -v
+# Note: You may see an asyncio proactor AttributeError on Windows during teardown; this does not affect functionality.
+```
+
 ### Verify Dashboard Build
 ```bash
 cd dashboard
