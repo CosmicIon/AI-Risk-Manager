@@ -52,6 +52,7 @@ export default function Sidebar() {
       
       <div className="sidebar-footer">
         <p className="version-info">v1.0.0-rc.1</p>
+        <span className="status-dot" title="All systems operational" />
       </div>
     </aside>
   );
