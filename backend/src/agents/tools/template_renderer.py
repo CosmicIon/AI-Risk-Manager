@@ -1,14 +1,15 @@
 from langchain_core.tools import tool
 
+
 @tool
 def render_template(network: str, reason_code: str, evidence: dict) -> str:
     """Render a fallback chargeback response template.
-    
+
     Args:
         network: The card network (e.g., VISA, Mastercard).
         reason_code: The chargeback reason code.
         evidence: Dictionary containing evidence details.
-        
+
     Returns:
         A formatted chargeback representment narrative string.
     """
@@ -32,7 +33,7 @@ Signed By: {evidence.get('signed_by', 'Not available')}
 
 MERCHANT RESPONSE
 -----------------
-The customer participated in this transaction as evidenced by AVS and 3DS matching, 
+The customer participated in this transaction as evidenced by AVS and 3DS matching,
 and the goods were delivered successfully to the authorized address.
 
 REQUESTED ACTION

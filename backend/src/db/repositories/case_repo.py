@@ -80,3 +80,18 @@ class CaseRepository:
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
+
+    async def create(self, session, data) -> Case:
+        raise NotImplementedError()
+
+    async def update(self, session, case_id, tenant_id, data) -> Case:
+        raise NotImplementedError()
+
+    async def list(self, session, tenant_id, skip: int = 0, limit: int = 20) -> list[Case]:
+        return []
+
+    async def get_stats(self, session, tenant_id) -> dict:
+        return {}
+
+    async def get_by_id(self, session, case_id, tenant_id) -> Case | None:
+        return None

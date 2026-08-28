@@ -1,5 +1,6 @@
-from langchain_core.tools import tool
 import logging
+
+from langchain_core.tools import tool
 
 logger = logging.getLogger(__name__)
 
@@ -9,11 +10,11 @@ class EvidenceRetrievalError(Exception):
 @tool
 def lookup_order(order_id: str, tenant_id: str) -> dict:
     """Fetch order details from the database.
-    
+
     Args:
         order_id: The ID of the order to look up.
         tenant_id: The tenant ID associated with the order.
-        
+
     Returns:
         Order details including items, amounts, dates, customer info, and shipping address.
     """
@@ -21,7 +22,7 @@ def lookup_order(order_id: str, tenant_id: str) -> dict:
         # Mocking database call for this module since DB might not have all tables
         if not order_id or order_id == "unknown":
             return {"found": False}
-            
+
         return {
             "found": True,
             "order_id": order_id,
@@ -48,4 +49,4 @@ def lookup_order(order_id: str, tenant_id: str) -> dict:
         }
     except Exception as e:
         logger.error(f"Error looking up order {order_id}: {e}")
-        raise EvidenceRetrievalError(f"Failed to fetch order: {e}")
+        raise EvidenceRetrievalError(f"Failed to fetch order: {e}") from e

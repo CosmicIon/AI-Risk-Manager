@@ -1,10 +1,11 @@
 import logging
+
 import neo4j
 from neo4j import AsyncGraphDatabase
 
+from src.config import settings
 from src.streaming.app import app
 from src.streaming.processors.transaction_processor import transactions_topic
-from src.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ async def setup_neo4j():
 async def update_neo4j_batch(batch):
     if not neo4j_driver:
         return
-        
+
     query = """
     UNWIND $events AS event
     MERGE (b:Buyer {id: event.customer_id, tenant_id: event.tenant_id})
@@ -31,13 +32,13 @@ async def update_neo4j_batch(batch):
     MERGE (a:Address {hash: event.shipping_address_hash})
     MERGE (d:Device {fingerprint: event.device_fingerprint})
     MERGE (p:PaymentInstrument {token: event.payment_method})
-    
+
     CREATE (b)-[:BOUGHT_FROM {amount: event.amount, timestamp: event.timestamp}]->(s)
     MERGE (b)-[:USES]->(d)
     MERGE (b)-[:SHIPS_TO]->(a)
     MERGE (b)-[:PAYS_WITH]->(p)
     """
-    
+
     # Prepare batch data
     events_data = []
     for tx in batch:
@@ -51,7 +52,7 @@ async def update_neo4j_batch(batch):
             "amount": tx.amount,
             "timestamp": tx.timestamp,
         })
-        
+
     async with neo4j_driver.session() as session:
         try:
             await session.run(query, events=events_data)

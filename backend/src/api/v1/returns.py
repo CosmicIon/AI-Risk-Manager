@@ -1,15 +1,15 @@
 """Return scoring endpoints."""
 
-from uuid import UUID
 import time
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
-from src.api.middleware.auth import TokenData, verify_api_key, require_role
+from src.api.middleware.auth import TokenData, require_role, verify_api_key
 from src.api.middleware.rate_limit import rate_limit
-from src.core.schemas.return_request import ReturnScoreRequest, ReturnScoreResponse, PolicyConfig
-from src.services.return_scoring_service import ReturnScoringService
-from src.integrations.prometheus_metrics import return_scoring_latency_seconds
+from src.core.schemas.return_request import PolicyConfig, ReturnScoreRequest, ReturnScoreResponse
 from src.db.models.tenant import Tenant
+from src.integrations.prometheus_metrics import return_scoring_latency_seconds
+from src.services.return_scoring_service import ReturnScoringService
 
 router = APIRouter(prefix="/returns", tags=["returns"])
 
@@ -18,7 +18,7 @@ async def get_return_scoring_service(request: Request) -> ReturnScoringService:
     # return ReturnScoringService(request.app.state.redis, request.app.state.model_registry)
     from src.integrations.redis_client import RedisClient
     from src.ml.serving.model_registry import ModelRegistry
-    return ReturnScoringService(RedisClient(), ModelRegistry())
+    return ReturnScoringService(RedisClient("redis://localhost:6379"), ModelRegistry())
 
 async def get_tenant(token: TokenData = Depends(verify_api_key)) -> Tenant:
     # MVP mock. Default policy config
@@ -47,7 +47,7 @@ async def score_return(
         response = await service.score(request, tenant)
         return response
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
     finally:
         latency = time.time() - start_time
         return_scoring_latency_seconds.observe(latency)
@@ -78,6 +78,6 @@ async def update_return_policy(
     """
     if not (policy.low_threshold < policy.medium_threshold < policy.high_threshold):
         raise HTTPException(status_code=400, detail="Invalid thresholds: must be low < medium < high")
-        
+
     # MVP stub: would update tenant record in database
     return {"status": "success", "message": "Policy updated successfully"}

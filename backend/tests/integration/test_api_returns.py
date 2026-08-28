@@ -1,12 +1,12 @@
-import pytest
-from httpx import AsyncClient, ASGITransport
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
-from unittest.mock import AsyncMock
+import pytest
+from httpx import ASGITransport, AsyncClient
 
-from src.main import app
 from src.api.v1.returns import get_return_scoring_service
+from src.main import app
 
 # Mock Redis state
 app.state.redis = AsyncMock()
@@ -45,14 +45,14 @@ async def test_score_return(auth_headers):
         "order_amount": 250.00,
         "return_amount": 100.00,
         "return_reason": "Defective",
-        "order_date": datetime.now(timezone.utc).isoformat(),
-        "return_initiated_at": datetime.now(timezone.utc).isoformat(),
+        "order_date": datetime.now(UTC).isoformat(),
+        "return_initiated_at": datetime.now(UTC).isoformat(),
         "product_category": "Electronics"
     }
-    
+
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post("/api/v1/returns/score", json=payload, headers=auth_headers)
-        
+
     assert response.status_code == 200
     data = response.json()
     assert "risk_score" in data

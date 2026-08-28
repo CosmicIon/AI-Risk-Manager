@@ -71,3 +71,12 @@ class ChargebackRepository:
         rate = (won / total * 100) if total > 0 else 0.0
 
         return {"total_resolved": total, "total_won": won, "win_rate_percentage": round(rate, 2)}
+
+    async def create(self, session, data) -> ChargebackRecord:
+        raise NotImplementedError()
+
+    async def update_evidence(self, session, case_id, data):
+        pass
+
+    async def get_by_arn(self, session, tenant_id, arn) -> ChargebackRecord | None:
+        return None

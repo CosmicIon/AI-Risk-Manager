@@ -1,4 +1,5 @@
 import faust
+
 from src.config import settings
 
 # Initialize Faust app

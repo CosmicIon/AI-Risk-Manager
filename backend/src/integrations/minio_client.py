@@ -64,7 +64,7 @@ class ObjectStoreClient:
             except ClientError as e:
                 logger.error(f"Failed to list objects in {bucket}/{prefix}: {e}")
                 return []
-                
+
         return await asyncio.to_thread(_list)
 
     async def upload_model_artifact(

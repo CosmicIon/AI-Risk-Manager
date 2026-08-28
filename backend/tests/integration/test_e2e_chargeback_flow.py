@@ -6,16 +6,16 @@ processing to analyst review, validating status transitions, evidence
 assembly, narrative generation, and audit trail creation.
 """
 
-import pytest
-from httpx import AsyncClient, ASGITransport
-from datetime import datetime, timezone
+from unittest.mock import AsyncMock
 from uuid import uuid4
-from unittest.mock import AsyncMock, patch, MagicMock
 
-from src.main import app
+import pytest
+from httpx import ASGITransport, AsyncClient
+
 from src.api.middleware.auth import create_access_token
 from src.api.v1.chargebacks import get_chargeback_service
 from src.core.enums import CaseStatus
+from src.main import app
 
 # ---------------------------------------------------------------------------
 # Fixtures

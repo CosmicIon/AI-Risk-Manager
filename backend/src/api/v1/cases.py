@@ -1,18 +1,19 @@
 """Case management endpoints."""
 
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from src.api.middleware.auth import TokenData, require_role
-from src.services.case_management_service import CaseManagementService
 from src.core.enums import CaseStatus
+from src.services.case_management_service import CaseManagementService
 
 router = APIRouter(prefix="/cases", tags=["cases"])
 
 async def get_case_service() -> CaseManagementService:
-    from src.db.repositories.case_repository import CaseRepository
-    return CaseManagementService(CaseRepository(None))
+    from src.db.repositories.case_repo import CaseRepository
+    return CaseManagementService(CaseRepository(None))  # type: ignore
 
 @router.get("")
 async def search_cases(
@@ -28,16 +29,17 @@ async def search_cases(
     List all cases with filters and pagination.
     """
     try:
-        filters = {}
+        import typing
+        filters: dict[str, typing.Any] = {}
         if status:
             filters["status"] = status
         if source:
             filters["source"] = source
-            
-        cases, total = await service.search(token.tenant_id, query, filters, page, size)
+
+        cases, total = await service.search(token.tenant_id, query, filters, page, size, session=None)
         return {"items": cases, "total": total, "page": page, "size": size}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 @router.get("/stats")
 async def get_dashboard_stats(
@@ -48,10 +50,10 @@ async def get_dashboard_stats(
     Dashboard statistics (counts by status, priority, win rate).
     """
     try:
-        stats = await service.get_dashboard_stats(token.tenant_id)
+        stats = await service.get_dashboard_stats(token.tenant_id, session=None)
         return stats
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 class AssignRequest(BaseModel):
     user_id: UUID
@@ -67,10 +69,10 @@ async def assign_case(
     Assign a case to an analyst.
     """
     try:
-        await service.assign(case_id, token.tenant_id, request.user_id, token.user_id)
+        await service.assign(case_id, token.tenant_id, request.user_id, token.user_id, session=None)
         return {"status": "success"}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 class StatusUpdateRequest(BaseModel):
     status: CaseStatus
@@ -87,7 +89,7 @@ async def update_case_status(
     Update case status.
     """
     try:
-        await service.update_status(case_id, token.tenant_id, request.status, token.user_id, request.resolution)
+        await service.update_status(case_id, token.tenant_id, request.status, token.user_id, session=None, resolution=request.resolution)
         return {"status": "success"}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e

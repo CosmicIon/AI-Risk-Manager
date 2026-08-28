@@ -7,25 +7,25 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.v1 import (
-    chargebacks_router,
-    returns_router,
-    fraud_router,
-    cases_router,
-    metrics_router,
-    health_router,
-)
-from src.api.middleware.request_id import RequestIDMiddleware
 from src.api.middleware.metrics import PrometheusMiddleware
+from src.api.middleware.request_id import RequestIDMiddleware
+from src.api.v1 import (
+    cases_router,
+    chargebacks_router,
+    fraud_router,
+    health_router,
+    metrics_router,
+    returns_router,
+)
 from src.config import settings
+from src.db.session import async_engine
 from src.integrations.kafka_producer import TypedKafkaProducer
 from src.integrations.langfuse_client import LangfuseTracer
 from src.integrations.llm_client import GeminiLLMClient
 from src.integrations.minio_client import ObjectStoreClient
+from src.integrations.otel_setup import setup_opentelemetry
 from src.integrations.qdrant_client import QdrantVectorStore
 from src.integrations.redis_client import RedisClient
-from src.integrations.otel_setup import setup_opentelemetry
-from src.db.session import async_engine
 
 # Configure logging
 logging.basicConfig(
@@ -107,7 +107,7 @@ def create_app() -> FastAPI:
 
     # Mount base health routes
     app.include_router(health_router, prefix="")
-    
+
     # Mount API v1 routes
     app.include_router(health_router, prefix="/api/v1")
     app.include_router(chargebacks_router, prefix="/api/v1")

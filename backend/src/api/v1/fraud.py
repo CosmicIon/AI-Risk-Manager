@@ -1,8 +1,8 @@
 """Fraud detection and anomaly endpoints."""
 
 from datetime import datetime
-from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Query
+
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from src.api.middleware.auth import TokenData, require_role
@@ -11,9 +11,9 @@ from src.services.fraud_detection_service import FraudDetectionService
 router = APIRouter(prefix="/fraud", tags=["fraud"])
 
 async def get_fraud_service() -> FraudDetectionService:
-    from src.db.repositories.case_repository import CaseRepository
+    from src.db.repositories.case_repo import CaseRepository
     from src.services.notification_service import NotificationService
-    return FraudDetectionService(CaseRepository(None), None, NotificationService())
+    return FraudDetectionService(CaseRepository(None), None, NotificationService())  # type: ignore
 
 @router.get("/alerts")
 async def get_active_alerts(
@@ -35,7 +35,7 @@ async def get_active_alerts(
             alerts = [a for a in alerts if a.get("anomaly_type") == classification]
         return {"items": alerts, "total": len(alerts)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 class KnownEventRequest(BaseModel):
     name: str
@@ -57,7 +57,7 @@ async def register_event(
         await service.register_event(token.tenant_id, request.name, request.start, request.end)
         return {"status": "success", "message": f"Event '{request.name}' registered."}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 @router.post("/alerts/{alert_id}/acknowledge")
 async def acknowledge_alert(

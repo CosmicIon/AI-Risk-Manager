@@ -6,13 +6,14 @@ reports, Prometheus metrics scraping, cost-summary retrieval,
 and role-based access control.
 """
 
-import pytest
-from httpx import AsyncClient, ASGITransport
-from uuid import uuid4
 from unittest.mock import AsyncMock
+from uuid import uuid4
 
-from src.main import app
+import pytest
+from httpx import ASGITransport, AsyncClient
+
 from src.api.middleware.auth import create_access_token
+from src.main import app
 
 # ---------------------------------------------------------------------------
 # Fixtures

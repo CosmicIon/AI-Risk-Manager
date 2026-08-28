@@ -1,17 +1,18 @@
 import logging
 from uuid import UUID
+
 import faust
 
+from src.config import settings
+from src.integrations.redis_client import RedisClient
 from src.streaming.app import app
+from src.streaming.tables.amount_windows import get_amount_stats, update_amount_window
 from src.streaming.tables.velocity_counters import (
+    get_velocity,
+    velocity_table_1h,
     velocity_table_1m,
     velocity_table_5m,
-    velocity_table_1h,
-    get_velocity,
 )
-from src.streaming.tables.amount_windows import update_amount_window, get_amount_stats
-from src.integrations.redis_client import RedisClient
-from src.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -43,19 +44,19 @@ async def setup_redis():
 async def process_transactions(stream):
     async for tx in stream:
         key = f"{tx.tenant_id}:{tx.customer_id}"
-        
+
         # 1. Update velocity counters
         velocity_table_1m[key] += 1
         velocity_table_5m[key] += 1
         velocity_table_1h[key] += 1
-        
+
         # 2. Update amount windows
         update_amount_window(tx.tenant_id, tx.customer_id, tx.amount)
-        
+
         # 3. Write computed features to Redis
         velocity_stats = get_velocity(tx.tenant_id, tx.customer_id)
         amount_stats = get_amount_stats(tx.tenant_id, tx.customer_id)
-        
+
         features = {
             "velocity_1m": float(velocity_stats["1m"]),
             "velocity_5m": float(velocity_stats["5m"]),
@@ -65,7 +66,7 @@ async def process_transactions(stream):
             "amount_p95_1h": float(amount_stats["p95"]),
             "amount_count_1h": float(amount_stats["count"]),
         }
-        
+
         if redis_client:
             try:
                 await redis_client.set_feature_vector(

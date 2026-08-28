@@ -1,6 +1,6 @@
 import logging
 from typing import Any
-import neo4j
+
 from neo4j import AsyncGraphDatabase
 
 logger = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class Neo4jClient:
         async with self.driver.session() as session:
             await session.run(query, nodes=nodes)
 
-    async def batch_merge_edges(self, rel_type: str, source_label: str, source_id_field: str, 
+    async def batch_merge_edges(self, rel_type: str, source_label: str, source_id_field: str,
                                 target_label: str, target_id_field: str, edges: list[dict[str, Any]]):
         """Batch merge edges between nodes."""
         query = f"""
@@ -84,7 +84,7 @@ class Neo4jClient:
                 # Actually, await result.data() returns dictionaries, but for path it might be complex.
                 # Let's extract nodes and relationships manually.
                 # It's better to return nodes and relationships directly from the query.
-        
+
         # Simpler query to extract nodes and rels directly for JSON serialization
         query_direct = """
         MATCH path = (n {id: $node_id})-[*1..$depth]-(m)
@@ -94,17 +94,17 @@ class Neo4jClient:
         """
         async with self.driver.session() as session:
             result = await session.run(query_direct, node_id=node_id, depth=depth)
-            record = await result.single()
-            if not record:
+            single_record = await result.single()
+            if not single_record:
                 return {"nodes": [], "edges": []}
-            
-            for node in record["nodes"]:
+
+            for node in single_record["nodes"]:
                 nodes[node.element_id] = {
                     "id": node.element_id,
                     "labels": list(node.labels),
                     "properties": dict(node)
                 }
-            for rel in record["rels"]:
+            for rel in single_record["rels"]:
                 edges.append({
                     "id": rel.element_id,
                     "source": rel.start_node.element_id,
@@ -112,7 +112,7 @@ class Neo4jClient:
                     "type": rel.type,
                     "properties": dict(rel)
                 })
-                
+
         return {"nodes": list(nodes.values()), "edges": edges}
 
     async def health_check(self) -> bool:

@@ -6,15 +6,16 @@ known calendar events (to suppress false positives), acknowledging
 alerts, and verifying auth / role restrictions.
 """
 
-import pytest
-from httpx import AsyncClient, ASGITransport
-from datetime import datetime, timezone, timedelta
-from uuid import uuid4
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock
+from uuid import uuid4
 
-from src.main import app
+import pytest
+from httpx import ASGITransport, AsyncClient
+
 from src.api.middleware.auth import create_access_token
 from src.api.v1.fraud import get_fraud_service
+from src.main import app
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -44,21 +45,21 @@ def _make_mock_fraud_service():
             "severity": "critical",
             "anomaly_type": "velocity_spike",
             "description": "142 TPS vs 12 baseline",
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
         },
         {
             "alert_id": "alert-002",
             "severity": "high",
             "anomaly_type": "geo_anomaly",
             "description": "Multiple countries in 10 min window",
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
         },
         {
             "alert_id": "alert-003",
             "severity": "medium",
             "anomaly_type": "velocity_spike",
             "description": "35 TPS vs 10 baseline",
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
         },
     ]
     svc.register_event.return_value = None
@@ -156,8 +157,8 @@ async def test_register_known_event(admin_headers):
                 "/api/v1/fraud/events",
                 json={
                     "name": "Big Billion Days",
-                    "start": datetime.now(timezone.utc).isoformat(),
-                    "end": (datetime.now(timezone.utc) + timedelta(days=5)).isoformat(),
+                    "start": datetime.now(UTC).isoformat(),
+                    "end": (datetime.now(UTC) + timedelta(days=5)).isoformat(),
                     "threshold_multiplier": 3.0,
                 },
                 headers=admin_headers,
@@ -180,8 +181,8 @@ async def test_register_event_requires_admin(analyst_headers):
             "/api/v1/fraud/events",
             json={
                 "name": "Test Event",
-                "start": datetime.now(timezone.utc).isoformat(),
-                "end": (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat(),
+                "start": datetime.now(UTC).isoformat(),
+                "end": (datetime.now(UTC) + timedelta(hours=2)).isoformat(),
             },
             headers=analyst_headers,
         )

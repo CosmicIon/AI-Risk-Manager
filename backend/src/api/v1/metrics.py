@@ -1,9 +1,10 @@
 """Metrics and evaluation endpoints."""
 
 from decimal import Decimal
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import PlainTextResponse
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from src.api.middleware.auth import TokenData, require_role
 

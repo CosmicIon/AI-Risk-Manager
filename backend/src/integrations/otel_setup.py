@@ -1,15 +1,16 @@
-import os
 import logging
+import os
+
+from fastapi import FastAPI
 from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.semconv.resource import ResourceAttributes
-from fastapi import FastAPI
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ def setup_opentelemetry(app: FastAPI, engine=None):
     Configure OpenTelemetry distributed tracing and instrument libraries.
     """
     otel_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-    
+
     if not otel_endpoint:
         logger.info("OTEL_EXPORTER_OTLP_ENDPOINT not set. OpenTelemetry tracing is disabled.")
         return
@@ -28,7 +29,7 @@ def setup_opentelemetry(app: FastAPI, engine=None):
         ResourceAttributes.SERVICE_NAME: "ai-risk-manager-backend",
         ResourceAttributes.SERVICE_VERSION: "1.0.0"
     })
-    
+
     provider = TracerProvider(resource=resource)
     trace.set_tracer_provider(provider)
 

@@ -7,15 +7,16 @@ and degraded-mode behaviour when Redis is unavailable.
 """
 
 import time
-import pytest
-from httpx import AsyncClient, ASGITransport
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock
 from uuid import uuid4
-from unittest.mock import AsyncMock, patch
 
-from src.main import app
-from src.api.v1.returns import get_return_scoring_service
+import pytest
+from httpx import ASGITransport, AsyncClient
+
 from src.api.middleware.auth import create_access_token
+from src.api.v1.returns import get_return_scoring_service
+from src.main import app
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -45,8 +46,8 @@ def _score_payload(**overrides):
         "order_amount": 5000.00,
         "return_amount": 3200.00,
         "return_reason": "Defective",
-        "order_date": datetime.now(timezone.utc).isoformat(),
-        "return_initiated_at": datetime.now(timezone.utc).isoformat(),
+        "order_date": datetime.now(UTC).isoformat(),
+        "return_initiated_at": datetime.now(UTC).isoformat(),
         "product_category": "Electronics",
     }
     base.update(overrides)
@@ -77,7 +78,7 @@ def _make_mock_service(
         ],
         "model_version": "v2.1",
         "inference_latency_ms": latency,
-        "scored_at": datetime.now(timezone.utc).isoformat(),
+        "scored_at": datetime.now(UTC).isoformat(),
     }
     return svc
 

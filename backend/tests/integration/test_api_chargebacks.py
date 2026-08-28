@@ -1,19 +1,18 @@
-import pytest
-from httpx import AsyncClient, ASGITransport
-from datetime import datetime, timezone
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
-from unittest.mock import AsyncMock
+import pytest
+from httpx import ASGITransport, AsyncClient
 
-from src.main import app
 from src.api.middleware.auth import create_access_token
 from src.api.v1.chargebacks import get_chargeback_service
+from src.core.enums import CaseStatus
+from src.main import app
 
 # Mock Redis state
 app.state.redis = AsyncMock()
 app.state.redis.check_rate_limit.return_value = True
 
-from src.core.enums import CaseStatus
 
 mock_chargeback_service = AsyncMock()
 mock_chargeback_service.ingest.return_value = {
@@ -43,10 +42,10 @@ async def test_ingest_chargeback(auth_headers):
             "amount": 100.50
         }
     }
-    
+
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post("/api/v1/chargebacks/ingest", json=payload, headers=auth_headers)
-        
+
     assert response.status_code == 202
     data = response.json()
     assert "case_id" in data
@@ -58,10 +57,10 @@ async def test_get_pending_reviews():
     # Test JWT auth
     token = create_access_token(user_id=uuid4(), tenant_id=uuid4(), role="analyst")
     headers = {"Authorization": f"Bearer {token}"}
-    
+
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get("/api/v1/chargebacks/pending", headers=headers)
-        
+
     assert response.status_code == 200
     data = response.json()
     assert "items" in data
