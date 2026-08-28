@@ -1,7 +1,7 @@
 import KPICard from '@/components/dashboard/KPICard';
-import CostWeightedChart from '@/components/charts/CostWeightedChart';
-import CaseDistributionChart from '@/components/charts/CaseDistributionChart';
+import { CostWeightedChart, CaseDistributionChart } from '@/components/charts/ClientCharts';
 import { Briefcase, IndianRupee, ShieldAlert, Timer } from 'lucide-react';
+import '../components/dashboard/dashboard.css';
 
 export default function DashboardHome() {
   return (

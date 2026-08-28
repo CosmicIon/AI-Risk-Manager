@@ -4,7 +4,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  ResponsiveContainer,
   Tooltip,
   Legend
 } from 'recharts';
@@ -20,8 +19,7 @@ const COLORS = ['#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export default function CaseDistributionChart() {
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <PieChart>
+      <PieChart width={300} height={300}>
         <Pie
           data={data}
           cx="50%"
@@ -42,6 +40,5 @@ export default function CaseDistributionChart() {
         />
         <Legend wrapperStyle={{ fontSize: '12px' }} />
       </PieChart>
-    </ResponsiveContainer>
   );
 }

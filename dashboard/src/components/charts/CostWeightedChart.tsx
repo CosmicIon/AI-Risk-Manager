@@ -7,7 +7,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   Legend
 } from 'recharts';
 
@@ -23,8 +22,7 @@ const data = [
 
 export default function CostWeightedChart() {
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+      <LineChart width={600} height={300} data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
         <XAxis 
           dataKey="name" 
@@ -59,6 +57,5 @@ export default function CostWeightedChart() {
         <Line yAxisId="left" type="monotone" dataKey="recall" name="Recall" stroke="var(--success)" strokeWidth={2} dot={{ r: 4 }} />
         <Line yAxisId="right" type="monotone" dataKey="loss" name="Cost-Weighted Loss" stroke="var(--danger)" strokeWidth={2} strokeDasharray="5 5" dot={false} />
       </LineChart>
-    </ResponsiveContainer>
   );
 }

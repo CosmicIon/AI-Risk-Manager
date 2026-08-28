@@ -372,6 +372,38 @@ curl -s http://localhost:8000/api/v1/metrics/prometheus | Select-String -Pattern
 cd dashboard
 npm run build
 ```
+
+### Verify Module 13 (End-to-End Integration Tests)
+
+Run the full E2E test suite covering all four test files:
+
+```bash
+cd backend
+python -m pytest tests/integration/test_e2e_chargeback_flow.py \
+                 tests/integration/test_e2e_return_scoring_flow.py \
+                 tests/integration/test_e2e_fraud_detection_flow.py \
+                 tests/integration/test_e2e_evaluation_flow.py -v --tb=short
+# Expected: 28 tests pass
+```
+
+Or run the **entire test suite** end-to-end (all modules):
+
+```bash
+cd backend
+python -m pytest tests/ -v --tb=short
+# Expected: 70+ tests pass, 1 skip (RLS superuser), graph analysis errors are
+#           benign Neo4j asyncio teardown warnings on Windows.
+```
+
+**What the E2E tests cover:**
+
+| Test File | Tests | Coverage |
+|---|---|---|
+| `test_e2e_chargeback_flow.py` | 5 | Full lifecycle (ingest→pending→review), duplicate rejection, reject/edit actions, auth |
+| `test_e2e_return_scoring_flow.py` | 7 | Happy path across risk tiers, degraded mode, auth, policy update/validation |
+| `test_e2e_fraud_detection_flow.py` | 7 | Alert listing, severity/classification filtering, event registration, RBAC, acknowledgement |
+| `test_e2e_evaluation_flow.py` | 9 | Prometheus scraping, evaluation reports, cost summary, health/readiness probes, degraded status |
+
 ---
 
 ## API Endpoints Reference
