@@ -353,6 +353,20 @@ pytest tests/integration/test_graph_analysis.py -v
 # Note: You may see an asyncio proactor AttributeError on Windows during teardown; this does not affect functionality.
 ```
 
+### Verify Module 11 (Observability & Monitoring)
+To manually verify the Prometheus metrics, Grafana dashboards, and OpenTelemetry instrumentation:
+```bash
+# Restart the infra stack to include Prometheus and Grafana
+docker-compose -f infra/docker/docker-compose.yml up -d prometheus grafana
+
+# Check the Prometheus metrics endpoint
+curl -s http://localhost:8000/api/v1/metrics/prometheus | Select-String -Pattern "requests_total|return_scoring_latency"
+
+# Access the Grafana Dashboard
+# URL: http://localhost:3000
+# Default Login: admin / admin
+```
+
 ### Verify Dashboard Build
 ```bash
 cd dashboard

@@ -1152,15 +1152,15 @@ cd backend && pytest tests/integration/test_graph_analysis.py -v
 
 ### Implementation Checklist
 
-- [ ] **11.1 — OpenTelemetry setup (`backend/src/integrations/otel_setup.py`)**
-  - [ ] Initialize `TracerProvider` with `BatchSpanProcessor` exporting to OTLP endpoint (Jaeger or Grafana Tempo)
-  - [ ] Auto-instrument FastAPI via `FastAPIInstrumentor().instrument_app(app)`
-  - [ ] Auto-instrument SQLAlchemy: `SQLAlchemyInstrumentor().instrument(engine=engine)`
-  - [ ] Auto-instrument httpx: `HTTPXClientInstrumentor().instrument()`
-  - [ ] Custom spans for: ML inference (`ml.inference`), agent steps (`agent.{step_name}`), Kafka produce/consume (`kafka.produce`, `kafka.consume`)
+- [x] **11.1 — OpenTelemetry setup (`backend/src/integrations/otel_setup.py`)**
+  - [x] Initialize `TracerProvider` with `BatchSpanProcessor` exporting to OTLP endpoint (Jaeger or Grafana Tempo)
+  - [x] Auto-instrument FastAPI via `FastAPIInstrumentor().instrument_app(app)`
+  - [x] Auto-instrument SQLAlchemy: `SQLAlchemyInstrumentor().instrument(engine=engine)`
+  - [x] Auto-instrument httpx: `HTTPXClientInstrumentor().instrument()`
+  - [x] Custom spans for: ML inference (`ml.inference`), agent steps (`agent.{step_name}`), Kafka produce/consume (`kafka.produce`, `kafka.consume`)
 
-- [ ] **11.2 — Prometheus metrics (`backend/src/integrations/prometheus_metrics.py`)**
-  - [ ] Define metrics:
+- [x] **11.2 — Prometheus metrics (`backend/src/integrations/prometheus_metrics.py`)**
+  - [x] Define metrics:
     - `Histogram("return_scoring_latency_seconds", "Return scoring inference latency", buckets=[0.01, 0.025, 0.05, 0.1, 0.15, 0.3])`
     - `Histogram("chargeback_processing_duration_seconds", "Chargeback evidence assembly duration", buckets=[10, 30, 60, 120, 300])`
     - `Counter("requests_total", "Total API requests", ["method", "endpoint", "status_code"])`
@@ -1171,8 +1171,8 @@ cd backend && pytest tests/integration/test_graph_analysis.py -v
     - `Counter("llm_tokens_total", "Total LLM tokens used", ["model", "direction"])`
     - `Counter("rate_limit_hits_total", "Rate limit rejections", ["endpoint"])`
 
-- [ ] **11.3 — Grafana dashboards**
-  - [ ] Create `infra/grafana/dashboards/risk_manager.json` with panels:
+- [x] **11.3 — Grafana dashboards**
+  - [x] Create `infra/grafana/dashboards/risk_manager.json` with panels:
     - Return scoring latency (P50, P95, P99) — line chart
     - Request rate by endpoint — stacked area chart
     - Active cases by status — stacked bar chart
@@ -1180,19 +1180,19 @@ cd backend && pytest tests/integration/test_graph_analysis.py -v
     - Kafka consumer lag — line chart per topic
     - Cost-weighted loss over time — line chart
     - LLM token usage and cost — counter
-  - [ ] Add Grafana + Prometheus to `docker-compose.yml` with provisioned datasource and dashboard
+  - [x] Add Grafana + Prometheus to `docker-compose.yml` with provisioned datasource and dashboard
 
-- [ ] **11.4 — Langfuse integration verification**
-  - [ ] Verify all LLM calls in agent pipeline create Langfuse generations with: prompt text, completion text, model name, token counts, latency
-  - [ ] Verify Langfuse traces are created per chargeback case with all agent steps as spans
-  - [ ] Verify Langfuse scores are recorded: evidence_completeness, win_probability
+- [x] **11.4 — Langfuse integration verification**
+  - [x] Verify all LLM calls in agent pipeline create Langfuse generations with: prompt text, completion text, model name, token counts, latency
+  - [x] Verify Langfuse traces are created per chargeback case with all agent steps as spans
+  - [x] Verify Langfuse scores are recorded: evidence_completeness, win_probability
 
 ### Acceptance Criteria
 
-- [ ] Distributed traces visible in Jaeger/Tempo showing full request lifecycle
-- [ ] Prometheus `/metrics` endpoint returns all defined metrics
-- [ ] Grafana dashboard loads with real data from dev environment
-- [ ] Langfuse shows traced agent pipelines with token usage
+- [x] Distributed traces visible in Jaeger/Tempo showing full request lifecycle
+- [x] Prometheus `/metrics` endpoint returns all defined metrics
+- [x] Grafana dashboard loads with real data from dev environment
+- [x] Langfuse shows traced agent pipelines with token usage
 
 ### Verification Gate
 

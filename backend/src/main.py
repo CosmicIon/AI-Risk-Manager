@@ -16,6 +16,7 @@ from src.api.v1 import (
     health_router,
 )
 from src.api.middleware.request_id import RequestIDMiddleware
+from src.api.middleware.metrics import PrometheusMiddleware
 from src.config import settings
 from src.integrations.kafka_producer import TypedKafkaProducer
 from src.integrations.langfuse_client import LangfuseTracer
@@ -23,6 +24,8 @@ from src.integrations.llm_client import GeminiLLMClient
 from src.integrations.minio_client import ObjectStoreClient
 from src.integrations.qdrant_client import QdrantVectorStore
 from src.integrations.redis_client import RedisClient
+from src.integrations.otel_setup import setup_opentelemetry
+from src.db.session import async_engine
 
 # Configure logging
 logging.basicConfig(
@@ -100,6 +103,7 @@ def create_app() -> FastAPI:
 
     # Mount middlewares
     app.add_middleware(RequestIDMiddleware)
+    app.add_middleware(PrometheusMiddleware)
 
     # Mount base health routes
     app.include_router(health_router, prefix="")
@@ -111,6 +115,9 @@ def create_app() -> FastAPI:
     app.include_router(fraud_router, prefix="/api/v1")
     app.include_router(cases_router, prefix="/api/v1")
     app.include_router(metrics_router, prefix="/api/v1")
+
+    # Initialize OpenTelemetry
+    setup_opentelemetry(app, async_engine)
 
     return app
 

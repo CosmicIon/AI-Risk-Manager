@@ -1,12 +1,14 @@
 """Return scoring endpoints."""
 
 from uuid import UUID
+import time
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from src.api.middleware.auth import TokenData, verify_api_key, require_role
 from src.api.middleware.rate_limit import rate_limit
 from src.core.schemas.return_request import ReturnScoreRequest, ReturnScoreResponse, PolicyConfig
 from src.services.return_scoring_service import ReturnScoringService
+from src.integrations.prometheus_metrics import return_scoring_latency_seconds
 from src.db.models.tenant import Tenant
 
 router = APIRouter(prefix="/returns", tags=["returns"])
@@ -40,11 +42,15 @@ async def score_return(
     Score the risk of a new return initiation in real-time.
     Secured by API Key.
     """
+    start_time = time.time()
     try:
         response = await service.score(request, tenant)
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        latency = time.time() - start_time
+        return_scoring_latency_seconds.observe(latency)
 
 @router.get("/history")
 async def get_return_history(
