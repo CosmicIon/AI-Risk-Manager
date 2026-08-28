@@ -93,7 +93,9 @@ async def test_louvain_detects_planted_ring(neo4j_client):
     await neo4j_client.batch_merge_edges("USES", "Buyer", "id", "Device", "fingerprint", edges_uses)
     await neo4j_client.batch_merge_edges("SHIPS_TO", "Buyer", "id", "Address", "hash", edges_ships)
     await neo4j_client.batch_merge_edges("BOUGHT_FROM", "Buyer", "id", "Seller", "id", edges_bought)
-    await neo4j_client.batch_merge_edges("PAYS_WITH", "Buyer", "id", "PaymentInstrument", "token", edges_pays)
+    await neo4j_client.batch_merge_edges(
+        "PAYS_WITH", "Buyer", "id", "PaymentInstrument", "token", edges_pays
+    )
 
     communities = await run_louvain(neo4j_client, tenant_id, min_community_size=3)
     assert len(communities) > 0
