@@ -97,7 +97,7 @@ async def test_return_scoring_happy_path(api_key_headers):
     mock_svc = _make_mock_service()
     app.dependency_overrides[get_return_scoring_service] = lambda _=None: mock_svc
     app.state.redis = AsyncMock()
-    app.state.redis.check_rate_limit.return_value = True
+    app.state.redis.check_rate_limit.return_value = (True, 100)
 
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -132,7 +132,7 @@ async def test_return_scoring_high_risk(api_key_headers):
     mock_svc = _make_mock_service(risk_score=92, risk_tier="CRITICAL", decision="auto_deny")
     app.dependency_overrides[get_return_scoring_service] = lambda _=None: mock_svc
     app.state.redis = AsyncMock()
-    app.state.redis.check_rate_limit.return_value = True
+    app.state.redis.check_rate_limit.return_value = (True, 100)
 
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -156,7 +156,7 @@ async def test_return_scoring_medium_risk(api_key_headers):
     mock_svc = _make_mock_service(risk_score=55, risk_tier="MEDIUM", decision="manual_review")
     app.dependency_overrides[get_return_scoring_service] = lambda _=None: mock_svc
     app.state.redis = AsyncMock()
-    app.state.redis.check_rate_limit.return_value = True
+    app.state.redis.check_rate_limit.return_value = (True, 100)
 
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -188,7 +188,7 @@ async def test_return_scoring_degraded_mode(api_key_headers):
     mock_svc.score.side_effect = Exception("Redis connection refused")
     app.dependency_overrides[get_return_scoring_service] = lambda _=None: mock_svc
     app.state.redis = AsyncMock()
-    app.state.redis.check_rate_limit.return_value = True
+    app.state.redis.check_rate_limit.return_value = (True, 100)
 
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:

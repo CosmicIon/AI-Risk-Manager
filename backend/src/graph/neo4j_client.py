@@ -75,14 +75,14 @@ class Neo4jClient:
 
     async def get_subgraph(self, node_id: str, depth: int = 2) -> dict:
         """Return ego-network for visualization."""
-        query = """
-        MATCH path = (n {id: $node_id})-[*1..$depth]-(m)
+        query = f"""
+        MATCH path = (n {{id: $node_id}})-[*1..{depth}]-(m)
         RETURN path
         """
         nodes = {}
         edges = []
         async with self.driver.session() as session:
-            result = await session.run(query, node_id=node_id, depth=depth)
+            result = await session.run(query, node_id=node_id)
             records = await result.data()
             for record in records:
                 path = record.get("path")
@@ -94,14 +94,14 @@ class Neo4jClient:
                 # It's better to return nodes and relationships directly from the query.
 
         # Simpler query to extract nodes and rels directly for JSON serialization
-        query_direct = """
-        MATCH path = (n {id: $node_id})-[*1..$depth]-(m)
+        query_direct = f"""
+        MATCH path = (n {{id: $node_id}})-[*1..{depth}]-(m)
         UNWIND nodes(path) AS node
         UNWIND relationships(path) AS rel
         RETURN collect(DISTINCT node) AS nodes, collect(DISTINCT rel) AS rels
         """
         async with self.driver.session() as session:
-            result = await session.run(query_direct, node_id=node_id, depth=depth)
+            result = await session.run(query_direct, node_id=node_id)
             single_record = await result.single()
             if not single_record:
                 return {"nodes": [], "edges": []}

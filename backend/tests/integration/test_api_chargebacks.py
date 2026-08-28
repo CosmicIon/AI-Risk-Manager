@@ -11,7 +11,7 @@ from src.main import app
 
 # Mock Redis state
 app.state.redis = AsyncMock()
-app.state.redis.check_rate_limit.return_value = True
+app.state.redis.check_rate_limit.return_value = (True, 100)
 
 
 mock_chargeback_service = AsyncMock()

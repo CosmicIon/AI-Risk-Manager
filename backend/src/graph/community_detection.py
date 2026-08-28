@@ -20,10 +20,7 @@ async def run_louvain(
     CALL gds.graph.project(
       $graph_name,
       ['Buyer', 'Seller', 'Address', 'Device', 'PaymentInstrument'],
-      ['BOUGHT_FROM', 'USES', 'SHIPS_TO', 'PAYS_WITH'],
-      {
-        nodeProperties: ['tenant_id']
-      }
+      ['BOUGHT_FROM', 'USES', 'SHIPS_TO', 'PAYS_WITH']
     )
     """
 

@@ -14,7 +14,7 @@ if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 async def neo4j_client():
     password = (
         settings.NEO4J_PASSWORD.get_secret_value()
@@ -62,11 +62,13 @@ async def test_louvain_detects_planted_ring(neo4j_client):
     device = [{"fingerprint": "d1", "tenant_id": str(tenant_id)}]
     address = [{"hash": "a1", "tenant_id": str(tenant_id)}]
     seller = [{"id": "s1", "tenant_id": str(tenant_id)}]
+    payment = [{"token": "p1", "tenant_id": str(tenant_id)}]
 
     await neo4j_client.batch_merge_nodes("Buyer", "id", buyers)
     await neo4j_client.batch_merge_nodes("Device", "fingerprint", device)
     await neo4j_client.batch_merge_nodes("Address", "hash", address)
     await neo4j_client.batch_merge_nodes("Seller", "id", seller)
+    await neo4j_client.batch_merge_nodes("PaymentInstrument", "token", payment)
 
     # Create edges
     edges_uses = [
@@ -84,10 +86,14 @@ async def test_louvain_detects_planted_ring(neo4j_client):
         {"source_id": "b2", "target_id": "s1", "properties": {}},
         {"source_id": "b3", "target_id": "s1", "properties": {}},
     ]
+    edges_pays = [
+        {"source_id": "b1", "target_id": "p1", "properties": {}},
+    ]
 
     await neo4j_client.batch_merge_edges("USES", "Buyer", "id", "Device", "fingerprint", edges_uses)
     await neo4j_client.batch_merge_edges("SHIPS_TO", "Buyer", "id", "Address", "hash", edges_ships)
     await neo4j_client.batch_merge_edges("BOUGHT_FROM", "Buyer", "id", "Seller", "id", edges_bought)
+    await neo4j_client.batch_merge_edges("PAYS_WITH", "Buyer", "id", "PaymentInstrument", "token", edges_pays)
 
     communities = await run_louvain(neo4j_client, tenant_id, min_community_size=3)
     assert len(communities) > 0

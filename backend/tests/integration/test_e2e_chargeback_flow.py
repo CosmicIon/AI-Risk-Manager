@@ -82,7 +82,7 @@ async def test_chargeback_full_lifecycle(api_key_headers, jwt_headers):
 
     # Ensure Redis rate-limiter is mocked
     app.state.redis = AsyncMock()
-    app.state.redis.check_rate_limit.return_value = True
+    app.state.redis.check_rate_limit.return_value = (True, 100)
 
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -154,7 +154,7 @@ async def test_duplicate_chargeback_rejected(api_key_headers):
     ]
     app.dependency_overrides[get_chargeback_service] = lambda: mock_svc
     app.state.redis = AsyncMock()
-    app.state.redis.check_rate_limit.return_value = True
+    app.state.redis.check_rate_limit.return_value = (True, 100)
 
     payload = {
         "raw_payload": {
@@ -197,7 +197,7 @@ async def test_chargeback_review_reject(jwt_headers):
     mock_svc, case_id = _make_mock_service()
     app.dependency_overrides[get_chargeback_service] = lambda: mock_svc
     app.state.redis = AsyncMock()
-    app.state.redis.check_rate_limit.return_value = True
+    app.state.redis.check_rate_limit.return_value = (True, 100)
 
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -218,7 +218,7 @@ async def test_chargeback_review_edit(jwt_headers):
     mock_svc, case_id = _make_mock_service()
     app.dependency_overrides[get_chargeback_service] = lambda: mock_svc
     app.state.redis = AsyncMock()
-    app.state.redis.check_rate_limit.return_value = True
+    app.state.redis.check_rate_limit.return_value = (True, 100)
 
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:

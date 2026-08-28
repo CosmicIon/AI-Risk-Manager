@@ -5,6 +5,8 @@ from datetime import UTC, datetime
 import pytest
 
 from src.streaming.app import app
+
+app.conf.store = "memory://"
 from src.streaming.processors.anomaly_processor import process_anomalies
 from src.streaming.processors.graph_updater import neo4j_driver, process_graph_updates, setup_neo4j
 from src.streaming.processors.transaction_processor import (
@@ -19,7 +21,6 @@ pytestmark = pytest.mark.asyncio
 
 @pytest.fixture(autouse=True)
 async def setup_app():
-    app.conf.store = "memory://"
     await setup_redis()
     await setup_neo4j()
     yield
