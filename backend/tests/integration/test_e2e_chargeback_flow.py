@@ -85,9 +85,7 @@ async def test_chargeback_full_lifecycle(api_key_headers, jwt_headers):
     app.state.redis.check_rate_limit.return_value = True
 
     try:
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             # ---- Step 1: Ingest ----
             ingest_payload = {
                 "raw_payload": {
@@ -111,9 +109,7 @@ async def test_chargeback_full_lifecycle(api_key_headers, jwt_headers):
             assert "deadline" in data
 
             # ---- Step 2: Pending reviews ----
-            resp = await ac.get(
-                "/api/v1/chargebacks/pending", headers=jwt_headers
-            )
+            resp = await ac.get("/api/v1/chargebacks/pending", headers=jwt_headers)
             assert resp.status_code == 200
             pending = resp.json()
             assert "items" in pending
@@ -169,9 +165,7 @@ async def test_duplicate_chargeback_rejected(api_key_headers):
     }
 
     try:
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             # First → success
             resp1 = await ac.post(
                 "/api/v1/chargebacks/ingest",
@@ -206,9 +200,7 @@ async def test_chargeback_review_reject(jwt_headers):
     app.state.redis.check_rate_limit.return_value = True
 
     try:
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             resp = await ac.post(
                 f"/api/v1/chargebacks/{case_id}/review",
                 json={"action": "reject"},
@@ -229,9 +221,7 @@ async def test_chargeback_review_edit(jwt_headers):
     app.state.redis.check_rate_limit.return_value = True
 
     try:
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             resp = await ac.post(
                 f"/api/v1/chargebacks/{case_id}/review",
                 json={
@@ -253,8 +243,6 @@ async def test_chargeback_review_edit(jwt_headers):
 @pytest.mark.asyncio
 async def test_ingest_without_api_key_returns_401():
     """Missing API key must return 401."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.post("/api/v1/chargebacks/ingest", json={})
     assert resp.status_code == 401

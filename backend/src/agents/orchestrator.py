@@ -11,6 +11,7 @@ from src.agents.state import ChargebackAgentState
 
 logger = logging.getLogger(__name__)
 
+
 def parse_notification(state: ChargebackAgentState) -> ChargebackAgentState:
     logger.info(f"Parsing notification for case {state.get('case_id')}")
 
@@ -24,20 +25,24 @@ def parse_notification(state: ChargebackAgentState) -> ChargebackAgentState:
     state["current_step"] = "parse_notification"
     return state
 
+
 def human_review(state: ChargebackAgentState) -> ChargebackAgentState:
     logger.info(f"Human review required for case {state.get('case_id')}")
     state["current_step"] = "human_review"
     return state
+
 
 def finalize(state: ChargebackAgentState) -> ChargebackAgentState:
     logger.info(f"Finalizing case {state.get('case_id')}")
     state["current_step"] = "finalize"
     return state
 
+
 def should_generate_narrative(state: ChargebackAgentState) -> str:
     if state.get("recommendation") == "accept_loss":
         return "human_review"
     return "generate_narrative"
+
 
 def create_agent_graph():
     workflow = StateGraph(ChargebackAgentState)
@@ -57,10 +62,7 @@ def create_agent_graph():
     workflow.add_conditional_edges(
         "assemble_evidence",
         should_generate_narrative,
-        {
-            "generate_narrative": "generate_narrative",
-            "human_review": "human_review"
-        }
+        {"generate_narrative": "generate_narrative", "human_review": "human_review"},
     )
 
     workflow.add_edge("generate_narrative", "score_confidence")
@@ -72,7 +74,9 @@ def create_agent_graph():
     memory = MemorySaver()
     return workflow.compile(checkpointer=memory, interrupt_before=["human_review"])
 
+
 chargeback_graph = create_agent_graph()
+
 
 async def process_chargeback(notification: dict, tenant_id: str) -> dict:
     """Entry point for initiating the chargeback agent workflow."""
@@ -90,7 +94,7 @@ async def process_chargeback(notification: dict, tenant_id: str) -> dict:
         "recommendation": None,
         "errors": [],
         "current_step": "init",
-        "trace_id": str(uuid.uuid4())
+        "trace_id": str(uuid.uuid4()),
     }
 
     config = {"configurable": {"thread_id": initial_state["case_id"]}}

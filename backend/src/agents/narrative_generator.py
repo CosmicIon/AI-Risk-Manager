@@ -10,9 +10,8 @@ from src.integrations.llm_client import GeminiLLMClient
 
 logger = logging.getLogger(__name__)
 
-llm_client = GeminiLLMClient(
-    api_key=settings.GEMINI_API_KEY.get_secret_value()
-)
+llm_client = GeminiLLMClient(api_key=settings.GEMINI_API_KEY.get_secret_value())
+
 
 async def narrative_generator_node(state: ChargebackAgentState) -> ChargebackAgentState:
     logger.info(f"Generating narrative for case {state.get('case_id')}")
@@ -25,11 +24,13 @@ async def narrative_generator_node(state: ChargebackAgentState) -> ChargebackAge
 
     # 1. Fetch similar cases
     try:
-        similar_cases = await search_similar_cases.ainvoke({
-            "case_summary": f"Chargeback dispute: {safe_desc}",
-            "reason_code": state["reason_code"],
-            "network": state["network"]
-        })
+        similar_cases = await search_similar_cases.ainvoke(
+            {
+                "case_summary": f"Chargeback dispute: {safe_desc}",
+                "reason_code": state["reason_code"],
+                "network": state["network"],
+            }
+        )
     except Exception as e:
         logger.error(f"Failed to fetch similar cases: {e}")
         similar_cases = []
@@ -39,7 +40,7 @@ async def narrative_generator_node(state: ChargebackAgentState) -> ChargebackAge
         network=state["network"],
         reason_code=state["reason_code"],
         evidence=str(state.get("evidence_bundle", {})),
-        similar_cases=str(similar_cases)
+        similar_cases=str(similar_cases),
     )
 
     # 3. Call LLM
@@ -55,11 +56,13 @@ async def narrative_generator_node(state: ChargebackAgentState) -> ChargebackAge
         logger.error(f"LLM generation failed, falling back to template: {e}")
         state.setdefault("errors", []).append(f"LLM Error: {e}")
         # 5. Fallback to template
-        draft = render_template.invoke({
-            "network": state["network"],
-            "reason_code": state["reason_code"],
-            "evidence": state.get("evidence_bundle", {})
-        })
+        draft = render_template.invoke(
+            {
+                "network": state["network"],
+                "reason_code": state["reason_code"],
+                "evidence": state.get("evidence_bundle", {}),
+            }
+        )
         state["narrative_draft"] = draft
 
     state["current_step"] = "generate_narrative"

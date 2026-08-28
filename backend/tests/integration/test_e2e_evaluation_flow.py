@@ -51,9 +51,7 @@ async def test_prometheus_metrics_endpoint():
     """
     GET /v1/metrics/prometheus returns text/plain with Prometheus exposition format.
     """
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.get("/api/v1/metrics/prometheus")
 
     assert resp.status_code == 200
@@ -74,9 +72,7 @@ async def test_get_evaluation_report_return_risk(admin_headers):
     """
     GET /v1/metrics/evaluation/return_risk/latest returns the latest evaluation.
     """
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.get(
             "/api/v1/metrics/evaluation/return_risk/latest",
             headers=admin_headers,
@@ -94,9 +90,7 @@ async def test_get_evaluation_report_return_risk(admin_headers):
 @pytest.mark.asyncio
 async def test_get_evaluation_report_data_scientist(data_scientist_headers):
     """Data scientists can also access evaluation reports."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.get(
             "/api/v1/metrics/evaluation/return_risk/latest",
             headers=data_scientist_headers,
@@ -107,9 +101,7 @@ async def test_get_evaluation_report_data_scientist(data_scientist_headers):
 @pytest.mark.asyncio
 async def test_get_evaluation_report_unknown_model(admin_headers):
     """Unknown model name returns 404."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.get(
             "/api/v1/metrics/evaluation/nonexistent_model/latest",
             headers=admin_headers,
@@ -122,9 +114,7 @@ async def test_get_evaluation_report_analyst_forbidden(analyst_headers):
     """
     Analysts should not have access to evaluation reports (admin / data_scientist only).
     """
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.get(
             "/api/v1/metrics/evaluation/return_risk/latest",
             headers=analyst_headers,
@@ -140,9 +130,7 @@ async def test_get_evaluation_report_analyst_forbidden(analyst_headers):
 @pytest.mark.asyncio
 async def test_cost_summary(admin_headers):
     """Admin can retrieve ₹-denominated cost summary."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.get(
             "/api/v1/metrics/cost-summary",
             headers=admin_headers,
@@ -164,9 +152,7 @@ async def test_cost_summary(admin_headers):
 @pytest.mark.asyncio
 async def test_health_probe():
     """GET /v1/health returns 200 with status ok."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.get("/api/v1/health")
 
     assert resp.status_code == 200
@@ -189,9 +175,7 @@ async def test_readiness_probe():
     app.state.minio = AsyncMock()
     app.state.minio.health_check.return_value = True
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.get("/api/v1/readiness")
 
     assert resp.status_code == 200
@@ -213,9 +197,7 @@ async def test_readiness_degraded():
     app.state.minio = AsyncMock()
     app.state.minio.health_check.return_value = True
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.get("/api/v1/readiness")
 
     assert resp.status_code == 200

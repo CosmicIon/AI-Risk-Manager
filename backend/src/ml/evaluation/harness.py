@@ -20,7 +20,7 @@ class EvaluationHarness:
         model_registry: ModelRegistry,
         holdout_manager: HoldoutManager,
         evaluation_repo: EvaluationRepository,
-        object_store: ObjectStoreClient
+        object_store: ObjectStoreClient,
     ):
         self.model_registry = model_registry
         self.holdout_manager = holdout_manager
@@ -34,7 +34,7 @@ class EvaluationHarness:
         holdout_version: str,
         fp_cost: Decimal,
         fn_cost: Decimal,
-        target_col: str = "is_abusive"
+        target_col: str = "is_abusive",
     ) -> EvaluationReport:
         # 1. Load holdout set
         data, manifest = await self.holdout_manager.load_holdout(holdout_version)
@@ -44,8 +44,10 @@ class EvaluationHarness:
 
         # 3. Extract features
         try:
-            meta_bytes = await self.object_store.download_file("models", f"{model_name}/{model_version}/metadata.json")
-            metadata = json.loads(meta_bytes.decode('utf-8'))
+            meta_bytes = await self.object_store.download_file(
+                "models", f"{model_name}/{model_version}/metadata.json"
+            )
+            metadata = json.loads(meta_bytes.decode("utf-8"))
             feature_names = metadata.get("feature_names", [])
         except Exception:
             feature_names = [c for c in data.columns if c != target_col and not c.endswith("_id")]
@@ -89,18 +91,18 @@ class EvaluationHarness:
         thresh_curve = compute_threshold_curve(y_true, y_prob, fp_cost, fn_cost)
 
         report_data = {
-            "metrics": best_metrics.model_dump(mode='json'),
+            "metrics": best_metrics.model_dump(mode="json"),
             "threshold_used": best_threshold,
             "calibration_curve": calib_curve,
             "threshold_curve": thresh_curve,
-            "is_improvement": is_improvement
+            "is_improvement": is_improvement,
         }
 
         # 9. Upload report to S3
         report_id = uuid.uuid4()
         report_key = f"{model_name}/{model_version}/report_{report_id}.json"
         report_url = await self.object_store.upload_file(
-            "reports", report_key, json.dumps(report_data).encode('utf-8'), "application/json"
+            "reports", report_key, json.dumps(report_data).encode("utf-8"), "application/json"
         )
 
         # 10. Persist EvaluationRun
@@ -109,10 +111,10 @@ class EvaluationHarness:
             model_version=model_version,
             holdout_set_version=holdout_version,
             holdout_set_hash=manifest["hash"],
-            metrics=best_metrics.model_dump(mode='json'),
+            metrics=best_metrics.model_dump(mode="json"),
             threshold=best_threshold,
             report_url=report_url,
-            is_champion=False
+            is_champion=False,
         )
 
         # 11. Return EvaluationReport
@@ -127,7 +129,7 @@ class EvaluationHarness:
             champion_model_version=champ_version if champ_version else None,
             is_improvement=is_improvement,
             evaluated_at=run.evaluated_at,
-            report_url=report_url
+            report_url=report_url,
         )
 
     async def gate_check(
@@ -135,7 +137,7 @@ class EvaluationHarness:
         report: EvaluationReport,
         min_precision: float = 0.7,
         min_recall: float = 0.5,
-        max_cost_increase_pct: float = 5.0
+        max_cost_increase_pct: float = 5.0,
     ) -> tuple[bool, str]:
         if report.metrics.precision < min_precision:
             return False, f"Precision {report.metrics.precision:.2f} < {min_precision}"
@@ -150,7 +152,10 @@ class EvaluationHarness:
                 if champ_loss > 0:
                     increase = ((new_loss - champ_loss) / champ_loss) * 100
                     if increase > max_cost_increase_pct:
-                        return False, f"Cost loss increased by {increase:.2f}% (max {max_cost_increase_pct}%)"
+                        return (
+                            False,
+                            f"Cost loss increased by {increase:.2f}% (max {max_cost_increase_pct}%)",
+                        )
 
         return True, "Passed"
 

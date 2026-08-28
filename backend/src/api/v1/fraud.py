@@ -10,17 +10,20 @@ from src.services.fraud_detection_service import FraudDetectionService
 
 router = APIRouter(prefix="/fraud", tags=["fraud"])
 
+
 async def get_fraud_service() -> FraudDetectionService:
     from src.db.repositories.case_repo import CaseRepository
     from src.services.notification_service import NotificationService
+
     return FraudDetectionService(CaseRepository(None), None, NotificationService())  # type: ignore
+
 
 @router.get("/alerts")
 async def get_active_alerts(
     token: TokenData = Depends(require_role("analyst", "admin")),
     service: FraudDetectionService = Depends(get_fraud_service),
     severity: str | None = None,
-    classification: str | None = None
+    classification: str | None = None,
 ):
     """
     List active fraud anomaly alerts for a tenant.
@@ -37,17 +40,19 @@ async def get_active_alerts(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+
 class KnownEventRequest(BaseModel):
     name: str
     start: datetime
     end: datetime
     threshold_multiplier: float = 2.0
 
+
 @router.post("/events")
 async def register_event(
     request: KnownEventRequest,
     token: TokenData = Depends(require_role("admin")),
-    service: FraudDetectionService = Depends(get_fraud_service)
+    service: FraudDetectionService = Depends(get_fraud_service),
 ):
     """
     Register a known calendar event (e.g. Big Billion Days) to suppress false positives.
@@ -59,10 +64,10 @@ async def register_event(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
+
 @router.post("/alerts/{alert_id}/acknowledge")
 async def acknowledge_alert(
-    alert_id: str,
-    token: TokenData = Depends(require_role("analyst", "admin"))
+    alert_id: str, token: TokenData = Depends(require_role("analyst", "admin"))
 ):
     """
     Mark an alert as acknowledged.

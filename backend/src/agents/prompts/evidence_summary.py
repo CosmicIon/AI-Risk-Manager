@@ -10,6 +10,5 @@ Summary:
 """
 
 evidence_summary_template = PromptTemplate(
-    input_variables=["raw_evidence"],
-    template=EVIDENCE_SUMMARY_PROMPT
+    input_variables=["raw_evidence"], template=EVIDENCE_SUMMARY_PROMPT
 )

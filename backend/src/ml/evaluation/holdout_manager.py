@@ -12,7 +12,9 @@ class HoldoutManager:
     def __init__(self, object_store: ObjectStoreClient):
         self.object_store = object_store
 
-    async def create_holdout(self, data: pd.DataFrame, version: str, target_col: str = "is_abusive") -> str:
+    async def create_holdout(
+        self, data: pd.DataFrame, version: str, target_col: str = "is_abusive"
+    ) -> str:
         """
         Creates a versioned holdout dataset, computes its hash, and uploads to MinIO along with a manifest.
         """
@@ -36,15 +38,19 @@ class HoldoutManager:
             "hash": sha256_hash,
             "row_count": len(data),
             "class_distribution": class_dist,
-            "created_at": datetime.now(UTC).isoformat()
+            "created_at": datetime.now(UTC).isoformat(),
         }
 
         # Upload
         data_key = f"{version}/data.parquet"
         manifest_key = f"{version}/manifest.json"
 
-        url = await self.object_store.upload_file("holdout", data_key, parquet_bytes, "application/octet-stream")
-        await self.object_store.upload_file("holdout", manifest_key, json.dumps(manifest).encode('utf-8'), "application/json")
+        url = await self.object_store.upload_file(
+            "holdout", data_key, parquet_bytes, "application/octet-stream"
+        )
+        await self.object_store.upload_file(
+            "holdout", manifest_key, json.dumps(manifest).encode("utf-8"), "application/json"
+        )
 
         return url
 
@@ -58,12 +64,14 @@ class HoldoutManager:
         parquet_bytes = await self.object_store.download_file("holdout", data_key)
         manifest_bytes = await self.object_store.download_file("holdout", manifest_key)
 
-        manifest = json.loads(manifest_bytes.decode('utf-8'))
+        manifest = json.loads(manifest_bytes.decode("utf-8"))
 
         # Verify hash
         actual_hash = hashlib.sha256(parquet_bytes).hexdigest()
         if actual_hash != manifest["hash"]:
-            raise ValueError(f"Hash mismatch for holdout {version}. Expected {manifest['hash']}, got {actual_hash}")
+            raise ValueError(
+                f"Hash mismatch for holdout {version}. Expected {manifest['hash']}, got {actual_hash}"
+            )
 
         # Parse parquet
         data = pd.read_parquet(io.BytesIO(parquet_bytes))
@@ -80,12 +88,14 @@ class HoldoutManager:
             key = obj["Key"]
             if key.endswith("manifest.json"):
                 manifest_bytes = await self.object_store.download_file("holdout", key)
-                manifest = json.loads(manifest_bytes.decode('utf-8'))
+                manifest = json.loads(manifest_bytes.decode("utf-8"))
                 versions.append(manifest)
 
         return sorted(versions, key=lambda x: x.get("created_at", ""), reverse=True)
 
-    def verify_no_overlap(self, train_data: pd.DataFrame, holdout: pd.DataFrame, key_col: str) -> bool:
+    def verify_no_overlap(
+        self, train_data: pd.DataFrame, holdout: pd.DataFrame, key_col: str
+    ) -> bool:
         """
         Verifies that there is no data leakage (no overlapping keys) between train and holdout sets.
         """

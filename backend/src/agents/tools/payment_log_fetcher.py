@@ -23,5 +23,5 @@ def fetch_payment_logs(transaction_id: str, tenant_id: str) -> dict:
         "cvv_match": "M",  # M = Match
         "ip_country": "US",
         "ip_city": "Anytown",
-        "device_fingerprint_match": True
+        "device_fingerprint_match": True,
     }

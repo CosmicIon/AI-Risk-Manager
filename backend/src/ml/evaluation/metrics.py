@@ -50,14 +50,14 @@ def find_optimal_threshold(
     y_prob: np.ndarray,
     fp_cost: float | Decimal,
     fn_cost: float | Decimal,
-    thresholds: np.ndarray = np.arange(0.05, 0.95, 0.01)
+    thresholds: np.ndarray = np.arange(0.05, 0.95, 0.01),
 ) -> tuple[float, CostWeightedMetrics]:
     """
     Sweep thresholds and return the one minimizing cost-weighted loss.
     """
     best_threshold = 0.5
     best_metrics = None
-    min_loss = float('inf')
+    min_loss = float("inf")
 
     fp_cost_dec = Decimal(str(fp_cost))
     fn_cost_dec = Decimal(str(fn_cost))
@@ -82,7 +82,9 @@ def compute_calibration_curve(y_true: np.ndarray, y_prob: np.ndarray, n_bins: in
     """
     Compute expected calibration error and return bins.
     """
-    fraction_positive, bin_means = calibration_curve(y_true, y_prob, n_bins=n_bins, strategy='uniform')
+    fraction_positive, bin_means = calibration_curve(
+        y_true, y_prob, n_bins=n_bins, strategy="uniform"
+    )
 
     # Calculate Expected Calibration Error (ECE)
     # Re-implementing a simple ECE since it's not directly in sklearn
@@ -92,7 +94,7 @@ def compute_calibration_curve(y_true: np.ndarray, y_prob: np.ndarray, n_bins: in
 
     ece = 0.0
     for i in range(n_bins):
-        bin_idx = (binned == i)
+        bin_idx = binned == i
         bin_count = np.sum(bin_idx)
         if bin_count > 0:
             bin_acc = np.mean(y_true[bin_idx])
@@ -102,7 +104,7 @@ def compute_calibration_curve(y_true: np.ndarray, y_prob: np.ndarray, n_bins: in
     return {
         "bin_means": bin_means.tolist(),
         "fraction_positive": fraction_positive.tolist(),
-        "ece": float(ece)
+        "ece": float(ece),
     }
 
 
@@ -111,7 +113,7 @@ def compute_threshold_curve(
     y_prob: np.ndarray,
     fp_cost: float | Decimal,
     fn_cost: float | Decimal,
-    thresholds: np.ndarray = np.arange(0.05, 0.95, 0.05)
+    thresholds: np.ndarray = np.arange(0.05, 0.95, 0.05),
 ) -> list[dict]:
     """
     Returns array of threshold metrics for dashboard visualization.
@@ -122,10 +124,12 @@ def compute_threshold_curve(
     results = []
     for threshold in thresholds:
         metrics = compute_binary_metrics(y_true, y_prob, float(threshold), fp_cost_dec, fn_cost_dec)
-        results.append({
-            "threshold": float(threshold),
-            "precision": metrics.precision,
-            "recall": metrics.recall,
-            "cost_weighted_loss": metrics.cost_weighted_loss
-        })
+        results.append(
+            {
+                "threshold": float(threshold),
+                "precision": metrics.precision,
+                "recall": metrics.recall,
+                "cost_weighted_loss": metrics.cost_weighted_loss,
+            }
+        )
     return results

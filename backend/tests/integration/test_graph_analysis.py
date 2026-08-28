@@ -10,15 +10,21 @@ from src.graph.community_detection import detect_suspicious_communities, run_lou
 from src.graph.neo4j_client import Neo4jClient
 from src.graph.ring_scorer import format_for_alert, generate_ring_narrative, score_ring
 
-if sys.platform == 'win32':
+if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 
 @pytest.fixture(scope="module")
 async def neo4j_client():
-    password = settings.NEO4J_PASSWORD.get_secret_value() if hasattr(settings.NEO4J_PASSWORD, "get_secret_value") else settings.NEO4J_PASSWORD
+    password = (
+        settings.NEO4J_PASSWORD.get_secret_value()
+        if hasattr(settings.NEO4J_PASSWORD, "get_secret_value")
+        else settings.NEO4J_PASSWORD
+    )
     client = Neo4jClient(uri=settings.NEO4J_URI, user=settings.NEO4J_USER, password=password)
     yield client
     await client.close()
+
 
 @pytest.fixture(autouse=True)
 async def clear_neo4j(neo4j_client):
@@ -28,6 +34,7 @@ async def clear_neo4j(neo4j_client):
             await session.run("CALL gds.graph.drop('test_graph', false)")
         except Exception:
             pass
+
 
 @pytest.mark.asyncio
 async def test_batch_node_creation(neo4j_client):
@@ -41,6 +48,7 @@ async def test_batch_node_creation(neo4j_client):
         result = await session.run("MATCH (b:Buyer) RETURN count(b) as count")
         record = await result.single()
         assert record["count"] == 2
+
 
 @pytest.mark.asyncio
 async def test_louvain_detects_planted_ring(neo4j_client):
@@ -92,13 +100,9 @@ async def test_louvain_detects_planted_ring(neo4j_client):
     assert community["devices"] == 1
     assert community["addresses"] == 1
 
+
 def test_ring_scorer_flags_suspicious_cluster():
-    community = {
-        "buyers": 5,
-        "devices": 1,
-        "addresses": 2,
-        "community_id": 123
-    }
+    community = {"buyers": 5, "devices": 1, "addresses": 2, "community_id": 123}
     stats = {"timing_score": 0.8, "chargeback_rate": 0.1}
 
     score = score_ring(community, stats)
@@ -111,6 +115,7 @@ def test_ring_scorer_flags_suspicious_cluster():
     alert = format_for_alert(community, score, narrative, uuid.uuid4())
     assert alert is not None
     assert alert.severity in [AlertSeverity.WARNING, AlertSeverity.CRITICAL]
+
 
 @pytest.mark.asyncio
 async def test_subgraph_extraction(neo4j_client):

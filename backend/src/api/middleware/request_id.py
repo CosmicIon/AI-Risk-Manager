@@ -13,7 +13,9 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
     It also adds the same header to the response.
     """
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         request_id = request.headers.get("X-Request-ID")
         if not request_id:
             request_id = str(uuid.uuid4())

@@ -5,6 +5,7 @@ from neo4j import AsyncGraphDatabase
 
 logger = logging.getLogger(__name__)
 
+
 class Neo4jClient:
     def __init__(self, uri: str, user: str, password: str):
         self.driver = AsyncGraphDatabase.driver(uri, auth=(user, password))
@@ -52,8 +53,15 @@ class Neo4jClient:
         async with self.driver.session() as session:
             await session.run(query, nodes=nodes)
 
-    async def batch_merge_edges(self, rel_type: str, source_label: str, source_id_field: str,
-                                target_label: str, target_id_field: str, edges: list[dict[str, Any]]):
+    async def batch_merge_edges(
+        self,
+        rel_type: str,
+        source_label: str,
+        source_id_field: str,
+        target_label: str,
+        target_id_field: str,
+        edges: list[dict[str, Any]],
+    ):
         """Batch merge edges between nodes."""
         query = f"""
         UNWIND $edges AS edge
@@ -102,16 +110,18 @@ class Neo4jClient:
                 nodes[node.element_id] = {
                     "id": node.element_id,
                     "labels": list(node.labels),
-                    "properties": dict(node)
+                    "properties": dict(node),
                 }
             for rel in single_record["rels"]:
-                edges.append({
-                    "id": rel.element_id,
-                    "source": rel.start_node.element_id,
-                    "target": rel.end_node.element_id,
-                    "type": rel.type,
-                    "properties": dict(rel)
-                })
+                edges.append(
+                    {
+                        "id": rel.element_id,
+                        "source": rel.start_node.element_id,
+                        "target": rel.end_node.element_id,
+                        "type": rel.type,
+                        "properties": dict(rel),
+                    }
+                )
 
         return {"nodes": list(nodes.values()), "edges": edges}
 

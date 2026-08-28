@@ -10,6 +10,7 @@ def rate_limit(limit: int, window_seconds: int):
     Dependency generator for route-specific rate limiting.
     Requires the request to have a tenant_id or client IP to use as identifier.
     """
+
     async def limiter(request: Request):
         # We need a Redis client instance. Let's get it from the app state
         # assuming it will be attached during startup.
@@ -31,14 +32,14 @@ def rate_limit(limit: int, window_seconds: int):
         allowed, _ = await redis_client.check_rate_limit(
             identifier=f"ratelimit:{request.url.path}:{identifier}",
             limit=limit,
-            window=window_seconds
+            window=window_seconds,
         )
 
         if not allowed:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail="Too Many Requests",
-                headers={"Retry-After": str(window_seconds)}
+                headers={"Retry-After": str(window_seconds)},
             )
 
     return limiter

@@ -5,7 +5,10 @@ from src.graph.neo4j_client import Neo4jClient
 
 logger = logging.getLogger(__name__)
 
-async def run_louvain(client: Neo4jClient, tenant_id: UUID, min_community_size: int = 3) -> list[dict]:
+
+async def run_louvain(
+    client: Neo4jClient, tenant_id: UUID, min_community_size: int = 3
+) -> list[dict]:
     """
     Project graph and run GDS Louvain to find communities.
     Returns communities with {"community_id": int, "members": list[str], "size": int, "modularity": float}.
@@ -50,7 +53,12 @@ async def run_louvain(client: Neo4jClient, tenant_id: UUID, min_community_size: 
             await session.run(project_query, graph_name=graph_name)
 
             # Run community detection
-            result = await session.run(louvain_query, graph_name=graph_name, tenant_id_str=str(tenant_id), min_size=min_community_size)
+            result = await session.run(
+                louvain_query,
+                graph_name=graph_name,
+                tenant_id_str=str(tenant_id),
+                min_size=min_community_size,
+            )
             records = await result.data()
             for record in records:
                 communities.append(record)
@@ -73,7 +81,9 @@ async def run_label_propagation(client: Neo4jClient, tenant_id: UUID) -> list[di
     return []
 
 
-async def detect_suspicious_communities(client: Neo4jClient, tenant_id: UUID, communities: list[dict]) -> list[dict]:
+async def detect_suspicious_communities(
+    client: Neo4jClient, tenant_id: UUID, communities: list[dict]
+) -> list[dict]:
     """
     Filter communities by suspicion heuristics:
     - Shared shipping addresses

@@ -19,13 +19,21 @@ from src.integrations.kafka_producer import TypedKafkaProducer
 
 logger = logging.getLogger(__name__)
 
+
 class ChargebackService:
-    def __init__(self, case_repo: CaseRepository, chargeback_repo: ChargebackRepository, kafka: TypedKafkaProducer):
+    def __init__(
+        self,
+        case_repo: CaseRepository,
+        chargeback_repo: ChargebackRepository,
+        kafka: TypedKafkaProducer,
+    ):
         self.case_repo = case_repo
         self.chargeback_repo = chargeback_repo
         self.kafka = kafka
 
-    async def ingest(self, request: ChargebackIngestRequest, tenant: Tenant, session) -> ChargebackIngestResponse:
+    async def ingest(
+        self, request: ChargebackIngestRequest, tenant: Tenant, session
+    ) -> ChargebackIngestResponse:
         logger.info(f"Ingesting chargeback payload for tenant {tenant.id}")
 
         # 1. Parse raw payload into ChargebackNotification
@@ -42,7 +50,7 @@ class ChargebackService:
             tenant_id=tenant.id,
             source=CaseSource.CHARGEBACK,
             source_id=notification.arn,
-            priority=5
+            priority=5,
         )
         case = await self.case_repo.create(session, case_create)
 
@@ -55,7 +63,7 @@ class ChargebackService:
             reason_code=notification.reason_code.value,
             transaction_id=notification.transaction_id,
             transaction_date=notification.transaction_date,
-            transaction_amount=notification.transaction_amount
+            transaction_amount=notification.transaction_amount,
         )
         await self.chargeback_repo.create(session, record)
 
@@ -69,13 +77,15 @@ class ChargebackService:
             case_id=case.id,
             status=CaseStatus.NEW,
             deadline=notification.deadline,  # type: ignore
-            message="Chargeback ingested successfully"
+            message="Chargeback ingested successfully",
         )
 
     async def process(self, case_id: UUID, tenant_id: UUID, notification_dict: dict, session):
         """Runs the LangGraph agent pipeline and updates the case status."""
         logger.info(f"Starting agent pipeline for case {case_id}")
-        await self.case_repo.update(session, case_id, tenant_id, CaseUpdate(status=CaseStatus.EVIDENCE_GATHERING))
+        await self.case_repo.update(
+            session, case_id, tenant_id, CaseUpdate(status=CaseStatus.EVIDENCE_GATHERING)
+        )
 
         try:
             # 1. Run agent
@@ -88,7 +98,9 @@ class ChargebackService:
 
             await self.chargeback_repo.update_evidence(session, case_id, evidence_bundle)
             if draft:
-                record = await self.chargeback_repo.get_by_arn(session, tenant_id, notification_dict["arn"])
+                record = await self.chargeback_repo.get_by_arn(
+                    session, tenant_id, notification_dict["arn"]
+                )
                 if record:
                     record.representment_draft = draft
                     record.win_probability = win_prob
@@ -96,23 +108,40 @@ class ChargebackService:
             # 3. Update case status based on recommendation
             recommendation = final_state.get("recommendation")
             if recommendation == "accept_loss":
-                await self.case_repo.update(session, case_id, tenant_id, CaseUpdate(status=CaseStatus.ACCEPTED_LOSS))
+                await self.case_repo.update(
+                    session, case_id, tenant_id, CaseUpdate(status=CaseStatus.ACCEPTED_LOSS)
+                )
             else:
-                await self.case_repo.update(session, case_id, tenant_id, CaseUpdate(status=CaseStatus.DRAFT_READY))
+                await self.case_repo.update(
+                    session, case_id, tenant_id, CaseUpdate(status=CaseStatus.DRAFT_READY)
+                )
 
         except Exception as e:
             logger.error(f"Agent pipeline failed for case {case_id}: {e}")
-            await self.case_repo.update(session, case_id, tenant_id, CaseUpdate(status=CaseStatus.NEW))
+            await self.case_repo.update(
+                session, case_id, tenant_id, CaseUpdate(status=CaseStatus.NEW)
+            )
             raise
 
-    async def review(self, case_id: UUID, tenant_id: UUID, action: str, edits: dict, actor_id: UUID, session):
+    async def review(
+        self, case_id: UUID, tenant_id: UUID, action: str, edits: dict, actor_id: UUID, session
+    ):
         logger.info(f"Analyst {actor_id} reviewing case {case_id} with action {action}")
         if action == "approve":
-            await self.case_repo.update(session, case_id, tenant_id, CaseUpdate(status=CaseStatus.SUBMITTED))
+            await self.case_repo.update(
+                session, case_id, tenant_id, CaseUpdate(status=CaseStatus.SUBMITTED)
+            )
         elif action == "edit":
-            await self.case_repo.update(session, case_id, tenant_id, CaseUpdate(status=CaseStatus.DRAFT_READY))
+            await self.case_repo.update(
+                session, case_id, tenant_id, CaseUpdate(status=CaseStatus.DRAFT_READY)
+            )
         elif action == "reject":
-            await self.case_repo.update(session, case_id, tenant_id, CaseUpdate(status=CaseStatus.ACCEPTED_LOSS, resolution="Rejected by analyst"))
+            await self.case_repo.update(
+                session,
+                case_id,
+                tenant_id,
+                CaseUpdate(status=CaseStatus.ACCEPTED_LOSS, resolution="Rejected by analyst"),
+            )
         else:
             raise ValueError(f"Invalid review action: {action}")
 

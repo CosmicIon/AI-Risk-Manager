@@ -28,5 +28,5 @@ Write the narrative now.
 
 narrative_prompt_template = PromptTemplate(
     input_variables=["network", "reason_code", "evidence", "similar_cases"],
-    template=NARRATIVE_SYSTEM_PROMPT
+    template=NARRATIVE_SYSTEM_PROMPT,
 )

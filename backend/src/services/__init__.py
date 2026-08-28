@@ -10,5 +10,5 @@ __all__ = [
     "FraudDetectionService",
     "CaseManagementService",
     "NotificationService",
-    "NotificationChannel"
+    "NotificationChannel",
 ]

@@ -19,28 +19,27 @@ mock_chargeback_service.ingest.return_value = {
     "case_id": "00000000-0000-0000-0000-000000000000",
     "deadline": "2024-12-31T23:59:59Z",
     "status": CaseStatus.NEW,
-    "message": "ingested"
+    "message": "ingested",
 }
 mock_chargeback_service.get_pending_reviews.return_value = [{"case_id": "CASE-1"}]
 
 app.dependency_overrides[get_chargeback_service] = lambda: mock_chargeback_service
 
+
 @pytest.fixture
 def test_api_key():
     return "test-api-key-123"
+
 
 @pytest.fixture
 def auth_headers(test_api_key):
     return {"x-api-key": test_api_key}
 
+
 @pytest.mark.asyncio
 async def test_ingest_chargeback(auth_headers):
     payload = {
-        "raw_payload": {
-            "tenant_id": str(uuid4()),
-            "network_arn": "ARN-123456",
-            "amount": 100.50
-        }
+        "raw_payload": {"tenant_id": str(uuid4()), "network_arn": "ARN-123456", "amount": 100.50}
     }
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -51,6 +50,7 @@ async def test_ingest_chargeback(auth_headers):
     assert "case_id" in data
     assert "deadline" in data
     assert data["status"] == "NEW"
+
 
 @pytest.mark.asyncio
 async def test_get_pending_reviews():
@@ -64,6 +64,7 @@ async def test_get_pending_reviews():
     assert response.status_code == 200
     data = response.json()
     assert "items" in data
+
 
 @pytest.mark.asyncio
 async def test_unauthorized_access():

@@ -13,12 +13,13 @@ logger = logging.getLogger(__name__)
 
 alerts_topic = app.topic("alerts.outbound", value_type=AnomalyAlert)  # type: ignore
 
-segment_counts = app.Table(
-    "segment_counts_1m", default=int, partitions=8
-).tumbling(60.0, expires=3600.0)
+segment_counts = app.Table("segment_counts_1m", default=int, partitions=8).tumbling(
+    60.0, expires=3600.0
+)
 
 baseline_table = app.Table("segment_baselines", default=float, partitions=8)
 calendar_events = app.Table("calendar_events", default=list, partitions=1)
+
 
 # Mocking the ML ensemble for streaming runtime
 class MockEnsemble:
@@ -34,11 +35,13 @@ class MockEnsemble:
             current_tps=5.0,
             deviation_factor=5.0,
             window_seconds=60,
-            is_calendar_adjusted=False
+            is_calendar_adjusted=False,
         )
+
 
 ensemble = MockEnsemble()
 ALPHA = 0.1
+
 
 def check_calendar_event(tenant_id: str) -> bool:
     events = calendar_events[tenant_id]
@@ -46,6 +49,7 @@ def check_calendar_event(tenant_id: str) -> bool:
         return False
     # Mock behavior: assume event is active if registered
     return True
+
 
 @app.agent(transactions_topic)
 async def process_anomalies(stream):

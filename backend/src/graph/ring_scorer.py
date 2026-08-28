@@ -21,7 +21,9 @@ def score_ring(community: dict, transaction_stats: dict) -> float:
     addresses = community.get("addresses", buyers)
     if buyers > 1 and addresses < buyers:
         ratio = 1.0 - (addresses / buyers)
-        score += 0.3 * min(ratio * 2, 1.0) # e.g. 1 address / 5 buyers -> 1 - 0.2 = 0.8 * 2 = 1.0 -> 0.3
+        score += 0.3 * min(
+            ratio * 2, 1.0
+        )  # e.g. 1 address / 5 buyers -> 1 - 0.2 = 0.8 * 2 = 1.0 -> 0.3
 
     # Heuristic 2: Device sharing
     devices = community.get("devices", buyers)
@@ -35,7 +37,7 @@ def score_ring(community: dict, transaction_stats: dict) -> float:
 
     # Heuristic 4: Chargeback/Return rate
     chargeback_rate = transaction_stats.get("chargeback_rate", 0.0)
-    if chargeback_rate > 0.05: # >5% is suspicious
+    if chargeback_rate > 0.05:  # >5% is suspicious
         score += 0.2 * min((chargeback_rate - 0.05) * 10, 1.0)
 
     return min(score, 1.0)
@@ -52,7 +54,9 @@ def generate_ring_narrative(community: dict, score: float) -> str:
         if devices < buyers:
             reasons.append(f"{buyers} distinct buyers are sharing {devices} physical devices.")
         if addresses < buyers:
-            reasons.append(f"Shipments are directed to only {addresses} addresses across {buyers} accounts.")
+            reasons.append(
+                f"Shipments are directed to only {addresses} addresses across {buyers} accounts."
+            )
 
     if score > 0.7:
         severity = "High"
@@ -63,14 +67,18 @@ def generate_ring_narrative(community: dict, score: float) -> str:
 
     narrative = f"[{severity} Suspicion Ring] "
     if reasons:
-        narrative += "Detected structural anomalies indicating coordinated activity: " + " ".join(reasons)
+        narrative += "Detected structural anomalies indicating coordinated activity: " + " ".join(
+            reasons
+        )
     else:
         narrative += "Community cluster detected but lacks strong anomaly indicators."
 
     return narrative
 
 
-def format_for_alert(community: dict, score: float, narrative: str, tenant_id: uuid.UUID) -> AnomalyAlert | None:
+def format_for_alert(
+    community: dict, score: float, narrative: str, tenant_id: uuid.UUID
+) -> AnomalyAlert | None:
     """Create alert if score > 0.7."""
     if score > 0.7:
         return AnomalyAlert(
@@ -78,12 +86,12 @@ def format_for_alert(community: dict, score: float, narrative: str, tenant_id: u
             tenant_id=tenant_id,
             detected_at=datetime.now(UTC),
             severity=AlertSeverity.CRITICAL if score > 0.9 else AlertSeverity.WARNING,
-            spike_classification=SpikeClassification.ORGANIC_SPIKE, # Mock value as this is abuse ring
+            spike_classification=SpikeClassification.ORGANIC_SPIKE,  # Mock value as this is abuse ring
             affected_segment=f"community_{community.get('community_id', 'unknown')}",
             baseline_tps=0.0,
             current_tps=0.0,
             deviation_factor=score,
             window_seconds=86400,
-            is_calendar_adjusted=False
+            is_calendar_adjusted=False,
         )
     return None

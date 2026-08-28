@@ -4,6 +4,7 @@ from src.agents.state import ChargebackAgentState
 
 logger = logging.getLogger(__name__)
 
+
 async def confidence_scorer_node(state: ChargebackAgentState) -> ChargebackAgentState:
     logger.info(f"Scoring confidence for case {state.get('case_id')}")
 

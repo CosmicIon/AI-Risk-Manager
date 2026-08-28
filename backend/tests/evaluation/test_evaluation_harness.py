@@ -33,10 +33,7 @@ def mock_holdout_manager():
     manager = MagicMock(spec=HoldoutManager)
 
     # Return 10 rows dataframe
-    data = pd.DataFrame({
-        "feature1": range(10),
-        "is_abusive": [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
-    })
+    data = pd.DataFrame({"feature1": range(10), "is_abusive": [1, 1, 1, 1, 1, 0, 0, 0, 0, 0]})
     manifest = {"hash": "dummy_hash"}
 
     manager.load_holdout = AsyncMock(return_value=(data, manifest))
@@ -74,7 +71,7 @@ async def test_evaluate_and_gate_check(mock_registry, mock_holdout_manager, mock
         model_registry=mock_registry,
         holdout_manager=mock_holdout_manager,
         evaluation_repo=mock_repo,
-        object_store=mock_store
+        object_store=mock_store,
     )
 
     report = await harness.evaluate(
@@ -82,7 +79,7 @@ async def test_evaluate_and_gate_check(mock_registry, mock_holdout_manager, mock
         model_version="v1",
         holdout_version="h1",
         fp_cost=Decimal("500"),
-        fn_cost=Decimal("2000")
+        fn_cost=Decimal("2000"),
     )
 
     assert isinstance(report, EvaluationReport)

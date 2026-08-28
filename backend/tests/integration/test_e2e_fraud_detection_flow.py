@@ -78,9 +78,7 @@ async def test_get_fraud_alerts(analyst_headers):
     app.dependency_overrides[get_fraud_service] = lambda: mock_svc
 
     try:
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             resp = await ac.get("/api/v1/fraud/alerts", headers=analyst_headers)
 
         assert resp.status_code == 200
@@ -98,9 +96,7 @@ async def test_get_fraud_alerts_filter_severity(analyst_headers):
     app.dependency_overrides[get_fraud_service] = lambda: mock_svc
 
     try:
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             resp = await ac.get(
                 "/api/v1/fraud/alerts?severity=critical",
                 headers=analyst_headers,
@@ -121,9 +117,7 @@ async def test_get_fraud_alerts_filter_classification(analyst_headers):
     app.dependency_overrides[get_fraud_service] = lambda: mock_svc
 
     try:
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             resp = await ac.get(
                 "/api/v1/fraud/alerts?classification=velocity_spike",
                 headers=analyst_headers,
@@ -150,9 +144,7 @@ async def test_register_known_event(admin_headers):
     app.dependency_overrides[get_fraud_service] = lambda: mock_svc
 
     try:
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             resp = await ac.post(
                 "/api/v1/fraud/events",
                 json={
@@ -174,9 +166,7 @@ async def test_register_known_event(admin_headers):
 @pytest.mark.asyncio
 async def test_register_event_requires_admin(analyst_headers):
     """Analyst (non-admin) cannot register events → 403."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.post(
             "/api/v1/fraud/events",
             json={
@@ -197,9 +187,7 @@ async def test_register_event_requires_admin(analyst_headers):
 @pytest.mark.asyncio
 async def test_acknowledge_alert(analyst_headers):
     """Analyst can acknowledge an alert."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.post(
             "/api/v1/fraud/alerts/alert-001/acknowledge",
             headers=analyst_headers,
@@ -216,8 +204,6 @@ async def test_acknowledge_alert(analyst_headers):
 @pytest.mark.asyncio
 async def test_fraud_alerts_no_jwt():
     """Missing JWT returns 403."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.get("/api/v1/fraud/alerts")
     assert resp.status_code == 401

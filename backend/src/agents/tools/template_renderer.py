@@ -20,16 +20,16 @@ Reason Code: {reason_code}
 
 TRANSACTION SUMMARY
 -------------------
-Order ID: {evidence.get('order_id', 'Unknown')}
-Amount: {evidence.get('total_amount', 'Unknown')} {evidence.get('currency', 'USD')}
-Date: {evidence.get('order_date', 'Unknown')}
+Order ID: {evidence.get("order_id", "Unknown")}
+Amount: {evidence.get("total_amount", "Unknown")} {evidence.get("currency", "USD")}
+Date: {evidence.get("order_date", "Unknown")}
 
 EVIDENCE PRESENTED
 ------------------
-3DS Authenticated: {evidence.get('3ds_authenticated', False)}
-AVS Match: {evidence.get('avs_match', 'N')}
-Delivery Proof URL: {evidence.get('proof_url', 'Not available')}
-Signed By: {evidence.get('signed_by', 'Not available')}
+3DS Authenticated: {evidence.get("3ds_authenticated", False)}
+AVS Match: {evidence.get("avs_match", "N")}
+Delivery Proof URL: {evidence.get("proof_url", "Not available")}
+Signed By: {evidence.get("signed_by", "Not available")}
 
 MERCHANT RESPONSE
 -----------------

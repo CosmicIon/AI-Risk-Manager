@@ -13,12 +13,15 @@ from src.services.return_scoring_service import ReturnScoringService
 
 router = APIRouter(prefix="/returns", tags=["returns"])
 
+
 async def get_return_scoring_service(request: Request) -> ReturnScoringService:
     # MVP mock. In a real app we would get the redis and model registry from request.app.state
     # return ReturnScoringService(request.app.state.redis, request.app.state.model_registry)
     from src.integrations.redis_client import RedisClient
     from src.ml.serving.model_registry import ModelRegistry
+
     return ReturnScoringService(RedisClient("redis://localhost:6379"), ModelRegistry())
+
 
 async def get_tenant(token: TokenData = Depends(verify_api_key)) -> Tenant:
     # MVP mock. Default policy config
@@ -28,15 +31,18 @@ async def get_tenant(token: TokenData = Depends(verify_api_key)) -> Tenant:
         "medium_threshold": 50,
         "high_threshold": 75,
         "auto_deny_enabled": False,
-        "high_value_customer_override": True
+        "high_value_customer_override": True,
     }
     return Tenant(id=token.tenant_id, name="Test Tenant", policy_config=policy)
 
-@router.post("/score", response_model=ReturnScoreResponse, dependencies=[Depends(rate_limit(100, 1))])
+
+@router.post(
+    "/score", response_model=ReturnScoreResponse, dependencies=[Depends(rate_limit(100, 1))]
+)
 async def score_return(
     request: ReturnScoreRequest,
     tenant: Tenant = Depends(get_tenant),
-    service: ReturnScoringService = Depends(get_return_scoring_service)
+    service: ReturnScoringService = Depends(get_return_scoring_service),
 ):
     """
     Score the risk of a new return initiation in real-time.
@@ -52,13 +58,14 @@ async def score_return(
         latency = time.time() - start_time
         return_scoring_latency_seconds.observe(latency)
 
+
 @router.get("/history")
 async def get_return_history(
     token: TokenData = Depends(require_role("analyst", "admin")),
     customer_id: str | None = None,
     risk_tier: str | None = None,
     page: int = Query(1, ge=1),
-    size: int = Query(20, ge=1, le=100)
+    size: int = Query(20, ge=1, le=100),
 ):
     """
     Paginated history of return scoring decisions.
@@ -67,17 +74,19 @@ async def get_return_history(
     # MVP stub: usually calls a database repository
     return {"items": [], "total": 0, "page": page, "size": size}
 
+
 @router.put("/policy")
 async def update_return_policy(
-    policy: PolicyConfig,
-    token: TokenData = Depends(require_role("admin"))
+    policy: PolicyConfig, token: TokenData = Depends(require_role("admin"))
 ):
     """
     Update merchant risk thresholds.
     Secured by JWT, Admin only.
     """
     if not (policy.low_threshold < policy.medium_threshold < policy.high_threshold):
-        raise HTTPException(status_code=400, detail="Invalid thresholds: must be low < medium < high")
+        raise HTTPException(
+            status_code=400, detail="Invalid thresholds: must be low < medium < high"
+        )
 
     # MVP stub: would update tenant record in database
     return {"status": "success", "message": "Policy updated successfully"}

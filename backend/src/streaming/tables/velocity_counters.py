@@ -3,17 +3,18 @@ from datetime import timedelta
 from src.streaming.app import app
 
 # Tumbling window tables for different time spans
-velocity_table_1m = app.Table(
-    "velocity_1m", default=int, partitions=8
-).tumbling(60.0, expires=timedelta(hours=1))
+velocity_table_1m = app.Table("velocity_1m", default=int, partitions=8).tumbling(
+    60.0, expires=timedelta(hours=1)
+)
 
-velocity_table_5m = app.Table(
-    "velocity_5m", default=int, partitions=8
-).tumbling(300.0, expires=timedelta(hours=1))
+velocity_table_5m = app.Table("velocity_5m", default=int, partitions=8).tumbling(
+    300.0, expires=timedelta(hours=1)
+)
 
-velocity_table_1h = app.Table(
-    "velocity_1h", default=int, partitions=8
-).tumbling(3600.0, expires=timedelta(hours=24))
+velocity_table_1h = app.Table("velocity_1h", default=int, partitions=8).tumbling(
+    3600.0, expires=timedelta(hours=24)
+)
+
 
 def get_velocity(tenant_id: str, customer_id: str) -> dict[str, int]:
     """

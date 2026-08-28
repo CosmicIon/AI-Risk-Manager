@@ -15,8 +15,12 @@ from src.services.return_scoring_service import ReturnScoringService
 @pytest.fixture
 def mock_redis():
     redis = AsyncMock()
-    redis.get_feature_vector.return_value = {"return_count_30d": 1.0, "return_amount_total_30d": 50.0}
+    redis.get_feature_vector.return_value = {
+        "return_count_30d": 1.0,
+        "return_amount_total_30d": 50.0,
+    }
     return redis
+
 
 @pytest.fixture
 def mock_model_registry():
@@ -26,6 +30,7 @@ def mock_model_registry():
     model.predict_with_latency.return_value = ([0.15], 5)
     registry.get_model.return_value = model
     return registry
+
 
 @pytest.fixture
 def tenant():
@@ -38,9 +43,10 @@ def tenant():
             "high_threshold": 80,
             "medium_threshold": 50,
             "low_threshold": 20,
-            "high_value_customer_override": True
-        }
+            "high_value_customer_override": True,
+        },
     )
+
 
 @pytest.mark.asyncio
 async def test_return_scoring_service_low_risk(mock_redis, mock_model_registry, tenant):
@@ -56,13 +62,14 @@ async def test_return_scoring_service_low_risk(mock_redis, mock_model_registry, 
         order_date=datetime.now(UTC),
         return_initiated_at=datetime.now(UTC),
         product_category="Electronics",
-        items=[{"item_id": "item-1", "amount": 10.0, "reason": "Defective"}]
+        items=[{"item_id": "item-1", "amount": 10.0, "reason": "Defective"}],
     )
 
     response = await service.score(req, tenant)
 
     assert response.risk_score == 15
     assert response.decision == "auto_approve"
+
 
 @pytest.mark.asyncio
 async def test_return_scoring_service_high_risk_override(mock_redis, mock_model_registry, tenant):
@@ -86,7 +93,7 @@ async def test_return_scoring_service_high_risk_override(mock_redis, mock_model_
         order_date=datetime.now(UTC),
         return_initiated_at=datetime.now(UTC),
         product_category="Clothing",
-        items=[{"item_id": "item-2", "amount": 100.0, "reason": "Wrong Size"}]
+        items=[{"item_id": "item-2", "amount": 100.0, "reason": "Wrong Size"}],
     )
 
     response = await service.score(req, tenant)
@@ -94,6 +101,7 @@ async def test_return_scoring_service_high_risk_override(mock_redis, mock_model_
     assert response.risk_score == 95
     # Since high_value_customer_override is True and LTV > 5000, it should override auto_deny to manual_review
     assert response.decision == "manual_review"
+
 
 @pytest.mark.asyncio
 async def test_fraud_detection_service_alert_routing(tenant):
@@ -103,16 +111,13 @@ async def test_fraud_detection_service_alert_routing(tenant):
 
     service = FraudDetectionService(mock_case_repo, mock_kafka, mock_notif)
 
-    alert = {
-        "alert_id": "alert-1",
-        "severity": "CRITICAL",
-        "anomaly_type": "Velocity Spike"
-    }
+    alert = {"alert_id": "alert-1", "severity": "CRITICAL", "anomaly_type": "Velocity Spike"}
 
     await service.handle_alert(alert, tenant, MagicMock())
 
     assert mock_case_repo.create.called
     assert mock_notif.route_alert.called
+
 
 @pytest.mark.asyncio
 async def test_case_management_service_state_machine():

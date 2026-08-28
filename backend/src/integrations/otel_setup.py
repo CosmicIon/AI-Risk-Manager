@@ -14,6 +14,7 @@ from opentelemetry.semconv.resource import ResourceAttributes
 
 logger = logging.getLogger(__name__)
 
+
 def setup_opentelemetry(app: FastAPI, engine=None):
     """
     Configure OpenTelemetry distributed tracing and instrument libraries.
@@ -25,10 +26,12 @@ def setup_opentelemetry(app: FastAPI, engine=None):
         return
 
     # Set up TracerProvider
-    resource = Resource.create({
-        ResourceAttributes.SERVICE_NAME: "ai-risk-manager-backend",
-        ResourceAttributes.SERVICE_VERSION: "1.0.0"
-    })
+    resource = Resource.create(
+        {
+            ResourceAttributes.SERVICE_NAME: "ai-risk-manager-backend",
+            ResourceAttributes.SERVICE_VERSION: "1.0.0",
+        }
+    )
 
     provider = TracerProvider(resource=resource)
     trace.set_tracer_provider(provider)

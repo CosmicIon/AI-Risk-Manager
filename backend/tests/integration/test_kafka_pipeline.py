@@ -16,6 +16,7 @@ from src.streaming.processors.transaction_processor import (
 
 pytestmark = pytest.mark.asyncio
 
+
 @pytest.fixture(autouse=True)
 async def setup_app():
     app.conf.store = "memory://"
@@ -26,6 +27,7 @@ async def setup_app():
         await redis_client.close()
     if neo4j_driver:
         await neo4j_driver.close()
+
 
 def make_tx(tenant_id, customer_id, amount=100.0, ip="127.0.0.1"):
     return TransactionRecord(
@@ -41,8 +43,9 @@ def make_tx(tenant_id, customer_id, amount=100.0, ip="127.0.0.1"):
         mcc="5411",
         shipping_address_hash="hash123",
         device_fingerprint="dev123",
-        ip_address=ip
+        ip_address=ip,
     )
+
 
 async def test_transaction_updates_redis_features():
     tenant_id = str(uuid.uuid4())
@@ -63,6 +66,7 @@ async def test_transaction_updates_redis_features():
         assert features["amount_mean_1h"] == 150.0
         assert features["amount_count_1h"] == 1
 
+
 async def test_velocity_counters():
     tenant_id = str(uuid.uuid4())
     customer_id = "cust_burst"
@@ -80,6 +84,7 @@ async def test_velocity_counters():
         assert features["amount_count_1h"] == 5
         assert features["amount_mean_1h"] == 50.0
 
+
 async def test_anomaly_detection():
     tenant_id = str(uuid.uuid4())
     customer_id = "cust_anomaly"
@@ -95,17 +100,22 @@ async def test_anomaly_detection():
     # For now, we just ensure it processes without throwing exceptions.
     assert True
 
+
 async def test_calendar_adjustment():
     tenant_id = str(uuid.uuid4())
 
     # Mock the check_calendar_event function to return True
     import unittest.mock as mock
-    with mock.patch("src.streaming.processors.anomaly_processor.check_calendar_event", return_value=True):
+
+    with mock.patch(
+        "src.streaming.processors.anomaly_processor.check_calendar_event", return_value=True
+    ):
         async with process_anomalies.test_context() as agent:
             for _ in range(20):
                 await agent.put(make_tx(tenant_id, "cust_cal", 100.0, "10.0.0.1"))
 
     assert True
+
 
 async def test_graph_updater():
     tenant_id = str(uuid.uuid4())

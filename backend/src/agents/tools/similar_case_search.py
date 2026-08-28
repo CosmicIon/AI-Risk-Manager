@@ -5,8 +5,11 @@ from langchain_core.tools import tool
 
 logger = logging.getLogger(__name__)
 
+
 @tool
-async def search_similar_cases(case_summary: str, reason_code: str, network: str, limit: int = 5) -> list[dict[str, Any]]:
+async def search_similar_cases(
+    case_summary: str, reason_code: str, network: str, limit: int = 5
+) -> list[dict[str, Any]]:
     """Search for similar past chargeback cases that were won.
 
     Args:
@@ -26,12 +29,12 @@ async def search_similar_cases(case_summary: str, reason_code: str, network: str
             "case_id": "sim_case_1",
             "outcome": "WON",
             "narrative_summary": "We proved the customer signed for the delivery at the billing address matching AVS.",
-            "similarity_score": 0.95
+            "similarity_score": 0.95,
         },
         {
             "case_id": "sim_case_2",
             "outcome": "WON",
             "narrative_summary": "The 3DS authentication log was sufficient to win the dispute for fraud.",
-            "similarity_score": 0.88
-        }
+            "similarity_score": 0.88,
+        },
     ]

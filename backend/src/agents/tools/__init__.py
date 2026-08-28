@@ -3,6 +3,7 @@ import re
 
 logger = logging.getLogger(__name__)
 
+
 def sanitize_input(text: str) -> str:
     """
     Sanitizes user input for defense against prompt injections and control character exploits.
@@ -20,14 +21,14 @@ def sanitize_input(text: str) -> str:
     text = text[:10000]
 
     # 2. Strip non-printable control characters except newline and tab
-    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
 
     # 3. Detect and escape prompt injection keywords
     injection_patterns = [
         r"(?i)\bignore previous instructions\b",
         r"(?i)\bsystem:\b",
         r"(?i)\bassistant:\b",
-        r"(?i)\bdisregard all prior\b"
+        r"(?i)\bdisregard all prior\b",
     ]
 
     sanitized = False

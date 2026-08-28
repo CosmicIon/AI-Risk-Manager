@@ -4,8 +4,10 @@ from langchain_core.tools import tool
 
 logger = logging.getLogger(__name__)
 
+
 class EvidenceRetrievalError(Exception):
     pass
+
 
 @tool
 def lookup_order(order_id: str, tenant_id: str) -> dict:
@@ -33,19 +35,27 @@ def lookup_order(order_id: str, tenant_id: str) -> dict:
             "customer_info": {
                 "name": "Jane Doe",
                 "email": "jane.doe@example.com",
-                "phone": "+1234567890"
+                "phone": "+1234567890",
             },
             "shipping_address": {
                 "line1": "123 Main St",
                 "city": "Anytown",
                 "state": "CA",
                 "zip": "12345",
-                "country": "US"
+                "country": "US",
             },
             "communications": [
-                {"date": "2023-10-02T10:00:00Z", "type": "email", "content": "Your order has shipped."},
-                {"date": "2023-10-04T12:00:00Z", "type": "email", "content": "Delivery confirmation from carrier."}
-            ]
+                {
+                    "date": "2023-10-02T10:00:00Z",
+                    "type": "email",
+                    "content": "Your order has shipped.",
+                },
+                {
+                    "date": "2023-10-04T12:00:00Z",
+                    "type": "email",
+                    "content": "Delivery confirmation from carrier.",
+                },
+            ],
         }
     except Exception as e:
         logger.error(f"Error looking up order {order_id}: {e}")

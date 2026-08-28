@@ -100,9 +100,7 @@ async def test_return_scoring_happy_path(api_key_headers):
     app.state.redis.check_rate_limit.return_value = True
 
     try:
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             start = time.monotonic()
             resp = await ac.post(
                 "/api/v1/returns/score",
@@ -137,9 +135,7 @@ async def test_return_scoring_high_risk(api_key_headers):
     app.state.redis.check_rate_limit.return_value = True
 
     try:
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             resp = await ac.post(
                 "/api/v1/returns/score",
                 json=_score_payload(),
@@ -163,9 +159,7 @@ async def test_return_scoring_medium_risk(api_key_headers):
     app.state.redis.check_rate_limit.return_value = True
 
     try:
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             resp = await ac.post(
                 "/api/v1/returns/score",
                 json=_score_payload(),
@@ -197,9 +191,7 @@ async def test_return_scoring_degraded_mode(api_key_headers):
     app.state.redis.check_rate_limit.return_value = True
 
     try:
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             start = time.monotonic()
             resp = await ac.post(
                 "/api/v1/returns/score",
@@ -225,9 +217,7 @@ async def test_return_scoring_degraded_mode(api_key_headers):
 @pytest.mark.asyncio
 async def test_return_scoring_no_api_key():
     """Missing API key returns 401."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.post("/api/v1/returns/score", json=_score_payload())
     assert resp.status_code == 401
 
@@ -240,9 +230,7 @@ async def test_return_scoring_no_api_key():
 @pytest.mark.asyncio
 async def test_return_policy_update(admin_jwt_headers):
     """Admin can update return policy thresholds."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.put(
             "/api/v1/returns/policy",
             json={
@@ -262,9 +250,7 @@ async def test_return_policy_update(admin_jwt_headers):
 @pytest.mark.asyncio
 async def test_return_policy_invalid_thresholds(admin_jwt_headers):
     """Invalid thresholds (low > medium) return 400."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         resp = await ac.put(
             "/api/v1/returns/policy",
             json={

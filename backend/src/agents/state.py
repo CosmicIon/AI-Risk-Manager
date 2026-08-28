@@ -5,6 +5,7 @@ class ChargebackAgentState(TypedDict):
     """
     State definition for the Chargeback Agent Workflow in LangGraph.
     """
+
     case_id: str
     tenant_id: str
     chargeback: dict[str, Any]  # Serialized ChargebackNotification

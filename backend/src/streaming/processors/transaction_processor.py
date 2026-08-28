@@ -16,6 +16,7 @@ from src.streaming.tables.velocity_counters import (
 
 logger = logging.getLogger(__name__)
 
+
 class TransactionRecord(faust.Record, serializer="json"):
     transaction_id: str
     tenant_id: str
@@ -31,14 +32,17 @@ class TransactionRecord(faust.Record, serializer="json"):
     device_fingerprint: str
     ip_address: str
 
+
 transactions_topic = app.topic("transactions.raw", value_type=TransactionRecord)
 
 redis_client = None
+
 
 @app.task
 async def setup_redis():
     global redis_client
     redis_client = RedisClient(str(settings.REDIS_URL))
+
 
 @app.agent(transactions_topic)
 async def process_transactions(stream):
@@ -73,7 +77,7 @@ async def process_transactions(stream):
                     customer_id=tx.customer_id,
                     tenant_id=UUID(tx.tenant_id),
                     features=features,
-                    ttl=3600
+                    ttl=3600,
                 )
             except Exception as e:
                 logger.error(f"Failed to write features to Redis for {key}: {e}")

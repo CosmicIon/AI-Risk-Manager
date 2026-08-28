@@ -21,5 +21,5 @@ def track_shipment(tracking_number: str, carrier: str) -> dict:
         "signed_by": "J. DOE",
         "proof_url": f"https://shipping.provider.com/proof/{tracking_number}",
         "carrier": carrier,
-        "tracking_number": tracking_number
+        "tracking_number": tracking_number,
     }

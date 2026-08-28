@@ -12,7 +12,9 @@ class DriftDetector:
         self.psi_threshold = psi_threshold
         self.kl_threshold = kl_threshold
 
-    def compute_psi(self, expected: np.ndarray, actual: np.ndarray, buckets: int = 10) -> tuple[float, dict, dict]:
+    def compute_psi(
+        self, expected: np.ndarray, actual: np.ndarray, buckets: int = 10
+    ) -> tuple[float, dict, dict]:
         """
         Compute Population Stability Index (PSI) between two arrays of numerical data.
         Returns (psi_value, expected_dist, actual_dist).
@@ -48,7 +50,9 @@ class DriftDetector:
 
         return psi, exp_dist, act_dist
 
-    def compute_kl_divergence(self, expected: np.ndarray, actual: np.ndarray) -> tuple[float, dict, dict]:
+    def compute_kl_divergence(
+        self, expected: np.ndarray, actual: np.ndarray
+    ) -> tuple[float, dict, dict]:
         """
         Compute KL Divergence for categorical data.
         Returns (kl_value, expected_dist, actual_dist).
@@ -88,7 +92,9 @@ class DriftDetector:
 
         return kl, exp_dist_dict, act_dist_dict
 
-    def detect_feature_drift(self, ref_data: pd.DataFrame, curr_data: pd.DataFrame, feature_cols: list[str]) -> list[DriftReport]:
+    def detect_feature_drift(
+        self, ref_data: pd.DataFrame, curr_data: pd.DataFrame, feature_cols: list[str]
+    ) -> list[DriftReport]:
         """
         Detect drift across multiple features. Numerical -> PSI, Categorical -> KL Divergence.
         """
@@ -134,7 +140,7 @@ class DriftDetector:
                 requires_retrain=requires_retrain,
                 reference_distribution=ref_dist,
                 current_distribution=curr_dist,
-                computed_at=now
+                computed_at=now,
             )
             reports.append(report)
 
@@ -156,5 +162,5 @@ class DriftDetector:
             requires_retrain=requires_retrain,
             reference_distribution=ref_dist,
             current_distribution=curr_dist,
-            computed_at=datetime.now(UTC)
+            computed_at=datetime.now(UTC),
         )
