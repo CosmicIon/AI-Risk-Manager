@@ -9,6 +9,7 @@ import {
   FileSearch, 
   Network, 
   Activity, 
+  FlaskConical,
   Settings 
 } from 'lucide-react';
 
@@ -19,6 +20,7 @@ const navItems = [
   { name: 'Fraud Alerts', href: '/fraud', icon: ShieldAlert },
   { name: 'Abuse Rings', href: '/rings', icon: Network },
   { name: 'Evaluation', href: '/evaluation', icon: Activity },
+  { name: 'Simulation', href: '/simulation', icon: FlaskConical },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

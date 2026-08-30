@@ -3,6 +3,7 @@ import "./globals.css";
 import "@/components/layout/layout.css";
 import "@/components/dashboard/dashboard.css";
 import "@/app/chargebacks/chargebacks.css";
+import "@/app/simulation/simulation.css";
 
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";

@@ -120,6 +120,12 @@ The Next.js 15 dashboard is the operational command center for Risk Analysts. It
 - **Trigger:** Evolving transaction graph linking buyers, sellers, devices, addresses, and payment tokens.
 - **Engine:** Louvain and Label Propagation community detection algorithms scoring suspicious clusters in Neo4j.
 
+### 5. Fraud Detection Simulation Studio
+- **Trigger:** On-demand dataset generation or live WebSocket streaming via `/api/v1/simulation`.
+- **Engine:** Vectorized NumPy/Pandas generating high-throughput datasets with $O(N \log N)$ geographic terminal binding via `scipy.spatial.cKDTree`.
+- **Scenarios:** Faithfully adapts the *Fraud Detection Handbook*, injecting High Amount point-fraud, POS Skimming windows, and Account Takeovers.
+- **Dashboard:** Interactive HTML5 Canvas mapping a 100x100km spatial grid, with a live streaming transaction ticker and Recharts KPI analytics.
+
 ---
 
 ## Architecture Overview

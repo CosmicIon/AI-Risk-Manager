@@ -6,6 +6,7 @@ from src.api.v1.fraud import router as fraud_router
 from src.api.v1.health import router as health_router
 from src.api.v1.metrics import router as metrics_router
 from src.api.v1.returns import router as returns_router
+from src.api.v1.simulation import router as simulation_router
 
 __all__ = [
     "chargebacks_router",
@@ -14,4 +15,5 @@ __all__ = [
     "cases_router",
     "metrics_router",
     "health_router",
+    "simulation_router",
 ]
