@@ -16,6 +16,7 @@ from src.api.v1 import (
     health_router,
     metrics_router,
     returns_router,
+    simulation_router,
 )
 from src.config import settings
 from src.db.session import async_engine
@@ -115,6 +116,7 @@ def create_app() -> FastAPI:
     app.include_router(fraud_router, prefix="/api/v1")
     app.include_router(cases_router, prefix="/api/v1")
     app.include_router(metrics_router, prefix="/api/v1")
+    app.include_router(simulation_router, prefix="/api/v1")
 
     # Initialize OpenTelemetry
     setup_opentelemetry(app, async_engine)
