@@ -145,7 +145,7 @@ export default function SpatialMap({
           // Outer radar rings
           for (let r = 0; r < 3; r++) {
             const ringPhase = (phase * 1.5 + r * 0.8) % (Math.PI * 2);
-            const ringR = radarR + r * 8 + Math.sin(ringPhase) * 4;
+            const ringR = Math.max(0.1, radarR + r * 8 + Math.sin(ringPhase) * 4);
             const ringAlpha = Math.max(0, 0.4 - r * 0.15);
             ctx.strokeStyle = `rgba(248, 113, 113, ${ringAlpha})`;
             ctx.lineWidth = 1;
