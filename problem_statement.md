@@ -9,10 +9,7 @@ why now
 AI-enabled fraud is hitting Indian BFSI while returns and chargebacks quietly eat margin. This track surfaces the risk and ML minded builders the others miss.
 
 example directions
-Chargeback evidence responder
 Return-risk scorer
-Fraud-spike detector
-Abuse-ring sentinel
-the bar
+
 Honest metrics including false-positive cost. Strictly defense-only: anything offense-capable is disqualified.
 
