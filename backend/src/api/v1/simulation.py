@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import io
 import json
 import logging
 import os
@@ -159,7 +160,7 @@ async def generate_dataset(config: SimulationConfig):
     result = await loop.run_in_executor(_executor, _run_generation, config)
 
     # Cache for streaming
-    _cached_tx_df = pd.read_json(result["tx_df_json"], orient="records")
+    _cached_tx_df = pd.read_json(io.StringIO(result["tx_df_json"]), orient="records")
 
     stats = result["stats"]
     return SimulationStats(**stats)
