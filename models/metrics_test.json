@@ -1,0 +1,14 @@
+{
+    "recommended_threshold": 0.78,
+    "precision": 0.3746620316724604,
+    "recall": 0.7882974400650142,
+    "cost_flag_nothing": 664972.4899999999,
+    "cost_model": 173156.37841934172,
+    "savings": 491816.1115806581,
+    "confusion_matrix": {
+        "tn": 1050664,
+        "fp": 6476,
+        "fn": 1042,
+        "tp": 3880
+    }
+}
