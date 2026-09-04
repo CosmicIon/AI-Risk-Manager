@@ -15,7 +15,7 @@ This document details all planned fixes, architectural upgrades, and optimizatio
 | **Module 9: API Serving** (`src/api.py`) | **MEDIUM** | Real-time FastAPI sub-50ms inference endpoint | `[x] Completed` |
 | **Module 10: Model Monitoring** (`src/drift.py`) | **MEDIUM** | Population Stability Index (PSI) & feature drift detection | `[x] Completed` |
 | **Module 1: Ingestion & Adapters** (`src/ingestion.py`, `src/adapters/`) | **LOW** | Vectorization optimization & real-world dataset adapters (Kaggle/IEEE-CIS) | `[x] Completed` |
-| **Module 11: CI/CD & Testing** (`tests/`, `.github/`) | **LOW** | Feature leakage unit tests & automated GitHub Actions CI | `[ ] Pending` |
+| **Module 11: CI/CD & Testing** (`tests/`, `.github/`) | **LOW** | Feature leakage unit tests & automated GitHub Actions CI | `[x] Completed` |
 
 ---
 
@@ -222,20 +222,20 @@ This document details all planned fixes, architectural upgrades, and optimizatio
 
 ### 7.1 Unit Tests for Feature Leakage
 * **Priority:** 🟢 **LOW**
-* **Status:** `[ ] Pending`
+* **Status:** `[x] Completed`
 * **Current Issue:**
   Current smoke test only checks process exit codes (`0`) and artifact existence.
 * **Fix Implementation:**
-  Add `tests/test_leakage.py`:
+  Added `tests/test_leakage.py`:
   - Verify that terminal risk calculated at day $T$ strictly matches labels from $\le T - 7$.
   - Assert that no future timestamps appear in rolling window slices.
-  - Assert that train and test indices have zero overlap.
+  - Assert that train and test indices have zero overlap and strict temporal boundaries.
 
 ### 7.2 GitHub Actions Automated CI Workflow
 * **Priority:** 🟢 **LOW**
-* **Status:** `[ ] Pending`
+* **Status:** `[x] Completed`
 * **Fix Implementation:**
-  Create `.github/workflows/ci.yml`:
-  - Installs dependencies on `ubuntu-latest`.
-  - Runs code linter (`flake8` / `ruff`).
-  - Executes `pytest tests/test_pipeline_smoke.py`.
+  Created `.github/workflows/ci.yml`:
+  - Matrix test runner on Python 3.11 and 3.12 on `ubuntu-latest`.
+  - Installs requirements.
+  - Executes full test suite (`pytest -v`) across 35 test cases.
