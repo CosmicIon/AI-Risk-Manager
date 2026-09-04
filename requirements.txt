@@ -10,3 +10,4 @@ seaborn
 PyYAML
 joblib
 pytest
+optuna
