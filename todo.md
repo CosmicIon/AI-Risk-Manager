@@ -11,7 +11,7 @@ This document details all planned fixes, architectural upgrades, and optimizatio
 | **Module 3: Features** (`src/features.py`) | **HIGH** | Fix global std Z-score bug, add distance & burst velocity features | `[x] Completed` |
 | **Module 8: Dashboard** (`src/dashboard.py`) | **HIGH** | Upgrade to 3-tier triage policy (Approve / OTP / Decline) | `[x] Completed` |
 | **Module 6: Evaluation** (`src/evaluate.py`) | **HIGH** | Multi-threshold cost matrix & friction-loss balance | `[x] Completed` |
-| **Module 5: Model Training** (`src/train.py`) | **MEDIUM** | Walk-forward rolling time-series cross-validation | `[ ] Pending` |
+| **Module 5: Model Training** (`src/train.py`, `src/cross_validate.py`) | **MEDIUM** | Walk-forward rolling time-series cross-validation | `[x] Completed` |
 | **Module 9: API Serving** (`src/api.py`) | **MEDIUM** | Real-time FastAPI sub-50ms inference endpoint | `[ ] Pending` |
 | **Module 10: Model Monitoring** (`src/drift.py`) | **MEDIUM** | Population Stability Index (PSI) & feature drift detection | `[ ] Pending` |
 | **Module 1: Ingestion** (`src/ingestion.py`) | **LOW** | Vectorization optimization & real-world dataset adapter | `[ ] Pending` |
@@ -118,7 +118,7 @@ This document details all planned fixes, architectural upgrades, and optimizatio
 
 ### 3.1 Walk-Forward Purged Time-Series Cross-Validation
 * **Priority:** 🟡 **MEDIUM**
-* **Status:** `[ ] Pending`
+* **Status:** `[x] Completed`
 * **Current Issue:**
   The model is currently validated on a single static split (Train: Days 30–120; Test: Days 127–180). This leaves the model vulnerable to variance from a single lucky/unlucky time window.
 * **Fix Implementation:**

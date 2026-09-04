@@ -1,0 +1,60 @@
+{
+    "n_folds": 3,
+    "embargo_days": 7,
+    "baseline_lr": {
+        "mean_pr_auc": 0.8066,
+        "std_pr_auc": 0.0212,
+        "mean_roc_auc": 0.7376,
+        "std_roc_auc": 0.0213
+    },
+    "lightgbm": {
+        "mean_pr_auc": 0.8735,
+        "std_pr_auc": 0.0338,
+        "mean_roc_auc": 0.8242,
+        "std_roc_auc": 0.0349
+    },
+    "folds": [
+        {
+            "fold": 1,
+            "train_days": "D30-D40",
+            "embargo_days": "D41-D46",
+            "test_days": "D47-D50",
+            "train_size": 1102,
+            "test_size": 383,
+            "train_fraud_rate_pct": 58.89,
+            "test_fraud_rate_pct": 54.05,
+            "lr_roc_auc": 0.7255,
+            "lr_pr_auc": 0.7903,
+            "lgb_roc_auc": 0.783,
+            "lgb_pr_auc": 0.8288
+        },
+        {
+            "fold": 2,
+            "train_days": "D30-D44",
+            "embargo_days": "D45-D50",
+            "test_days": "D51-D54",
+            "train_size": 1475,
+            "test_size": 388,
+            "train_fraud_rate_pct": 59.46,
+            "test_fraud_rate_pct": 53.87,
+            "lr_roc_auc": 0.7198,
+            "lr_pr_auc": 0.7929,
+            "lgb_roc_auc": 0.8211,
+            "lgb_pr_auc": 0.8809
+        },
+        {
+            "fold": 3,
+            "train_days": "D30-D48",
+            "embargo_days": "D49-D54",
+            "test_days": "D55-D59",
+            "train_size": 1875,
+            "test_size": 497,
+            "train_fraud_rate_pct": 59.04,
+            "test_fraud_rate_pct": 56.74,
+            "lr_roc_auc": 0.7675,
+            "lr_pr_auc": 0.8366,
+            "lgb_roc_auc": 0.8684,
+            "lgb_pr_auc": 0.9107
+        }
+    ]
+}
