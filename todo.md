@@ -13,7 +13,7 @@ This document details all planned fixes, architectural upgrades, and optimizatio
 | **Module 6: Evaluation** (`src/evaluate.py`) | **HIGH** | Multi-threshold cost matrix & friction-loss balance | `[x] Completed` |
 | **Module 5: Model Training & Tuning** (`src/train.py`, `src/cross_validate.py`, `src/tune.py`) | **MEDIUM** | Walk-forward cross-validation & Optuna automated tuning | `[x] Completed` |
 | **Module 9: API Serving** (`src/api.py`) | **MEDIUM** | Real-time FastAPI sub-50ms inference endpoint | `[x] Completed` |
-| **Module 10: Model Monitoring** (`src/drift.py`) | **MEDIUM** | Population Stability Index (PSI) & feature drift detection | `[ ] Pending` |
+| **Module 10: Model Monitoring** (`src/drift.py`) | **MEDIUM** | Population Stability Index (PSI) & feature drift detection | `[x] Completed` |
 | **Module 1: Ingestion** (`src/ingestion.py`) | **LOW** | Vectorization optimization & real-world dataset adapter | `[ ] Pending` |
 | **Module 11: CI/CD & Testing** (`tests/`, `.github/`) | **LOW** | Feature leakage unit tests & automated GitHub Actions CI | `[ ] Pending` |
 
@@ -186,7 +186,7 @@ This document details all planned fixes, architectural upgrades, and optimizatio
 
 ### 5.1 Population Stability Index (PSI) & Concept Drift Detector
 * **Priority:** 🟡 **MEDIUM**
-* **Status:** `[ ] Pending`
+* **Status:** `[x] Completed`
 * **Current Issue:**
   No automated detection of feature shift or changing fraud tactics across time.
 * **Fix Implementation:**

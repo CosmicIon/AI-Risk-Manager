@@ -1,0 +1,214 @@
+{
+    "timestamp": "2026-09-04T14:52:24.060764Z",
+    "overall_health": "ACTION_REQUIRED",
+    "recommendation": "Retraining recommended: 1 feature(s) show significant drift (PSI > 0.25). Review data sources and schedule model update.",
+    "train_samples": 1578,
+    "test_samples": 986,
+    "feature_summary": {
+        "total_features": 21,
+        "stable": 17,
+        "moderate_shift": 3,
+        "significant_drift": 1
+    },
+    "concept_drift": {
+        "train_fraud_rate_pct": 59.51,
+        "test_fraud_rate_pct": 54.97,
+        "shift_pct_points": -4.54,
+        "status": "STABLE"
+    },
+    "prediction_drift": {
+        "psi": 0.5875,
+        "status": "SIGNIFICANT_DRIFT"
+    },
+    "features": [
+        {
+            "feature": "TERMINAL_ID_RISK_30DAY_WINDOW",
+            "psi": 0.2966,
+            "status": "SIGNIFICANT_DRIFT",
+            "train_mean": 0.4245,
+            "test_mean": 0.5689,
+            "train_std": 0.3009,
+            "test_std": 0.3183
+        },
+        {
+            "feature": "CUSTOMER_ID_STD_AMOUNT_30DAY_WINDOW",
+            "psi": 0.245,
+            "status": "MODERATE_SHIFT",
+            "train_mean": 235.1118,
+            "test_mean": 256.9111,
+            "train_std": 351.823,
+            "test_std": 334.5848
+        },
+        {
+            "feature": "CUSTOMER_ID_AVG_AMOUNT_30DAY_WINDOW",
+            "psi": 0.2331,
+            "status": "MODERATE_SHIFT",
+            "train_mean": 139.8373,
+            "test_mean": 152.1883,
+            "train_std": 142.4323,
+            "test_std": 148.3116
+        },
+        {
+            "feature": "TERMINAL_ID_RISK_7DAY_WINDOW",
+            "psi": 0.1567,
+            "status": "MODERATE_SHIFT",
+            "train_mean": 0.5407,
+            "test_mean": 0.5917,
+            "train_std": 0.4137,
+            "test_std": 0.3841
+        },
+        {
+            "feature": "TERMINAL_ID_NB_TX_7DAY_WINDOW",
+            "psi": 0.0809,
+            "status": "STABLE",
+            "train_mean": 15.0596,
+            "test_mean": 13.5619,
+            "train_std": 8.0665,
+            "test_std": 7.0856
+        },
+        {
+            "feature": "CUSTOMER_ID_NB_TX_30DAY_WINDOW",
+            "psi": 0.0802,
+            "status": "STABLE",
+            "train_mean": 83.3853,
+            "test_mean": 81.573,
+            "train_std": 31.2164,
+            "test_std": 30.5713
+        },
+        {
+            "feature": "CUSTOMER_ID_NB_TX_7DAY_WINDOW",
+            "psi": 0.0712,
+            "status": "STABLE",
+            "train_mean": 20.1806,
+            "test_mean": 19.4148,
+            "train_std": 8.1164,
+            "test_std": 7.837
+        },
+        {
+            "feature": "CUSTOMER_ID_AVG_AMOUNT_7DAY_WINDOW",
+            "psi": 0.0706,
+            "status": "STABLE",
+            "train_mean": 136.1053,
+            "test_mean": 149.839,
+            "train_std": 171.6642,
+            "test_std": 190.6378
+        },
+        {
+            "feature": "TERMINAL_ID_RISK_1DAY_WINDOW",
+            "psi": 0.0555,
+            "status": "STABLE",
+            "train_mean": 0.5465,
+            "test_mean": 0.5773,
+            "train_std": 0.4582,
+            "test_std": 0.4469
+        },
+        {
+            "feature": "CUSTOMER_ID_AVG_AMOUNT_1DAY_WINDOW",
+            "psi": 0.0507,
+            "status": "STABLE",
+            "train_mean": 144.0661,
+            "test_mean": 141.5291,
+            "train_std": 258.378,
+            "test_std": 173.2165
+        },
+        {
+            "feature": "TERMINAL_ID_NB_TX_1DAY_WINDOW",
+            "psi": 0.0497,
+            "status": "STABLE",
+            "train_mean": 3.1134,
+            "test_mean": 2.7961,
+            "train_std": 1.8262,
+            "test_std": 1.6301
+        },
+        {
+            "feature": "TERMINAL_ID_NB_TX_30DAY_WINDOW",
+            "psi": 0.0471,
+            "status": "STABLE",
+            "train_mean": 55.9075,
+            "test_mean": 57.3793,
+            "train_std": 29.8079,
+            "test_std": 28.8118
+        },
+        {
+            "feature": "TX_AMOUNT_ZSCORE",
+            "psi": 0.0361,
+            "status": "STABLE",
+            "train_mean": 0.1454,
+            "test_mean": 0.1164,
+            "train_std": 1.2875,
+            "test_std": 1.2474
+        },
+        {
+            "feature": "TX_AMOUNT",
+            "psi": 0.015,
+            "status": "STABLE",
+            "train_mean": 150.1531,
+            "test_mean": 136.6293,
+            "train_std": 445.9325,
+            "test_std": 276.9558
+        },
+        {
+            "feature": "CUSTOMER_ID_NB_TX_1DAY_WINDOW",
+            "psi": 0.0099,
+            "status": "STABLE",
+            "train_mean": 3.756,
+            "test_mean": 3.7059,
+            "train_std": 1.9846,
+            "test_std": 1.8778
+        },
+        {
+            "feature": "TX_DIST_CUSTOMER_TERMINAL",
+            "psi": 0.0053,
+            "status": "STABLE",
+            "train_mean": 1.1336,
+            "test_mean": 1.1906,
+            "train_std": 1.721,
+            "test_std": 1.7354
+        },
+        {
+            "feature": "TIME_SINCE_LAST_TX",
+            "psi": 0.0043,
+            "status": "STABLE",
+            "train_mean": 43738.8498,
+            "test_mean": 43498.2911,
+            "train_std": 72128.9159,
+            "test_std": 71614.4206
+        },
+        {
+            "feature": "CUSTOMER_ID_NB_TX_1HOUR_WINDOW",
+            "psi": 0.001,
+            "status": "STABLE",
+            "train_mean": 1.1299,
+            "test_mean": 1.142,
+            "train_std": 0.3651,
+            "test_std": 0.3797
+        },
+        {
+            "feature": "TX_DURING_WEEKEND",
+            "psi": 0.0,
+            "status": "STABLE",
+            "train_mean": 0.2395,
+            "test_mean": 0.1978,
+            "train_std": 0.4268,
+            "test_std": 0.3983
+        },
+        {
+            "feature": "TX_DURING_NIGHT",
+            "psi": 0.0,
+            "status": "STABLE",
+            "train_mean": 0.1293,
+            "test_mean": 0.144,
+            "train_std": 0.3355,
+            "test_std": 0.3511
+        },
+        {
+            "feature": "CUSTOMER_ID_NB_TX_15MIN_WINDOW",
+            "psi": 0.0,
+            "status": "STABLE",
+            "train_mean": 1.0355,
+            "test_mean": 1.0375,
+            "train_std": 0.1884,
+            "test_std": 0.19
+        }
+    ]
+}
