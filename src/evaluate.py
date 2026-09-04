@@ -124,8 +124,8 @@ def main():
     plt.close()
     
     # Compute 3-tier triage statistics
-    thresh_high = float(best_threshold)
-    thresh_low = 0.30 if thresh_high > 0.30 else round(thresh_high * 0.5, 2)
+    thresh_low = float(eval_cfg.get('threshold_challenge', 0.30))
+    thresh_high = float(eval_cfg.get('threshold_decline', 0.78))
     
     is_approve = y_pred_lgb < thresh_low
     is_challenge = (y_pred_lgb >= thresh_low) & (y_pred_lgb < thresh_high)

@@ -1,38 +1,38 @@
 {
     "recommended_threshold": 0.01,
-    "precision": 0.5660580021482277,
-    "recall": 0.9723247232472325,
-    "cost_flag_nothing": 107282.53,
-    "cost_model": 4989.073708487085,
-    "savings": 102293.4562915129,
+    "precision": 0.6004489337822672,
+    "recall": 0.9744990892531876,
+    "cost_flag_nothing": 113004.51000000001,
+    "cost_model": 4661.717923497268,
+    "savings": 108342.79207650274,
     "confusion_matrix": {
-        "tn": 40,
-        "fp": 404,
-        "fn": 15,
-        "tp": 527
+        "tn": 54,
+        "fp": 356,
+        "fn": 14,
+        "tp": 535
     },
     "triage": {
-        "threshold_challenge": 0.01,
-        "threshold_decline": 0.01,
+        "threshold_challenge": 0.3,
+        "threshold_decline": 0.78,
         "approve": {
-            "count": 55,
-            "percentage": 5.58,
-            "clean_count": 40,
-            "fraud_missed": 15
+            "count": 364,
+            "percentage": 37.96,
+            "clean_count": 277,
+            "fraud_missed": 87
         },
         "challenge": {
-            "count": 0,
-            "percentage": 0.0,
-            "clean_verified": 0,
-            "fraud_prevented": 0,
-            "recovered_fraud_amount": 0.0
+            "count": 158,
+            "percentage": 16.48,
+            "clean_verified": 81,
+            "fraud_prevented": 77,
+            "recovered_fraud_amount": 5213.59
         },
         "decline": {
-            "count": 931,
-            "percentage": 94.42,
-            "fraud_caught": 527,
-            "false_positives": 404
+            "count": 437,
+            "percentage": 45.57,
+            "fraud_caught": 385,
+            "false_positives": 52
         },
-        "total_protected_amount": 106741.5
+        "total_protected_amount": 107871.79
     }
 }

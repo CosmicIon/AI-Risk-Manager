@@ -1,5 +1,7 @@
 evaluation:
   cost_false_positive: 5.0
+  threshold_challenge: 0.3
+  threshold_decline: 0.78
 features:
   customer_windows:
   - 1

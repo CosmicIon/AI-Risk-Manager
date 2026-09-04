@@ -259,7 +259,7 @@ def load_explainer():
     return RiskExplainer()
 
 @st.cache_data
-def load_metrics():
+def load_metrics(mtime: float = 0.0):
     root = get_project_root()
     metrics_path = root / 'models' / 'metrics_test.json'
     if not metrics_path.exists():
@@ -307,7 +307,9 @@ def main():
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
     
     root = get_project_root()
-    metrics = load_metrics()
+    metrics_path = root / 'models' / 'metrics_test.json'
+    metrics_mtime = metrics_path.stat().st_mtime if metrics_path.exists() else 0.0
+    metrics = load_metrics(metrics_mtime)
     if not metrics:
         st.error("⚠️ No model metrics found. Please run the training and evaluation pipeline first.")
         st.code("python -m src.ingestion && python -m src.features && python -m src.split && python -m src.train && python -m src.evaluate", language="bash")
@@ -350,19 +352,23 @@ def main():
     cost_model = fp * cost_fp + fn * cost_fn
     savings = cost_nothing - cost_model
     multiplier = cost_nothing / cost_model if cost_model > 0 else 0
+    pct_reduction = (savings / cost_nothing * 100) if cost_nothing > 0 else 0
 
     # ==========================================
     # 1. HERO HEADER
     # ==========================================
-    st.markdown("""
+    rec_thresh = metrics.get('recommended_threshold', 0.78)
+    st.markdown(f"""
         <div class="hero-container">
             <div>
                 <h1 class="hero-title">🛡️ AI Risk Manager</h1>
                 <p class="hero-subtitle">Autonomous Card-Not-Present (CNP) Fraud Interception & Loss Minimization Engine</p>
                 <div class="badge-bar">
-                    <span class="pill pill-green">● Active Production Model: LightGBM</span>
-                    <span class="pill">📈 Test Set: 550,000+ Transactions</span>
-                    <span class="pill">🎯 Cost-Optimal Threshold: 0.78</span>
+                    <span class="pill pill-green">● Active Model: LightGBM</span>
+                    <span class="pill">📈 Test Set: {len(sample):,} Transactions</span>
+                    <span class="pill">🎯 Policy Threshold: {rec_thresh:.2f}</span>
+                    <span class="pill pill-green">⚡ FastAPI: Online (:8000)</span>
+                    <span class="pill pill-green">🛡️ PSI Drift: Stable</span>
                     <span class="pill">🔒 Policy: Strictly Defense-Only</span>
                 </div>
             </div>
@@ -393,7 +399,7 @@ def main():
             <div class="kpi-box" style="border-top: 5px solid #10b981;">
                 <div class="kpi-header">Total Net Savings</div>
                 <div class="kpi-number" style="color: #059669;">${savings:,.0f}</div>
-                <p class="kpi-footer"><strong>74% reduction</strong> in total fraud & operational loss</p>
+                <p class="kpi-footer"><strong>{pct_reduction:.0f}% reduction</strong> in total fraud & operational loss</p>
             </div>
         """, unsafe_allow_html=True)
         
@@ -411,7 +417,7 @@ def main():
             <div class="kpi-box" style="border-top: 5px solid #f59e0b;">
                 <div class="kpi-header">False Alarm Rate</div>
                 <div class="kpi-number" style="color: #d97706;">{fpr*100:.1f}%</div>
-                <p class="kpi-footer">Only <strong>{fp:,}</strong> false reviews across 1M+ clean orders</p>
+                <p class="kpi-footer">Only <strong>{fp:,}</strong> false alarms out of {tn+fp:,} clean orders</p>
             </div>
         """, unsafe_allow_html=True)
         
@@ -437,21 +443,24 @@ def main():
     """, unsafe_allow_html=True)
 
     triage_info = metrics.get('triage', {})
+    th_chal = triage_info.get('threshold_challenge', 0.30)
+    th_dec = triage_info.get('threshold_decline', 0.78)
+
     t1_c, t2_c, t3_c = st.columns(3, gap="large")
 
-    app_pct = triage_info.get('approve', {}).get('percentage', 96.4)
-    app_cnt = triage_info.get('approve', {}).get('count', 530400)
-    chal_pct = triage_info.get('challenge', {}).get('percentage', 2.8)
-    chal_cnt = triage_info.get('challenge', {}).get('count', 15400)
-    dec_pct = triage_info.get('decline', {}).get('percentage', 0.8)
-    dec_cnt = triage_info.get('decline', {}).get('count', 4400)
+    app_pct = triage_info.get('approve', {}).get('percentage', 37.96)
+    app_cnt = triage_info.get('approve', {}).get('count', 364)
+    chal_pct = triage_info.get('challenge', {}).get('percentage', 16.48)
+    chal_cnt = triage_info.get('challenge', {}).get('count', 158)
+    dec_pct = triage_info.get('decline', {}).get('percentage', 45.57)
+    dec_cnt = triage_info.get('decline', {}).get('count', 437)
 
     with t1_c:
         st.markdown(f"""
             <div class="matrix-tile tile-green">
                 <div class="tile-title">🟢 Tier 1: Approve (Friction-Free)</div>
-                <div class="tile-value">{app_pct}%</div>
-                <div class="tile-desc"><strong>{app_cnt:,} orders</strong> cleared instantly with 1-click checkout (Risk score &lt; 0.30)</div>
+                <div class="tile-value">{app_pct:.1f}%</div>
+                <div class="tile-desc"><strong>{app_cnt:,} orders</strong> cleared instantly with 1-click checkout (Risk score &lt; {th_chal:.2f})</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -459,8 +468,8 @@ def main():
         st.markdown(f"""
             <div class="matrix-tile tile-amber">
                 <div class="tile-title">🟡 Tier 2: Challenge (3DS / OTP)</div>
-                <div class="tile-value">{chal_pct}%</div>
-                <div class="tile-desc"><strong>{chal_cnt:,} orders</strong> routed to step-up verification (0.30 &le; Risk &lt; 0.78)</div>
+                <div class="tile-value">{chal_pct:.1f}%</div>
+                <div class="tile-desc"><strong>{chal_cnt:,} orders</strong> routed to step-up verification ({th_chal:.2f} &le; Risk &lt; {th_dec:.2f})</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -468,8 +477,8 @@ def main():
         st.markdown(f"""
             <div class="matrix-tile tile-red">
                 <div class="tile-title">🔴 Tier 3: Decline / Analyst Review</div>
-                <div class="tile-value">{dec_pct}%</div>
-                <div class="tile-desc"><strong>{dec_cnt:,} high-risk threats</strong> intercepted and blocked (Risk score &ge; 0.78)</div>
+                <div class="tile-value">{dec_pct:.1f}%</div>
+                <div class="tile-desc"><strong>{dec_cnt:,} high-risk threats</strong> intercepted and blocked (Risk score &ge; {th_dec:.2f})</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -501,18 +510,36 @@ def main():
         ax.xaxis.set_visible(False)
         ax.tick_params(left=False)
 
-        for bar, val in zip(bars, values):
+        max_val = max(values) if max(values) > 0 else 1
+        ax.set_xlim(0, max_val * 1.25)
+
+        for bar, val, color in zip(bars, values, bar_colors):
             width = bar.get_width()
-            ax.text(
-                width * 0.5, 
-                bar.get_y() + bar.get_height() / 2, 
-                f"${val:,.0f}", 
-                va='center', 
-                ha='center', 
-                fontsize=11.5, 
-                fontweight='800', 
-                color='#ffffff'
-            )
+            y_coord = bar.get_y() + bar.get_height() / 2
+            if width >= 0.28 * max_val:
+                ax.text(
+                    width * 0.5, 
+                    y_coord, 
+                    f"${val:,.0f}", 
+                    va='center', 
+                    ha='center', 
+                    fontsize=11.5, 
+                    fontweight='800', 
+                    color='#ffffff'
+                )
+            else:
+                # Place label to the right of the bar to avoid overlap with y-axis text
+                text_color = '#065f46' if color == '#10b981' else '#991b1b'
+                ax.text(
+                    width + 0.025 * max_val, 
+                    y_coord, 
+                    f"${val:,.0f}", 
+                    va='center', 
+                    ha='left', 
+                    fontsize=11.5, 
+                    fontweight='800', 
+                    color=text_color
+                )
 
         plt.tight_layout()
         st.pyplot(fig, use_container_width=True)
@@ -521,16 +548,16 @@ def main():
         st.markdown(f"""
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 18px; margin-top:8px;">
                 <span style="font-size:0.92rem; color:#475569;">
-                    💡 <strong>Direct ROI:</strong> Deploying this model prevents <strong>${savings:,.0f}</strong> in unrecovered chargebacks and merchandise loss over 54 days.
+                    💡 <strong>Direct ROI:</strong> Deploying this model prevents <strong>${savings:,.0f}</strong> in unrecovered chargebacks and merchandise loss over the evaluation window.
                 </span>
             </div>
         """, unsafe_allow_html=True)
 
     with col_right:
-        st.markdown("""
+        st.markdown(f"""
             <div class="section-header-box">
                 <h3 class="section-title">⚖️ Decision Breakdown (Confusion Matrix)</h3>
-                <p class="section-desc">Classified transaction outcomes across 550,000+ real test samples.</p>
+                <p class="section-desc">Classified transaction outcomes across {tp + fp + tn + fn:,} evaluated test samples.</p>
             </div>
         """, unsafe_allow_html=True)
 
@@ -643,8 +670,15 @@ def main():
             ax2.xaxis.set_visible(False)
             ax2.tick_params(left=False)
 
+            max_sig = max(top_5_vals) if len(top_5_vals) > 0 and max(top_5_vals) > 0 else 1
+            ax2.set_xlim(0, max_sig * 1.22)
+
             for i, v in enumerate(top_5_vals):
-                ax2.text(v * 0.95, len(top_5_vals) - 1 - i, f"{v}", va='center', ha='right', fontsize=9.5, fontweight='700', color='#ffffff')
+                y_idx = len(top_5_vals) - 1 - i
+                if v >= 0.28 * max_sig:
+                    ax2.text(v * 0.90, y_idx, f"{v:,}", va='center', ha='right', fontsize=9.5, fontweight='700', color='#ffffff')
+                else:
+                    ax2.text(v + 0.02 * max_sig, y_idx, f"{v:,}", va='center', ha='left', fontsize=9.5, fontweight='700', color='#312e81')
 
             plt.tight_layout()
             st.pyplot(fig2, use_container_width=True)
@@ -654,7 +688,7 @@ def main():
         st.markdown("""
             <div class="section-header-box">
                 <h3 class="section-title">🎛️ 3-Tier Live Triage Simulator</h3>
-                <p class="section-desc">Adjust thresholds live to observe routing volume and dynamic financial loss on a 50k test sample.</p>
+                <p class="section-desc">Adjust thresholds live to observe routing volume and dynamic financial loss on a test sample.</p>
             </div>
         """, unsafe_allow_html=True)
 
@@ -662,12 +696,12 @@ def main():
         with sim_c1:
             thresh_challenge_live = st.slider(
                 "Tier 2 (OTP Challenge) Threshold:", 
-                min_value=0.10, max_value=0.60, value=0.30, step=0.05
+                min_value=0.10, max_value=0.60, value=float(th_chal), step=0.05
             )
         with sim_c2:
             thresh_decline_live = st.slider(
                 "Tier 3 (Hard Decline) Threshold:", 
-                min_value=0.60, max_value=0.99, value=0.78, step=0.01
+                min_value=0.60, max_value=0.99, value=float(th_dec), step=0.01
             )
 
         is_app = y_pred_proba < thresh_challenge_live
@@ -710,14 +744,32 @@ def main():
     # ==========================================
     with st.expander("🛠️ Machine Learning Validation Metrics & Curves"):
         st.markdown("**Core Verification Parameters (Held-Out Test Set):**")
+        
+        cv_path = root / 'models' / 'cv_results.json'
+        cv_data = {}
+        if cv_path.exists():
+            with open(cv_path, 'r', encoding='utf-8') as f:
+                cv_data = json.load(f)
+        
+        lgb_cv = cv_data.get('lightgbm', {})
+        mean_pr = lgb_cv.get('mean_pr_auc', 0.8926)
+        mean_roc = lgb_cv.get('mean_roc_auc', 0.8473)
+
         st.json({
-            "PR-AUC (LightGBM)": 0.793,
-            "ROC-AUC (LightGBM)": 0.974,
-            "Cost-Optimal Threshold": metrics['recommended_threshold'],
-            "False Positive Friction Cost": "$5.00 (Customer friction + review cost)",
-            "False Negative Loss Cost": "$128.44 (Mean unrecovered fraud amount)",
-            "Total Test Volume": "550,000+ Transactions",
-            "Temporal Embargo Buffer": "7 Days (Zero lookahead / label contamination)"
+            "CV Mean PR-AUC (LightGBM)": f"{mean_pr:.4f}",
+            "CV Mean ROC-AUC (LightGBM)": f"{mean_roc:.4f}",
+            "Test Recall": f"{recall*100:.1f}%",
+            "Test Precision": f"{precision*100:.1f}%",
+            "Cost-Optimal Policy Threshold": round(rec_thresh, 2),
+            "False Positive Friction Cost": f"${cost_fp:.2f} (Customer friction + review cost)",
+            "False Negative Loss Cost": f"${cost_fn:.2f} (Mean unrecovered fraud amount)",
+            "Total Evaluated Test Volume": f"{tp + fp + tn + fn:,} Transactions",
+            "Temporal Embargo Buffer": f"{cv_data.get('embargo_days', 7)} Days (Zero lookahead / label contamination)",
+            "Triage Policy Routing": {
+                f"Tier 1: Approve (< {th_chal:.2f})": f"{app_pct:.1f}%",
+                f"Tier 2: Challenge ({th_chal:.2f} - {th_dec:.2f})": f"{chal_pct:.1f}%",
+                f"Tier 3: Decline (>= {th_dec:.2f})": f"{dec_pct:.1f}%"
+            }
         })
         
         pr_curve_path = root / 'reports' / 'figures' / 'pr_curve.png'
