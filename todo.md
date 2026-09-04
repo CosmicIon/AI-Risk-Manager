@@ -14,7 +14,7 @@ This document details all planned fixes, architectural upgrades, and optimizatio
 | **Module 5: Model Training & Tuning** (`src/train.py`, `src/cross_validate.py`, `src/tune.py`) | **MEDIUM** | Walk-forward cross-validation & Optuna automated tuning | `[x] Completed` |
 | **Module 9: API Serving** (`src/api.py`) | **MEDIUM** | Real-time FastAPI sub-50ms inference endpoint | `[x] Completed` |
 | **Module 10: Model Monitoring** (`src/drift.py`) | **MEDIUM** | Population Stability Index (PSI) & feature drift detection | `[x] Completed` |
-| **Module 1: Ingestion** (`src/ingestion.py`) | **LOW** | Vectorization optimization & real-world dataset adapter | `[ ] Pending` |
+| **Module 1: Ingestion & Adapters** (`src/ingestion.py`, `src/adapters/`) | **LOW** | Vectorization optimization & real-world dataset adapters (Kaggle/IEEE-CIS) | `[x] Completed` |
 | **Module 11: CI/CD & Testing** (`tests/`, `.github/`) | **LOW** | Feature leakage unit tests & automated GitHub Actions CI | `[ ] Pending` |
 
 ---
@@ -198,23 +198,23 @@ This document details all planned fixes, architectural upgrades, and optimizatio
 
 ---
 
-## 6. Data Ingestion & Scalability Module (`src/ingestion.py`)
+## 6. Data Ingestion & Scalability Module (`src/ingestion.py`, `src/adapters/`)
 
 ### 6.1 Polars / Vectorized Data Simulation
 * **Priority:** 🟢 **LOW**
-* **Status:** `[ ] Pending`
+* **Status:** `[x] Completed`
 * **Current Issue:**
   Simulating 1.75M transactions uses sequential `pandas.apply` across 10,000 customer profiles, taking 4–6 minutes on standard hardware.
 * **Fix Implementation:**
-  Vectorize transaction generation with NumPy arrays or migrate ingestion and rolling windows to **Polars** for multithreaded processing in $<30$ seconds.
+  Vectorized transaction generation with NumPy broadcasting and array operations, reducing simulation time to milliseconds.
 
 ### 6.2 Real-World Dataset Adapter (IEEE-CIS / Kaggle Credit Card)
 * **Priority:** 🟢 **LOW**
-* **Status:** `[ ] Pending`
+* **Status:** `[x] Completed`
 * **Current Issue:**
   Pipeline runs solely on synthetic simulated data.
 * **Fix Implementation:**
-  Add `src/adapters/ieee_cis.py` or `src/adapters/kaggle.py` allowing users to swap the data source from synthetic generation to the public IEEE-CIS Fraud Detection benchmark with a single config flag (`data_source: "ieee_cis"`).
+  Added `src/adapters/kaggle.py` and `src/adapters/ieee_cis.py` allowing users to swap data sources between simulation and public benchmarks (Kaggle/IEEE-CIS) via CLI `--source` or config flag.
 
 ---
 

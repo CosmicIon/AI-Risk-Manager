@@ -1,10 +1,16 @@
-import pandas as pd
-import numpy as np
+import argparse
+from datetime import datetime, timedelta
+import os
+from pathlib import Path
 import random
 import time
-import os
-from datetime import datetime, timedelta
-from src.utils import load_config, get_project_root
+
+import numpy as np
+import pandas as pd
+
+from src.adapters.kaggle import KaggleCreditCardAdapter, generate_sample_kaggle_data
+from src.adapters.ieee_cis import IEEECISAdapter, generate_sample_ieee_cis_data
+from src.utils import get_project_root, load_config
 
 def generate_customer_profiles_table(n_customers, random_state=42):
     np.random.seed(random_state)
@@ -36,42 +42,77 @@ def generate_terminal_profiles_table(n_terminals, random_state=42):
                                                                       'x_terminal_id', 'y_terminal_id'])
     return terminal_profiles_table
 
-def get_list_terminals_within_radius(customer_profile, x_y_terminals, r):
-    x_y_customer = customer_profile[['x_customer_id','y_customer_id']].values.astype(float)
-    squared_diff_x_y = np.square(x_y_customer - x_y_terminals)
-    dist_x_y = np.sqrt(np.sum(squared_diff_x_y, axis=1))
-    available_terminals = list(np.where(dist_x_y<r)[0])
-    return available_terminals
+def compute_available_terminals_vectorized(customer_profiles_table, terminal_profiles_table, r):
+    """
+    Vectorized computation of customer-terminal proximity using 2D NumPy broadcasting.
+    Replaces slow row-by-row apply with a single C-speed matrix distance operation.
+    """
+    x_y_cust = customer_profiles_table[['x_customer_id', 'y_customer_id']].values.astype(float)
+    x_y_term = terminal_profiles_table[['x_terminal_id', 'y_terminal_id']].values.astype(float)
+    
+    # Broadcast Euclidean distance: (N_cust, 1, 2) - (1, N_term, 2) -> (N_cust, N_term)
+    diff = x_y_cust[:, np.newaxis, :] - x_y_term[np.newaxis, :, :]
+    dist_matrix = np.sqrt(np.sum(diff ** 2, axis=2))
+    
+    n_terminals = len(terminal_profiles_table)
+    available = []
+    for i in range(len(customer_profiles_table)):
+        matches = np.where(dist_matrix[i] < r)[0].tolist()
+        if len(matches) == 0:
+            matches = [int(np.random.randint(0, n_terminals))]
+        available.append(matches)
+    return available
 
-def generate_transactions_table(customer_profile, start_date, nb_days):
-    customer_transactions = []
-    random.seed(int(customer_profile.CUSTOMER_ID))
-    np.random.seed(int(customer_profile.CUSTOMER_ID))
+def generate_transactions_table_vectorized(customer_profile, start_date, nb_days):
+    """
+    Vectorized simulation of customer transactions using NumPy array operations.
+    """
+    cid = int(customer_profile.CUSTOMER_ID)
+    np.random.seed(cid)
+    random.seed(cid)
     
-    for day in range(nb_days):
-        nb_tx = np.random.poisson(customer_profile.mean_nb_tx_per_day)
-        if nb_tx>0:
-            for tx in range(nb_tx):
-                time_tx = int(np.random.normal(86400/2, 20000))
-                if (time_tx<0) or (time_tx>=86400):
-                    time_tx = int(np.random.uniform(0,86400))
-                amount = np.random.normal(customer_profile.mean_amount, customer_profile.std_amount)
-                if amount<0:
-                    amount = np.random.uniform(0,customer_profile.mean_amount*2)
-                amount = np.round(amount,decimals=2)
-                
-                if len(customer_profile.available_terminals)>0:
-                    terminal_id = random.choice(customer_profile.available_terminals)
-                    customer_transactions.append([time_tx+day*86400, day,
-                                                  customer_profile.CUSTOMER_ID, 
-                                                  terminal_id, amount])
-            
-    customer_transactions = pd.DataFrame(customer_transactions, columns=['TX_TIME_SECONDS', 'TX_TIME_DAYS', 'CUSTOMER_ID', 'TERMINAL_ID', 'TX_AMOUNT'])
-    if len(customer_transactions)>0:
-        start_date = pd.Timestamp(start_date)
-        customer_transactions['TX_DATETIME'] = start_date + pd.to_timedelta(customer_transactions['TX_TIME_SECONDS'], unit='s')
+    daily_counts = np.random.poisson(customer_profile.mean_nb_tx_per_day, size=nb_days)
+    total_tx = int(daily_counts.sum())
+    if total_tx == 0:
+        return pd.DataFrame(columns=['TX_TIME_SECONDS', 'TX_TIME_DAYS', 'CUSTOMER_ID', 'TERMINAL_ID', 'TX_AMOUNT', 'TX_DATETIME'])
     
-    return customer_transactions
+    days_arr = np.repeat(np.arange(nb_days), daily_counts)
+    
+    # Seconds within day: normal(43200, 20000)
+    time_tx = np.random.normal(43200, 20000, size=total_tx).astype(int)
+    invalid_mask = (time_tx < 0) | (time_tx >= 86400)
+    if np.any(invalid_mask):
+        time_tx[invalid_mask] = np.random.uniform(0, 86400, size=int(np.sum(invalid_mask))).astype(int)
+        
+    time_seconds = time_tx + days_arr * 86400
+    
+    # Monetary amounts
+    mean_amt = customer_profile.mean_amount
+    std_amt = customer_profile.std_amount
+    amounts = np.random.normal(mean_amt, std_amt, size=total_tx)
+    neg_mask = amounts < 0
+    if np.any(neg_mask):
+        amounts[neg_mask] = np.random.uniform(0, mean_amt * 2, size=int(np.sum(neg_mask)))
+    amounts = np.round(amounts, decimals=2)
+    
+    # Available terminals
+    term_choices = customer_profile.available_terminals
+    if len(term_choices) > 0:
+        terminals = [random.choice(term_choices) for _ in range(total_tx)]
+    else:
+        terminals = [0] * total_tx
+        
+    df = pd.DataFrame({
+        'TX_TIME_SECONDS': time_seconds,
+        'TX_TIME_DAYS': days_arr,
+        'CUSTOMER_ID': cid,
+        'TERMINAL_ID': terminals,
+        'TX_AMOUNT': amounts,
+    })
+    
+    start_ts = pd.Timestamp(start_date)
+    df['TX_DATETIME'] = start_ts + pd.to_timedelta(df['TX_TIME_SECONDS'], unit='s')
+    return df
 
 def generate_dataset(n_customers, n_terminals, nb_days, start_date, r, random_state=42):
     start_time = time.time()
@@ -80,23 +121,18 @@ def generate_dataset(n_customers, n_terminals, nb_days, start_date, r, random_st
     customer_profiles_table = generate_customer_profiles_table(n_customers, random_state)
     terminal_profiles_table = generate_terminal_profiles_table(n_terminals, random_state)
     
-    # 2. Terminals associated to customers
-    x_y_terminals = terminal_profiles_table[['x_terminal_id','y_terminal_id']].values.astype(float)
-    customer_profiles_table['available_terminals'] = customer_profiles_table.apply(
-        lambda x : get_list_terminals_within_radius(x, x_y_terminals=x_y_terminals, r=r), axis=1)
-    
-    # Customers with no terminals -> give them a random one
-    customer_profiles_table.loc[customer_profiles_table.available_terminals.apply(len)==0, 'available_terminals'] = \
-        pd.Series([[np.random.randint(0,n_terminals)] for i in range(len(customer_profiles_table))])
+    # 2. Terminals associated to customers (Vectorized)
+    customer_profiles_table['available_terminals'] = compute_available_terminals_vectorized(
+        customer_profiles_table, terminal_profiles_table, r=r
+    )
         
-    # 3. Transactions
-    transactions_df = customer_profiles_table.apply(
-        lambda x : generate_transactions_table(x, start_date=start_date, nb_days=nb_days), axis=1)
+    # 3. Transactions (Vectorized per customer)
+    tx_list = [
+        generate_transactions_table_vectorized(row, start_date=start_date, nb_days=nb_days)
+        for _, row in customer_profiles_table.iterrows()
+    ]
     
-    # concat all customer txs
-    transactions_df = pd.concat(list(transactions_df), ignore_index=True)
-    
-    # Sort
+    transactions_df = pd.concat(tx_list, ignore_index=True)
     transactions_df = transactions_df.sort_values('TX_DATETIME').reset_index(drop=True)
     transactions_df['TRANSACTION_ID'] = transactions_df.index
     
@@ -149,41 +185,91 @@ def add_frauds(customer_profiles_table, terminal_profiles_table, transactions_df
     return transactions_df
 
 def main():
+    parser = argparse.ArgumentParser(description="Data Ingestion & Simulation Engine")
+    parser.add_argument(
+        "--source",
+        choices=["simulator", "kaggle", "ieee_cis"],
+        default=None,
+        help="Data source to ingest (simulator, kaggle, or ieee_cis)",
+    )
+    args = parser.parse_args()
+
     config = load_config()
     sim_cfg = config['simulator']
-    
-    print(f"Generating data for {sim_cfg['n_customers']} customers, {sim_cfg['n_terminals']} terminals, {sim_cfg['nb_days']} days...")
-    
-    customers, terminals, transactions = generate_dataset(
-        n_customers=sim_cfg['n_customers'],
-        n_terminals=sim_cfg['n_terminals'],
-        nb_days=sim_cfg['nb_days'],
-        start_date=sim_cfg['start_date'],
-        r=sim_cfg['radius'],
-        random_state=sim_cfg['random_seed']
-    )
-    
-    print("Adding fraud scenarios...")
-    transactions = add_frauds(customers, terminals, transactions, sim_cfg['nb_days'], sim_cfg['random_seed'])
-    
+    source = args.source or config.get("data_source", "simulator")
+
+    root = get_project_root()
+    raw_dir = root / 'data' / 'raw'
+    raw_dir.mkdir(parents=True, exist_ok=True)
+
+    if source == "kaggle":
+        print("Ingesting Kaggle Credit Card Fraud benchmark dataset...")
+        raw_kaggle_path = raw_dir / "creditcard.csv"
+        if raw_kaggle_path.exists():
+            print(f"Loading raw Kaggle file from {raw_kaggle_path}...")
+            raw_df = pd.read_csv(raw_kaggle_path)
+        else:
+            print("Raw creditcard.csv not present. Generating synthetic benchmark sample...")
+            raw_df = generate_sample_kaggle_data(n_samples=1000)
+
+        adapter = KaggleCreditCardAdapter(
+            start_date=sim_cfg.get("start_date", "2018-04-01"),
+            n_customers=sim_cfg.get("n_customers", 50),
+            n_terminals=sim_cfg.get("n_terminals", 100),
+        )
+        transactions = adapter.transform(raw_df)
+        customers = generate_customer_profiles_table(sim_cfg.get("n_customers", 50), sim_cfg.get("random_seed", 42))
+        terminals = generate_terminal_profiles_table(sim_cfg.get("n_terminals", 100), sim_cfg.get("random_seed", 42))
+
+    elif source == "ieee_cis":
+        print("Ingesting IEEE-CIS Fraud Detection benchmark dataset...")
+        raw_ieee_path = raw_dir / "train_transaction.csv"
+        if raw_ieee_path.exists():
+            print(f"Loading raw IEEE-CIS file from {raw_ieee_path}...")
+            raw_df = pd.read_csv(raw_ieee_path)
+        else:
+            print("Raw train_transaction.csv not present. Generating synthetic benchmark sample...")
+            raw_df = generate_sample_ieee_cis_data(n_samples=1000)
+
+        adapter = IEEECISAdapter(
+            start_date=sim_cfg.get("start_date", "2018-04-01"),
+            n_customers=sim_cfg.get("n_customers", 50),
+            n_terminals=sim_cfg.get("n_terminals", 100),
+        )
+        transactions = adapter.transform(raw_df)
+        customers = generate_customer_profiles_table(sim_cfg.get("n_customers", 50), sim_cfg.get("random_seed", 42))
+        terminals = generate_terminal_profiles_table(sim_cfg.get("n_terminals", 100), sim_cfg.get("random_seed", 42))
+
+    else:
+        print(f"Generating vectorized simulation for {sim_cfg['n_customers']} customers, {sim_cfg['n_terminals']} terminals, {sim_cfg['nb_days']} days...")
+        t0 = time.time()
+        customers, terminals, transactions = generate_dataset(
+            n_customers=sim_cfg['n_customers'],
+            n_terminals=sim_cfg['n_terminals'],
+            nb_days=sim_cfg['nb_days'],
+            start_date=sim_cfg['start_date'],
+            r=sim_cfg['radius'],
+            random_state=sim_cfg['random_seed']
+        )
+        print(f"Raw simulation generated in {time.time() - t0:.2f}s")
+        
+        print("Adding fraud scenarios...")
+        transactions = add_frauds(customers, terminals, transactions, sim_cfg['nb_days'], sim_cfg['random_seed'])
+
     # Validate
     assert 'TX_FRAUD' in transactions.columns
     assert 'TX_FRAUD_SCENARIO' in transactions.columns
     assert transactions['TX_FRAUD'].isin([0,1]).all()
     
     print("Saving to disk...")
-    root = get_project_root()
-    raw_dir = root / 'data' / 'raw'
-    raw_dir.mkdir(parents=True, exist_ok=True)
-    
     customers.to_pickle(raw_dir / 'customer_profiles.pkl')
     terminals.to_pickle(raw_dir / 'terminal_profiles.pkl')
     transactions.to_pickle(raw_dir / 'transactions.pkl')
     
-    print(f"--- Dataset Summary ---")
-    print(f"Total transactions: {len(transactions)}")
-    frauds = transactions['TX_FRAUD'].sum()
-    print(f"Total frauds: {frauds} ({frauds/len(transactions)*100:.2f}%)")
+    print(f"--- Dataset Summary ({source.upper()}) ---")
+    print(f"Total transactions: {len(transactions):,}")
+    frauds = int(transactions['TX_FRAUD'].sum())
+    print(f"Total frauds: {frauds:,} ({frauds/len(transactions)*100:.2f}%)")
     print(f"Scenarios breakdown:")
     print(transactions['TX_FRAUD_SCENARIO'].value_counts())
     print("Done!")
