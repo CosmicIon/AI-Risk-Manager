@@ -12,7 +12,7 @@ This document details all planned fixes, architectural upgrades, and optimizatio
 | **Module 8: Dashboard** (`src/dashboard.py`) | **HIGH** | Upgrade to 3-tier triage policy (Approve / OTP / Decline) | `[x] Completed` |
 | **Module 6: Evaluation** (`src/evaluate.py`) | **HIGH** | Multi-threshold cost matrix & friction-loss balance | `[x] Completed` |
 | **Module 5: Model Training & Tuning** (`src/train.py`, `src/cross_validate.py`, `src/tune.py`) | **MEDIUM** | Walk-forward cross-validation & Optuna automated tuning | `[x] Completed` |
-| **Module 9: API Serving** (`src/api.py`) | **MEDIUM** | Real-time FastAPI sub-50ms inference endpoint | `[ ] Pending` |
+| **Module 9: API Serving** (`src/api.py`) | **MEDIUM** | Real-time FastAPI sub-50ms inference endpoint | `[x] Completed` |
 | **Module 10: Model Monitoring** (`src/drift.py`) | **MEDIUM** | Population Stability Index (PSI) & feature drift detection | `[ ] Pending` |
 | **Module 1: Ingestion** (`src/ingestion.py`) | **LOW** | Vectorization optimization & real-world dataset adapter | `[ ] Pending` |
 | **Module 11: CI/CD & Testing** (`tests/`, `.github/`) | **LOW** | Feature leakage unit tests & automated GitHub Actions CI | `[ ] Pending` |
@@ -150,7 +150,7 @@ This document details all planned fixes, architectural upgrades, and optimizatio
 
 ### 4.1 FastAPI Real-Time Scoring Microservice
 * **Priority:** 🟡 **MEDIUM**
-* **Status:** `[ ] Pending`
+* **Status:** `[x] Completed`
 * **Current Issue:**
   The system currently only scores batch parquet files. Checkout gateways require synchronous JSON API scoring with $<50\text{ms}$ latency.
 * **Fix Implementation:**
