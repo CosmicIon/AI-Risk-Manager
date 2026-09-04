@@ -294,6 +294,10 @@ def translate_feature_name(feat_name):
     if 'TERMINAL_ID_RISK' in feat_name: return "Terminal Delayed Fraud Rate"
     if 'TERMINAL_ID_NB_TX' in feat_name: return "Terminal Transaction Volume"
     if feat_name == 'TX_AMOUNT_ZSCORE': return "Spend Deviation from Norm (Z-Score)"
+    if feat_name == 'TX_DIST_CUSTOMER_TERMINAL': return "Customer-Terminal Distance"
+    if feat_name == 'CUSTOMER_ID_NB_TX_15MIN_WINDOW': return "15-Min Transaction Burst"
+    if feat_name == 'CUSTOMER_ID_NB_TX_1HOUR_WINDOW': return "1-Hour Transaction Velocity"
+    if feat_name == 'TIME_SINCE_LAST_TX': return "Time Since Previous Transaction"
     return feat_name.replace('_', ' ').title()
 
 # -----------------

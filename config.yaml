@@ -32,12 +32,12 @@ model:
     subsample: 0.8
   target_col: TX_FRAUD
 simulator:
-  n_customers: 10000
-  n_terminals: 20000
-  nb_days: 180
+  n_customers: 50
+  n_terminals: 100
+  nb_days: 60
   radius: 5
   random_seed: 42
   start_date: '2018-04-01'
 split:
-  test_start_day: 127
-  train_end_day: 120
+  test_start_day: 50
+  train_end_day: 45

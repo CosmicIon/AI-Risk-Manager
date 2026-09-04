@@ -54,6 +54,20 @@ class RiskExplainer:
                 return "This amount is significantly lower than what this customer normally spends"
             else:
                 return "How this amount compares to the customer's typical spend"
+        if feature_name == 'TX_DIST_CUSTOMER_TERMINAL':
+            if value > 15:
+                return f"This transaction terminal is unusually far ({value:.1f} km) from the customer's normal location"
+            else:
+                return f"The physical distance to this terminal ({value:.1f} km)"
+        if feature_name == 'CUSTOMER_ID_NB_TX_15MIN_WINDOW':
+            return "Multiple rapid transactions were initiated within the last 15 minutes"
+        if feature_name == 'CUSTOMER_ID_NB_TX_1HOUR_WINDOW':
+            return "Unusually high frequency of transactions in the past hour"
+        if feature_name == 'TIME_SINCE_LAST_TX':
+            if value < 60:
+                return "This transaction occurred within seconds of the customer's previous purchase"
+            else:
+                return "The time gap since the customer's previous purchase"
                 
         return feature_name.replace('_', ' ').lower()
         
