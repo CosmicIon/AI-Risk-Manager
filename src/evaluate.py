@@ -123,6 +123,48 @@ def main():
     plt.savefig(figures_dir / 'confusion_matrix.png')
     plt.close()
     
+    # Compute 3-tier triage statistics
+    thresh_high = float(best_threshold)
+    thresh_low = 0.30 if thresh_high > 0.30 else round(thresh_high * 0.5, 2)
+    
+    is_approve = y_pred_lgb < thresh_low
+    is_challenge = (y_pred_lgb >= thresh_low) & (y_pred_lgb < thresh_high)
+    is_decline = y_pred_lgb >= thresh_high
+    total_tx = len(y_test)
+    
+    clean_challenged = int(((y_test == 0) & is_challenge).sum())
+    fraud_challenged = int(((y_test == 1) & is_challenge).sum())
+    
+    amounts = test['TX_AMOUNT'] if 'TX_AMOUNT' in test.columns else pd.Series(128.44, index=test.index)
+    recovered_fraud_val = float(amounts[(y_test == 1) & is_challenge].sum())
+    caught_decline_val = float(amounts[(y_test == 1) & is_decline].sum())
+    total_protected_val = recovered_fraud_val + caught_decline_val
+    
+    triage_metrics = {
+        'threshold_challenge': float(thresh_low),
+        'threshold_decline': float(thresh_high),
+        'approve': {
+            'count': int(is_approve.sum()),
+            'percentage': round(float(is_approve.sum() / total_tx * 100), 2),
+            'clean_count': int(((y_test == 0) & is_approve).sum()),
+            'fraud_missed': int(((y_test == 1) & is_approve).sum())
+        },
+        'challenge': {
+            'count': int(is_challenge.sum()),
+            'percentage': round(float(is_challenge.sum() / total_tx * 100), 2),
+            'clean_verified': clean_challenged,
+            'fraud_prevented': fraud_challenged,
+            'recovered_fraud_amount': round(recovered_fraud_val, 2)
+        },
+        'decline': {
+            'count': int(is_decline.sum()),
+            'percentage': round(float(is_decline.sum() / total_tx * 100), 2),
+            'fraud_caught': int(((y_test == 1) & is_decline).sum()),
+            'false_positives': int(((y_test == 0) & is_decline).sum())
+        },
+        'total_protected_amount': round(total_protected_val, 2)
+    }
+
     # Save test metrics
     metrics = {
         'recommended_threshold': float(best_threshold),
@@ -136,7 +178,8 @@ def main():
             'fp': int(fp),
             'fn': int(fn),
             'tp': int(tp)
-        }
+        },
+        'triage': triage_metrics
     }
     with open(models_dir / 'metrics_test.json', 'w') as f:
         json.dump(metrics, f, indent=4)

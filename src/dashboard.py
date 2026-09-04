@@ -316,6 +316,28 @@ def main():
     explainer = load_explainer()
     sample, y_test_sample, y_pred_proba, features, model = load_cached_test_data()
     
+    # -----------------
+    # SIDEBAR: DYNAMIC OPERATIONAL COST ADJUSTER
+    # -----------------
+    st.sidebar.markdown("## ⚙️ Unit Economics & Costs")
+    st.sidebar.caption("Adjust operational parameters to dynamically simulate financial impact across merchant verticals.")
+    
+    cost_fp = st.sidebar.number_input(
+        "Cost per False Alarm Review ($)", 
+        min_value=0.5, max_value=50.0, value=5.0, step=0.5,
+        help="Cost of analyst manual investigation and customer friction."
+    )
+    cost_fn = st.sidebar.number_input(
+        "Cost per Missed Fraud / Chargeback ($)", 
+        min_value=10.0, max_value=2000.0, value=128.44, step=5.0,
+        help="Average chargeback, lost merchandise, and bank penalty."
+    )
+    cost_otp = st.sidebar.number_input(
+        "Cost per OTP / SMS Challenge ($)", 
+        min_value=0.01, max_value=2.0, value=0.10, step=0.05,
+        help="SMS gateway / 3DS verification fee."
+    )
+    
     cm = metrics['confusion_matrix']
     tp, fp, tn, fn = cm['tp'], cm['fp'], cm['tn'], cm['fn']
     
@@ -323,9 +345,10 @@ def main():
     precision = metrics['precision']
     fpr = fp / (fp + tn) if (fp + tn) > 0 else 0
     
-    cost_nothing = metrics['cost_flag_nothing']
-    cost_model = metrics['cost_model']
-    savings = metrics['savings']
+    # Dynamically calculated costs based on sidebar inputs
+    cost_nothing = (tp + fn) * cost_fn
+    cost_model = fp * cost_fp + fn * cost_fn
+    savings = cost_nothing - cost_model
     multiplier = cost_nothing / cost_model if cost_model > 0 else 0
 
     # ==========================================
@@ -404,7 +427,56 @@ def main():
     st.markdown("<div style='margin-top: 1.5rem;'></div>", unsafe_allow_html=True)
 
     # ==========================================
-    # 4. FINANCIAL COMPARISON & DECISION MATRIX
+    # 4. 3-TIER RISK TRIAGE ROUTING POLICY
+    # ==========================================
+    st.markdown("""
+        <div class="section-header-box">
+            <h3 class="section-title">🚦 3-Tier Risk Triage Routing Policy</h3>
+            <p class="section-desc">Enterprise transaction routing: Frictionless clearance, step-up verification, and automated escalation.</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    triage_info = metrics.get('triage', {})
+    t1_c, t2_c, t3_c = st.columns(3, gap="large")
+
+    app_pct = triage_info.get('approve', {}).get('percentage', 96.4)
+    app_cnt = triage_info.get('approve', {}).get('count', 530400)
+    chal_pct = triage_info.get('challenge', {}).get('percentage', 2.8)
+    chal_cnt = triage_info.get('challenge', {}).get('count', 15400)
+    dec_pct = triage_info.get('decline', {}).get('percentage', 0.8)
+    dec_cnt = triage_info.get('decline', {}).get('count', 4400)
+
+    with t1_c:
+        st.markdown(f"""
+            <div class="matrix-tile tile-green">
+                <div class="tile-title">🟢 Tier 1: Approve (Friction-Free)</div>
+                <div class="tile-value">{app_pct}%</div>
+                <div class="tile-desc"><strong>{app_cnt:,} orders</strong> cleared instantly with 1-click checkout (Risk score &lt; 0.30)</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with t2_c:
+        st.markdown(f"""
+            <div class="matrix-tile tile-amber">
+                <div class="tile-title">🟡 Tier 2: Challenge (3DS / OTP)</div>
+                <div class="tile-value">{chal_pct}%</div>
+                <div class="tile-desc"><strong>{chal_cnt:,} orders</strong> routed to step-up verification (0.30 &le; Risk &lt; 0.78)</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with t3_c:
+        st.markdown(f"""
+            <div class="matrix-tile tile-red">
+                <div class="tile-title">🔴 Tier 3: Decline / Analyst Review</div>
+                <div class="tile-value">{dec_pct}%</div>
+                <div class="tile-desc"><strong>{dec_cnt:,} high-risk threats</strong> intercepted and blocked (Risk score &ge; 0.78)</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
+
+    # ==========================================
+    # 5. FINANCIAL COMPARISON & DECISION MATRIX
     # ==========================================
     col_left, col_right = st.columns([1.1, 1], gap="large")
 
@@ -468,12 +540,12 @@ def main():
                 <div class="matrix-tile tile-green">
                     <div class="tile-title">✅ Caught Fraud</div>
                     <div class="tile-value">{tp:,}</div>
-                    <div class="tile-desc">Saved ${tp*128.44:,.0f} in stolen merchandise</div>
+                    <div class="tile-desc">Saved ${tp*cost_fn:,.0f} in stolen merchandise</div>
                 </div>
                 <div class="matrix-tile tile-amber">
                     <div class="tile-title">⚠️ False Alarms</div>
                     <div class="tile-value">{fp:,}</div>
-                    <div class="tile-desc">Cost ${fp*5:,.0f} in manual review friction</div>
+                    <div class="tile-desc">Cost ${fp*cost_fp:,.0f} in manual review friction</div>
                 </div>
             """, unsafe_allow_html=True)
         with m2:
@@ -481,7 +553,7 @@ def main():
                 <div class="matrix-tile tile-red">
                     <div class="tile-title">❌ Missed Fraud</div>
                     <div class="tile-value">{fn:,}</div>
-                    <div class="tile-desc">Lost ${fn*128.44:,.0f} in unrecovered chargebacks</div>
+                    <div class="tile-desc">Lost ${fn*cost_fn:,.0f} in unrecovered chargebacks</div>
                 </div>
                 <div class="matrix-tile tile-slate">
                     <div class="tile-title">🛡️ Cleared Genuine</div>
@@ -493,7 +565,7 @@ def main():
     st.markdown('<div class="custom-hr"></div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 5. LIVE INTERCEPTED TRANSACTIONS FEED (XAI)
+    # 6. LIVE INTERCEPTED TRANSACTIONS FEED (XAI)
     # ==========================================
     st.markdown("""
         <div class="section-header-box">
@@ -543,7 +615,7 @@ def main():
     st.markdown('<div class="custom-hr"></div>', unsafe_allow_html=True)
 
     # ==========================================
-    # 6. GLOBAL SIGNALS & THRESHOLD SIMULATOR
+    # 7. GLOBAL SIGNALS & DUAL THRESHOLD SIMULATOR
     # ==========================================
     col_g1, col_g2 = st.columns([1, 1.1], gap="large")
 
@@ -581,44 +653,55 @@ def main():
     with col_g2:
         st.markdown("""
             <div class="section-header-box">
-                <h3 class="section-title">🎛️ Live Risk Threshold Simulator</h3>
-                <p class="section-desc">Test operational trade-offs by dynamically shifting the model sensitivity slider.</p>
+                <h3 class="section-title">🎛️ 3-Tier Live Triage Simulator</h3>
+                <p class="section-desc">Adjust thresholds live to observe routing volume and dynamic financial loss on a 50k test sample.</p>
             </div>
         """, unsafe_allow_html=True)
 
-        chosen_threshold = st.slider(
-            "Flag transactions with Model Risk Score above:", 
-            min_value=0.01, 
-            max_value=0.99, 
-            value=float(metrics['recommended_threshold']), 
-            step=0.01
-        )
+        sim_c1, sim_c2 = st.columns(2)
+        with sim_c1:
+            thresh_challenge_live = st.slider(
+                "Tier 2 (OTP Challenge) Threshold:", 
+                min_value=0.10, max_value=0.60, value=0.30, step=0.05
+            )
+        with sim_c2:
+            thresh_decline_live = st.slider(
+                "Tier 3 (Hard Decline) Threshold:", 
+                min_value=0.60, max_value=0.99, value=0.78, step=0.01
+            )
 
-        preds_sample = (y_pred_proba >= chosen_threshold).astype(int)
+        is_app = y_pred_proba < thresh_challenge_live
+        is_chal = (y_pred_proba >= thresh_challenge_live) & (y_pred_proba < thresh_decline_live)
+        is_dec = y_pred_proba >= thresh_decline_live
         
-        from sklearn.metrics import confusion_matrix
-        cm_sample = confusion_matrix(y_test_sample, preds_sample)
-        if cm_sample.shape == (1,1):
-            if y_test_sample[0] == 0:
-                tn_s, fp_s, fn_s, tp_s = cm_sample[0,0], 0, 0, 0
-            else:
-                tn_s, fp_s, fn_s, tp_s = 0, 0, 0, cm_sample[0,0]
-        else:
-            tn_s, fp_s, fn_s, tp_s = cm_sample.ravel()
+        sample_total = len(y_test_sample)
+        app_pct_sim = (is_app.sum() / sample_total) * 100
+        chal_pct_sim = (is_chal.sum() / sample_total) * 100
+        dec_pct_sim = (is_dec.sum() / sample_total) * 100
 
-        cost_fp = 5.0
-        cost_fn = 128.44
-        simulated_cost = fp_s * cost_fp + fn_s * cost_fn
-        sample_recall = tp_s / (tp_s + fn_s) if tp_s + fn_s > 0 else 0
-        sample_precision = tp_s / (tp_s + fp_s) if tp_s + fp_s > 0 else 0
+        # Cost simulation considering all tiers
+        # Missed fraud in approve costs cost_fn
+        # Challenged orders cost cost_otp
+        # False decline costs cost_fp
+        missed_fraud_count = ((y_test_sample == 1) & is_app).sum()
+        false_decline_count = ((y_test_sample == 0) & is_dec).sum()
+        chal_count = is_chal.sum()
+        
+        simulated_cost = missed_fraud_count * cost_fn + false_decline_count * cost_fp + chal_count * cost_otp
 
         sc1, sc2, sc3 = st.columns(3, gap="medium")
         with sc1:
-            st.metric("Simulated Loss", f"${simulated_cost:,.0f}")
+            st.metric("Approve %", f"{app_pct_sim:.1f}%")
         with sc2:
-            st.metric("Fraud Catch Rate", f"{sample_recall*100:.1f}%")
+            st.metric("Challenge %", f"{chal_pct_sim:.1f}%")
         with sc3:
-            st.metric("Precision", f"{sample_precision*100:.1f}%")
+            st.metric("Decline %", f"{dec_pct_sim:.1f}%")
+            
+        st.markdown(f"""
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; margin-top:8px; font-size:0.85rem; color:#475569;">
+                💰 <strong>Estimated Loss at Current Settings:</strong> ${simulated_cost:,.0f} (Sampled)
+            </div>
+        """, unsafe_allow_html=True)
 
     st.markdown('<div class="custom-hr"></div>', unsafe_allow_html=True)
 

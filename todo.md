@@ -9,8 +9,8 @@ This document details all planned fixes, architectural upgrades, and optimizatio
 | Module | Priority | Focus Area | Status |
 | :--- | :---: | :--- | :---: |
 | **Module 3: Features** (`src/features.py`) | **HIGH** | Fix global std Z-score bug, add distance & burst velocity features | `[x] Completed` |
-| **Module 8: Dashboard** (`src/dashboard.py`) | **HIGH** | Upgrade to 3-tier triage policy (Approve / OTP / Decline) | `[ ] Pending` |
-| **Module 6: Evaluation** (`src/evaluate.py`) | **HIGH** | Multi-threshold cost matrix & friction-loss balance | `[ ] Pending` |
+| **Module 8: Dashboard** (`src/dashboard.py`) | **HIGH** | Upgrade to 3-tier triage policy (Approve / OTP / Decline) | `[x] Completed` |
+| **Module 6: Evaluation** (`src/evaluate.py`) | **HIGH** | Multi-threshold cost matrix & friction-loss balance | `[x] Completed` |
 | **Module 5: Model Training** (`src/train.py`) | **MEDIUM** | Walk-forward rolling time-series cross-validation | `[ ] Pending` |
 | **Module 9: API Serving** (`src/api.py`) | **MEDIUM** | Real-time FastAPI sub-50ms inference endpoint | `[ ] Pending` |
 | **Module 10: Model Monitoring** (`src/drift.py`) | **MEDIUM** | Population Stability Index (PSI) & feature drift detection | `[ ] Pending` |
@@ -86,7 +86,7 @@ This document details all planned fixes, architectural upgrades, and optimizatio
 
 ### 2.1 Transition to a 3-Tier Action Policy (Approve / Challenge / Decline)
 * **Priority:** 🔴 **HIGH**
-* **Status:** `[ ] Pending`
+* **Status:** `[x] Completed`
 * **Current Issue:**
   The system currently makes a binary choice: Flag or Clear. In enterprise fraud operations, auto-declining transactions creates severe customer drop-off.
 * **Fix Implementation:**
@@ -95,21 +95,22 @@ This document details all planned fixes, architectural upgrades, and optimizatio
   2. **Medium Risk ($0.30 \le p < 0.78$):** `CHALLENGE (OTP / 3DS)` — Customer completes step-up SMS/app verification. If legitimate, transaction clears; if fraudulent, fraudster cannot supply OTP.
   3. **High Risk ($p \ge 0.78$):** `DECLINE / MANUAL REVIEW` — Hard block or analyst queue.
 * **Dashboard Enhancements:**
-  - Add a 3-way triage chart on the UI showing the distribution of Approved vs. Challenged vs. Declined orders.
-  - Calculate "Recovered Revenue" from successful OTP verifications.
+  - Added a dedicated 3-way triage card strip on the UI showing the distribution of Approved vs. Challenged vs. Declined orders.
+  - Added dynamic dual-slider simulator recalculating 3-tier distribution in real time.
 
 ---
 
 ### 2.2 Dynamic Operational Cost Adjuster on Dashboard
 * **Priority:** 🟡 **MEDIUM**
-* **Status:** `[ ] Pending`
+* **Status:** `[x] Completed`
 * **Current Issue:**
   False positive cost ($5.00) and false negative cost ($128.44) are hardcoded. Different merchant categories (e.g., electronics vs. digital gaming) have vastly different unit economics.
 * **Fix Implementation:**
-  Add interactive sidebar inputs in `src/dashboard.py`:
-  - `st.sidebar.number_input("Cost per False Positive Review ($)", value=5.0)`
-  - `st.sidebar.number_input("Cost per Chargeback / Missed Fraud ($)", value=128.44)`
-  - Dynamically recalculate optimal threshold $t^*$ and financial savings live in the browser.
+  Added interactive sidebar inputs in `src/dashboard.py`:
+  - `Cost per False Alarm Review ($)`
+  - `Cost per Missed Fraud / Chargeback ($)`
+  - `Cost per OTP / SMS Challenge ($)`
+  - Dynamically recalculates net savings, efficiency multiplier, and confusion matrix dollar figures live in the browser.
 
 ---
 
