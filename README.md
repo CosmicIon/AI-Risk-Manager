@@ -174,6 +174,18 @@ curl -X POST "http://localhost:8000/v1/risk/evaluate" \
      }'
 ```
 
+```bash
+$body = @{
+    transaction_id = 9002
+    customer_id    = 1
+    terminal_id    = 99
+    tx_amount      = 4800.0
+    tx_datetime    = "2026-09-05T03:15:00"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "http://localhost:8000/v1/risk/evaluate" -Method Post -ContentType "application/json" -Body $body
+```
+
 #### Sample Response (<15ms Latency):
 ```json
 {

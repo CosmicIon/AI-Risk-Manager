@@ -64,7 +64,7 @@ Have these tabs open and zoomed cleanly (100% or 110%):
 * **On Screen:** Switch to the architecture diagram or the top overview banner in Streamlit.
 
 > *(Spoken)*:  
-> "Instead of naive binary Flag-or-Clear rules, our platform introduces an enterprise **3-Tier Risk Triage Policy**:  
+> "Instead of naive binary Flag-or-Clear rules, ou  r platform introduces an enterprise **3-Tier Risk Triage Policy**:  
 > 
 > 1. **Green Tier (Low Risk, below 0.30 score):** Instant, one-click frictionless checkout. 99.4% of honest transactions sail right through.  
 > 2. **Yellow Tier (Medium Risk, between 0.30 and our optimal 0.78 cutoff):** We **CHALLENGE** the user with an instant SMS or WhatsApp OTP. Honest cardholders verify in 5 seconds and complete their purchase, while fraudsters holding stolen card numbers are stopped dead. This recovers significant revenue that other systems throw away!  
