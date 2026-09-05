@@ -42,25 +42,30 @@ def generate_terminal_profiles_table(n_terminals, random_state=42):
                                                                       'x_terminal_id', 'y_terminal_id'])
     return terminal_profiles_table
 
-def compute_available_terminals_vectorized(customer_profiles_table, terminal_profiles_table, r):
+def compute_available_terminals_vectorized(customer_profiles_table, terminal_profiles_table, r, chunk_size=1000):
     """
-    Vectorized computation of customer-terminal proximity using 2D NumPy broadcasting.
-    Replaces slow row-by-row apply with a single C-speed matrix distance operation.
+    Vectorized computation of customer-terminal proximity using 2D NumPy broadcasting
+    with memory-safe chunking to prevent out-of-memory spikes on large customer sets.
     """
     x_y_cust = customer_profiles_table[['x_customer_id', 'y_customer_id']].values.astype(float)
     x_y_term = terminal_profiles_table[['x_terminal_id', 'y_terminal_id']].values.astype(float)
     
-    # Broadcast Euclidean distance: (N_cust, 1, 2) - (1, N_term, 2) -> (N_cust, N_term)
-    diff = x_y_cust[:, np.newaxis, :] - x_y_term[np.newaxis, :, :]
-    dist_matrix = np.sqrt(np.sum(diff ** 2, axis=2))
-    
     n_terminals = len(terminal_profiles_table)
     available = []
-    for i in range(len(customer_profiles_table)):
-        matches = np.where(dist_matrix[i] < r)[0].tolist()
-        if len(matches) == 0:
-            matches = [int(np.random.randint(0, n_terminals))]
-        available.append(matches)
+    
+    for start in range(0, len(x_y_cust), chunk_size):
+        end = min(start + chunk_size, len(x_y_cust))
+        chunk_cust = x_y_cust[start:end]
+        
+        diff = chunk_cust[:, np.newaxis, :] - x_y_term[np.newaxis, :, :]
+        dist_matrix = np.sqrt(np.sum(diff ** 2, axis=2))
+        
+        for i in range(len(chunk_cust)):
+            matches = np.where(dist_matrix[i] < r)[0].tolist()
+            if len(matches) == 0:
+                matches = [int(np.random.randint(0, n_terminals))]
+            available.append(matches)
+            
     return available
 
 def generate_transactions_table_vectorized(customer_profile, start_date, nb_days):

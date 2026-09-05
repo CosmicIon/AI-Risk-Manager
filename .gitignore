@@ -77,5 +77,3 @@ coverage.xml
 .Trashes
 ehthumbs.db
 Thumbs.db
-models/*
-data/raw/*

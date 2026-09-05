@@ -92,6 +92,7 @@ def main():
     
     print("Loading raw transactions...")
     transactions = pd.read_pickle(raw_dir / 'transactions.pkl')
+    transactions['TX_DATETIME'] = pd.to_datetime(transactions['TX_DATETIME'])
     
     print("Computing date/time features...")
     transactions['TX_DURING_WEEKEND'] = transactions['TX_DATETIME'].dt.weekday >= 5
