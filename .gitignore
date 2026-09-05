@@ -91,3 +91,5 @@ models/*/v*/
 *~
 .DS_Store
 Thumbs.db
+models/*
+data/raw/*
