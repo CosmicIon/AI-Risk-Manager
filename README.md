@@ -8,6 +8,13 @@
 
 **AI Risk Manager** is a production-grade, defense-only fraud mitigation platform engineered for modern payment gateways, digital banking, and e-commerce checkouts. It bridges the gap between machine learning research and enterprise payments operations by providing **sub-50ms real-time API scoring**, **3-tier triage routing (Approve / OTP Challenge / Decline)**, **leakage-free walk-forward validation**, **automated Bayesian tuning**, and **continuous feature drift monitoring**.
 
+> 💡 **New to the project or presenting to judges?**
+> - **Razorpay Buildathon 5-Min Video Script**: [**`docs/RAZORPAY_DEMO_VIDEO_SCRIPT.md`**](docs/RAZORPAY_DEMO_VIDEO_SCRIPT.md) — Word-for-word 5-minute video presentation script with screen cues and timing.
+> - **How We Solve the Problem & Feature Catalog**: [**`docs/PROBLEM_SOLUTION_AND_FEATURES.md`**](docs/PROBLEM_SOLUTION_AND_FEATURES.md) — Requirement-by-requirement mapping and breakdown of all 21 ML features + 10 platform features.
+> - **End-to-End Data Flow Guide**: [**`docs/DATA_FLOW.md`**](docs/DATA_FLOW.md) — Beginner-friendly narrative explaining how transactions journey from swipe to defense.
+> - **File-by-File Judge Pitch Guide**: [**`docs/FILES_EXPLAINED.md`**](docs/FILES_EXPLAINED.md) — 10-second elevator pitches and answers to tough judge questions.
+> - **Technical Specifications**: [**`ARCHITECTURE.md`**](ARCHITECTURE.md) — Deep mathematical formulations and engineering blueprints.
+
 ---
 
 ## 🚀 Key Architectural Capabilities
