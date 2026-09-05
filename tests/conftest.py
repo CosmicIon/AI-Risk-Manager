@@ -58,12 +58,15 @@ def ensure_test_assets_exist():
 
     model_path = models_dir / "model.pkl"
     if not model_path.exists():
-        # Train a fast, lightweight dummy model for testing
+        # Train a fast, calibrated dummy model for testing
         np.random.seed(42)
         X_dummy = pd.DataFrame(
-            np.random.randn(50, len(canonical_features)), columns=canonical_features
+            np.random.randn(100, len(canonical_features)), columns=canonical_features
         )
-        y_dummy = np.random.choice([0, 1], size=50, p=[0.8, 0.2])
-        dummy_model = lgb.LGBMClassifier(n_estimators=5, random_state=42, verbose=-1)
+        X_dummy["TX_AMOUNT"] = np.random.uniform(10, 500, size=100)
+        X_dummy["TX_AMOUNT_ZSCORE"] = (X_dummy["TX_AMOUNT"] - 50.0) / 20.0
+        y_dummy = ((X_dummy["TX_AMOUNT"] > 100.0) | (X_dummy["TX_AMOUNT_ZSCORE"] > 2.0)).astype(int)
+
+        dummy_model = lgb.LGBMClassifier(n_estimators=10, random_state=42, verbose=-1)
         dummy_model.fit(X_dummy, y_dummy)
         joblib.dump(dummy_model, model_path)

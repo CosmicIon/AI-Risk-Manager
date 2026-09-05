@@ -45,9 +45,12 @@ data/processed/*
 *.h5
 *.feather
 
-# Except small model artifacts in models/ if needed (models/*.json and small models)
+# Except model artifacts in models/
 !models/feature_columns.json
 !models/metrics_*.json
+!models/model.pkl
+!models/best_params.json
+!models/cv_results.json
 
 # Unit test / coverage reports
 .pytest_cache/
