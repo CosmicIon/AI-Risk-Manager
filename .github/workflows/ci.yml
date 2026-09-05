@@ -1,104 +1,35 @@
-name: CI Pipeline
+name: AI Risk Manager CI
 
 on:
   push:
-    branches: [main]
+    branches: [ main, v2.1 ]
   pull_request:
-    branches: [main]
+    branches: [ main, v2.1 ]
 
 jobs:
-  lint-backend:
-    name: Lint & Type Check (Backend)
+  build-and-test:
+    name: Test Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
 
-      - name: Set up Python 3.12
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
-      - name: Install uv and dependencies
+      - name: Install dependencies
         run: |
-          pip install uv
-          cd backend && uv sync
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Run Ruff Linter & Formatter Check
+      - name: Run Pytest Test Suite
         run: |
-          cd backend
-          uv run ruff check src/ tests/
-          uv run ruff format --check src/ tests/
-
-      - name: Run Mypy Type Checker
-        run: |
-          cd backend
-          uv run mypy src/
-
-  test-backend:
-    name: Backend Unit & Integration Tests
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: riskmanager
-          POSTGRES_USER: riskmanager
-          POSTGRES_PASSWORD: dev_password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install uv and dependencies
-        run: |
-          pip install uv
-          cd backend && uv sync
-
-      - name: Run Test Suite with Coverage
-        run: |
-          cd backend
-          uv run pytest tests/unit/ -v --cov=src --cov-report=xml
-
-  build-dashboard:
-    name: Build Next.js Dashboard
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: "npm"
-          cache-dependency-path: dashboard/package.json
-
-      - name: Install Dependencies
-        run: |
-          cd dashboard
-          npm ci
-
-      - name: Build Next.js
-        run: |
-          cd dashboard
-          npm run build
+          pytest -v

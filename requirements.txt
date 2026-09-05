@@ -1,0 +1,17 @@
+pandas
+numpy
+pyarrow
+lightgbm
+scikit-learn
+shap
+streamlit
+matplotlib
+seaborn
+PyYAML
+joblib
+pytest
+optuna
+fastapi
+uvicorn
+pydantic
+httpx

@@ -1,56 +1,31 @@
-.PHONY: help up down ps logs backend-dev dashboard-dev test lint format migrate seed clean
+.PHONY: setup train evaluate demo test eda clean
 
-help:
-	@echo "AI Risk Manager — Development Commands"
-	@echo "======================================"
-	@echo "  make up            - Spin up all infrastructure containers (Docker Compose)"
-	@echo "  make down          - Stop and remove infrastructure containers"
-	@echo "  make ps            - Check status of running containers"
-	@echo "  make logs          - Tail container logs"
-	@echo "  make backend-dev   - Run FastAPI backend locally with hot-reload"
-	@echo "  make dashboard-dev - Run Next.js dashboard locally"
-	@echo "  make test          - Run backend test suite with coverage"
-	@echo "  make lint          - Run ruff linter and mypy type checks"
-	@echo "  make format        - Format code using ruff"
-	@echo "  make migrate       - Apply database migrations (alembic upgrade head)"
-	@echo "  make seed          - Seed development database"
-	@echo "  make clean         - Clean cache and temporary files"
+setup:
+	python -m venv venv
+	.\venv\Scripts\pip install -r requirements.txt
 
-up:
-	docker compose -f infra/docker/docker-compose.yml up -d
+train:
+	.\venv\Scripts\python -m src.ingestion
+	.\venv\Scripts\python -m src.features
+	.\venv\Scripts\python -m src.split
+	.\venv\Scripts\python -m src.train
+	.\venv\Scripts\python -m src.evaluate
 
-down:
-	docker compose -f infra/docker/docker-compose.yml down -v
+evaluate:
+	.\venv\Scripts\python -m src.evaluate
 
-ps:
-	docker compose -f infra/docker/docker-compose.yml ps
-
-logs:
-	docker compose -f infra/docker/docker-compose.yml logs -f
-
-backend-dev:
-	cd backend && uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-
-dashboard-dev:
-	cd dashboard && npm run dev
+demo:
+	.\venv\Scripts\streamlit run src/dashboard.py
 
 test:
-	cd backend && pytest tests/ -v --cov=src --cov-report=term-missing
+	.\venv\Scripts\pytest tests/test_pipeline_smoke.py
 
-lint:
-	cd backend && ruff check src/ tests/ && mypy src/
-
-format:
-	cd backend && ruff format src/ tests/
-
-migrate:
-	cd backend && alembic upgrade head
-
-seed:
-	cd backend && python scripts/seed_db.py
+eda:
+	.\venv\Scripts\python -m src.eda
 
 clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	find . -type d -name ".pytest_cache" -exec rm -rf {} +
-	find . -type d -name ".ruff_cache" -exec rm -rf {} +
-	find . -type d -name ".mypy_cache" -exec rm -rf {} +
+	Remove-Item -Recurse -Force data\raw\* -ErrorAction SilentlyContinue
+	Remove-Item -Recurse -Force data\processed\* -ErrorAction SilentlyContinue
+	Remove-Item -Recurse -Force models\* -ErrorAction SilentlyContinue
+	Remove-Item -Recurse -Force reports\figures\* -ErrorAction SilentlyContinue
+	Remove-Item -Force reports\*.md -ErrorAction SilentlyContinue
