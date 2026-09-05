@@ -43,11 +43,6 @@ The **AI Risk Manager** is an enterprise-grade, defense-only machine learning an
 
 ```mermaid
 flowchart TD
-    subgraph ConfigLayer ["Configuration Layer"]
-        CFG["config.yaml"]
-        UTILS["src/utils.py"]
-        CFG --> UTILS
-    end
 
     subgraph DataIngestion ["1. Data Ingestion & Adapters"]
         INGEST["src/ingestion.py"]
