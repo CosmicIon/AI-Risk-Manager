@@ -1,0 +1,70 @@
+{
+    "cross_validation": {
+        "n_folds": 3,
+        "embargo_days": 7,
+        "baseline_lr": {
+            "mean_pr_auc": 0.7948,
+            "std_pr_auc": 0.0371,
+            "mean_roc_auc": 0.737,
+            "std_roc_auc": 0.055
+        },
+        "lightgbm": {
+            "mean_pr_auc": 0.8926,
+            "std_pr_auc": 0.0195,
+            "mean_roc_auc": 0.8473,
+            "std_roc_auc": 0.0194
+        },
+        "folds": [
+            {
+                "fold": 1,
+                "train_days": "D30-D40",
+                "embargo_days": "D41-D46",
+                "test_days": "D47-D50",
+                "train_size": 1043,
+                "test_size": 423,
+                "train_fraud_rate_pct": 61.74,
+                "test_fraud_rate_pct": 52.48,
+                "lr_roc_auc": 0.8147,
+                "lr_pr_auc": 0.8456,
+                "lgb_roc_auc": 0.8572,
+                "lgb_pr_auc": 0.8769
+            },
+            {
+                "fold": 2,
+                "train_days": "D30-D44",
+                "embargo_days": "D45-D50",
+                "test_days": "D51-D54",
+                "train_size": 1436,
+                "test_size": 385,
+                "train_fraud_rate_pct": 59.82,
+                "test_fraud_rate_pct": 58.7,
+                "lr_roc_auc": 0.7009,
+                "lr_pr_auc": 0.781,
+                "lgb_roc_auc": 0.8646,
+                "lgb_pr_auc": 0.92
+            },
+            {
+                "fold": 3,
+                "train_days": "D30-D48",
+                "embargo_days": "D49-D54",
+                "test_days": "D55-D59",
+                "train_size": 1884,
+                "test_size": 470,
+                "train_fraud_rate_pct": 58.7,
+                "test_fraud_rate_pct": 55.96,
+                "lr_roc_auc": 0.6955,
+                "lr_pr_auc": 0.7578,
+                "lgb_roc_auc": 0.8202,
+                "lgb_pr_auc": 0.8808
+            }
+        ]
+    },
+    "baseline_lr": {
+        "roc_auc": 0.7375608046829911,
+        "pr_auc": 0.8328582702445225
+    },
+    "lightgbm": {
+        "roc_auc": 1.0,
+        "pr_auc": 0.9999999999999999
+    }
+}

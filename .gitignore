@@ -1,8 +1,12 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# C extensions
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -16,78 +20,60 @@ parts/
 sdist/
 var/
 wheels/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
-.venv
-env/
+
+# Virtual Environments
 venv/
+.venv/
+env/
 ENV/
 env.bak/
 venv.bak/
 
-# Testing & Coverage
+# Large Datasets & Processed Files
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+*.parquet
+*.pkl
+*.pickle
+*.csv
+*.tsv
+*.h5
+*.feather
+
+# Except small model artifacts in models/ if needed (models/*.json and small models)
+!models/feature_columns.json
+!models/metrics_*.json
+
+# Unit test / coverage reports
 .pytest_cache/
 .coverage
-htmlcov/
-.tox/
-.nox/
+.coverage.*
+.cache
+nosetests.xml
 coverage.xml
 *.cover
-*.py,cover
-.hypothesis/
+*.log
 
-# Type Checking & Linting
-.mypy_cache/
-.ruff_cache/
-.dmypy.json
-dmypy.json
+# Jupyter Notebook
+.ipynb_checkpoints
 
-# Node & Next.js
-dashboard/node_modules/
-dashboard/.next/
-dashboard/out/
-dashboard/build/
-dashboard/.turbo/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-.npm
-
-# Environment Variables & Secrets
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-*.pem
-*.key
-*.cert
-
-# Databases & Infrastructure Data
-pgdata/
-redisdata/
-qdrant_data/
-neo4j_data/
-minio_data/
-zookeeper_data/
-kafka_data/
-
-# Machine Learning Artifacts & Datasets
-data/holdout/
-models/*/v*/
-*.onnx
-*.joblib
-*.parquet
-
-# IDE & OS
+# IDE / Editor Settings
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
